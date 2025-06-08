@@ -1,0 +1,31 @@
+CC = gcc
+CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -g
+LDFLAGS = 
+
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+  # macOS specific includes and libs
+  CFLAGS += -I/opt/homebrew/opt/gsl/include
+  LDFLAGS += -L/opt/homebrew/opt/gsl/lib -lgsl -lgslcblas -lm l-
+else
+  # Linux defaults
+  LDFLAGS += -lgsl -lgslcblas -lm
+endif
+
+SRCS = $(wildcard src/*.c)
+OBJS = $(SRCS:.c=.o)
+INCLUDES = -Iinclude
+
+TARGET = bin/mm_rpn
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET)

@@ -1,0 +1,73 @@
+\contentsline {section}{\numberline {1}Overview}{3}{section.1}%
+\contentsline {section}{\numberline {2}Data Types and Stack Model}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}StackElement}{3}{subsection.2.1}%
+\contentsline {section}{\numberline {3}Register System}{3}{section.3}%
+\contentsline {section}{\numberline {4}Polynomial Support}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}poly\_eval}{3}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}poly\_roots}{4}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Matrix Operations}{4}{section.5}%
+\contentsline {section}{\numberline {6}Cleanup}{4}{section.6}%
+\contentsline {section}{\numberline {7}Stack Operations}{4}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Data Structures}{4}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Core Functions}{5}{subsection.7.2}%
+\contentsline {paragraph}{init\_stack(Stack*)}{5}{paragraph*.1}%
+\contentsline {paragraph}{push\_real / push\_complex / push\_string / push\_matrix\_real / push\_matrix\_complex}{5}{paragraph*.2}%
+\contentsline {paragraph}{pop(Stack*)}{5}{paragraph*.3}%
+\contentsline {paragraph}{peek(Stack*)}{5}{paragraph*.4}%
+\contentsline {paragraph}{stack\_top\_type(Stack*)}{5}{paragraph*.5}%
+\contentsline {paragraph}{is\_stack\_empty(Stack*)}{5}{paragraph*.6}%
+\contentsline {paragraph}{print\_stack(Stack*)}{5}{paragraph*.7}%
+\contentsline {subsection}{\numberline {7.3}Safety Checks}{5}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Example Usage}{5}{subsection.7.4}%
+\contentsline {section}{\numberline {8}Math and Matrix Functions}{6}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Matrix Creation Functions}{6}{subsection.8.1}%
+\contentsline {paragraph}{make\_matrix\_of\_zeros}{6}{paragraph*.8}%
+\contentsline {paragraph}{make\_matrix\_of\_ones}{6}{paragraph*.9}%
+\contentsline {paragraph}{make\_random\_matrix}{6}{paragraph*.10}%
+\contentsline {paragraph}{make\_identity\_matrix}{6}{paragraph*.11}%
+\contentsline {subsection}{\numberline {8.2}Matrix Dimension Queries}{6}{subsection.8.2}%
+\contentsline {paragraph}{get\_matrix\_dimensions}{6}{paragraph*.12}%
+\contentsline {subsection}{\numberline {8.3}Reduction Operations}{6}{subsection.8.3}%
+\contentsline {paragraph}{matrix\_means}{6}{paragraph*.13}%
+\contentsline {subsection}{\numberline {8.4}Matrix Reshaping}{6}{subsection.8.4}%
+\contentsline {paragraph}{reshape\_matrix}{6}{paragraph*.14}%
+\contentsline {subsection}{\numberline {8.5}Register Interactions}{6}{subsection.8.5}%
+\contentsline {paragraph}{store\_to\_register / recall\_from\_register}{6}{paragraph*.15}%
+\contentsline {subsection}{\numberline {8.6}Memory Management}{6}{subsection.8.6}%
+\contentsline {paragraph}{free\_all\_registers}{7}{paragraph*.16}%
+\contentsline {subsection}{\numberline {8.7}Serialization}{7}{subsection.8.7}%
+\contentsline {paragraph}{save\_registers\_to\_file, load\_registers\_from\_file}{7}{paragraph*.17}%
+\contentsline {section}{\numberline {9}Statistical Functions}{7}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Normal Distribution Functions}{7}{subsection.9.1}%
+\contentsline {paragraph}{npdf}{7}{paragraph*.18}%
+\contentsline {paragraph}{ncdf}{7}{paragraph*.19}%
+\contentsline {paragraph}{nquant}{7}{paragraph*.20}%
+\contentsline {subsection}{\numberline {9.2}Vector and Matrix Statistics}{7}{subsection.9.2}%
+\contentsline {paragraph}{matrix\_means}{7}{paragraph*.21}%
+\contentsline {paragraph}{matrix\_reduce}{7}{paragraph*.22}%
+\contentsline {subsection}{\numberline {9.3}Behavior and Compatibility}{7}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Example}{8}{subsection.9.4}%
+\contentsline {section}{\numberline {10}String Functions}{8}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Supported Operations}{8}{subsection.10.1}%
+\contentsline {paragraph}{concatenate}{8}{paragraph*.23}%
+\contentsline {paragraph}{str\_to\_upper}{8}{paragraph*.24}%
+\contentsline {paragraph}{str\_to\_lower}{8}{paragraph*.25}%
+\contentsline {paragraph}{str\_reverse}{8}{paragraph*.26}%
+\contentsline {paragraph}{str\_length}{8}{paragraph*.27}%
+\contentsline {subsection}{\numberline {10.2}Memory Management}{8}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Example Usage}{8}{subsection.10.3}%
+\contentsline {section}{\numberline {11}Evaluation and Utility Functions}{9}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Parser Helpers}{9}{subsection.11.1}%
+\contentsline {paragraph}{read\_complex}{9}{paragraph*.28}%
+\contentsline {subsection}{\numberline {11.2}Unary Real and Complex Operations}{9}{subsection.11.2}%
+\contentsline {paragraph}{negate\_real / negate\_complex}{9}{paragraph*.29}%
+\contentsline {paragraph}{one\_over\_real / one\_over\_complex}{9}{paragraph*.30}%
+\contentsline {subsection}{\numberline {11.3}Safe and Defensive Math}{9}{subsection.11.3}%
+\contentsline {paragraph}{safe\_divide\_real}{9}{paragraph*.31}%
+\contentsline {paragraph}{safe\_divide\_complex}{9}{paragraph*.32}%
+\contentsline {subsection}{\numberline {11.4}Randomization Support}{9}{subsection.11.4}%
+\contentsline {subsection}{\numberline {11.5}Evaluation Logic}{9}{subsection.11.5}%
+\contentsline {paragraph}{eval\_expression / eval\_line}{9}{paragraph*.33}%
+\contentsline {paragraph}{init\_calculator}{10}{paragraph*.34}%
+\contentsline {paragraph}{cleanup\_calculator}{10}{paragraph*.35}%
+\contentsline {subsection}{\numberline {11.6}Example Session Flow}{10}{subsection.11.6}%

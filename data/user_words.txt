@@ -1,0 +1,12 @@
+sq dup *
+qu sq sq
+sqrt 0.5 ^
+cube 3 ^
+cubrt 3 inv ^
+pctchg over - swap / 100 *
+pctot / 100 *
+ln2 ln 2 ln /
+norm2 svd drop swap drop diag rmax split_mat
+cond svd drop swap drop diag dup rmax swap rmin swap drop ./ split_mat
+isnan nan eq
+isinf inf eq
