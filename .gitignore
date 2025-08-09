@@ -1,1 +1,28 @@
 token
+
+# build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# debug
+*.gch
+*.pch
+*.dSYM/
+*.stackdump
+
+# editors
+*~
+.\#*
+\#*\#
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# binaries from this project
+mm_*
