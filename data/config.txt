@@ -1,0 +1,4 @@
+print_precision = 6
+fixed_point = 1
+verbose_mode = 0
+selected_function = 0

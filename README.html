@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>README.html</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+
+</head>
+
+<body>
+
+<h1 id="micos-toy-calculatormm-rpn-15">Mico’s toy Calculator–MM-RPN-15</h1>
+<h2 id="rpn-calculator-for-real-and-complex-scalars-and-matrices.">RPN Calculator for real and complex scalars and matrices.</h2>
+<p>A stack-based Reverse Polish Notation (RPN) calculator written in C. Supports real and complex numbers, strings, and matrices (real and complex).</p>
+<h2 id="quick-start-entry-rules">Quick Start – Entry rules</h2>
+<ul>
+<li>All inputs are case sensitive.</li>
+<li>Enter complex numbers as in: (1,3) or (-1.2e-4, 0.7e2)</li>
+<li>Enter matrices as [#rows #cols $ matrix_elements].</li>
+<li>Entries can be complex; #rows and #cols are integers.</li>
+<li>Read matrix from file as [#rows, #cols, “filename”] where #cols and #rows are integers and “filename” is the name of the file (must be in quotes).</li>
+<li>Inline matrices entered using J-like syntax [#rows #cols $ list or entries]</li>
+<li>Recall previous commands with up-arrow</li>
+</ul>
+<h2 id="features">Features</h2>
+<ul>
+<li>✅ Real and complex number support</li>
+<li>✅ Entry by means of GNU Readline with TAB completion and full history support</li>
+<li>✅ String operations: concatenate, upper&lt;-&gt;lower case, string length, evaluate strings</li>
+<li>✅ Real and complex matrices using <a href="https://www.gnu.org/software/gsl/">GSL</a></li>
+<li>✅ Stack-based computation with visitor traversal</li>
+<li>✅ User-defined functions and variables</li>
+<li>✅ Registers for storage</li>
+<li>✅ Math functions: trigonometric, exponential, logarithmic, hyp[erbolic, special functions…</li>
+<li>✅ Matrix functionality: addition, multiplication, inversion, division</li>
+<li>✅ Special matrices: identity, constant, random, Gaussian random</li>
+<li>✅ Linear algebra: inverse, determinant, eigenvalues, SVD, pseudo inverse, cholesky</li>
+<li>✅ Matrix statistics: means, sums, and variances by rows or columns</li>
+<li>✅ GNU Readline support for command history and editing</li>
+<li>✅ Normal pdf, cdf, quantiles</li>
+<li>✅ Polynomials: zeros and evaluations</li>
+<li>✅ Numerical integration and zero finding for arbitrary continuous functions on closed intervals</li>
+<li>✅ Statistics (colmean, rowmean,…); regression; normpdf, normcdf, rand, nrand</li>
+<li>✅ Constants: pi, e, gravity</li>
+<li>✅ Date functions: difference between two dates, date + days, day of the week</li>
+<li>✅ User defined words (commands) by means of FORTH-like syntax</li>
+<li>✅ Predefined (interpreted) macros, including NPV, IRR, … Get the full list with <code>listmacros</code>.</li>
+<li>✅ Programmability a la HP-41C with labels, jumps, and subroutines</li>
+</ul>
+<h2 id="build-instructions">Build Instructions</h2>
+<p>bash - git clone https://github.com/micomrkaic/MM-s-Toy-Calculator - cd MM-s-Toy-calculator - make</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>C compiler (gcc or clang, C17 standard with limited POSIX extensions)</li>
+<li>GNU make</li>
+<li>GNU readline (libreadline-dev)</li>
+<li>GNU Scientific Library (libgsl-dev)</li>
+</ul>
+<h2 id="future-additions-and-improvements">Future additions and improvements</h2>
+<ul>
+<li>Nicer printing wiwth a build in pager</li>
+<li>Built in model estimation: OLS, GLS, GMM, ML, etc. (Though this could be implemented already by users with programming features.)</li>
+</ul>
+<h1 id="annex-i-full-function-list-with-descriptions">Annex I: Full Function List (with Descriptions)</h1>
+<h2 id="mathematics">Mathematics</h2>
+<h3 id="basic-functionality">Basic Functionality</h3>
+<ul>
+<li><code>.*</code> – Elementwise multiplication of two matrices or scalars<br />
+</li>
+<li><code>./</code> – Elementwise division<br />
+</li>
+<li><code>.^</code> – Elementwise power<br />
+</li>
+<li><code>ln</code> – Natural logarithm: <code>ln(x)</code><br />
+</li>
+<li><code>log</code> – Base-10 logarithm: <code>log(x)</code><br />
+</li>
+<li><code>exp</code> – Exponential: <code>exp(x)</code><br />
+</li>
+<li><code>sqrt</code> – Square root: <code>sqrt(x)</code><br />
+</li>
+<li><code>pow</code> – Power: <code>x^y</code><br />
+</li>
+<li><code>frac</code> – Returns the fractional part of a real number: <code>frac(x)</code><br />
+</li>
+<li><code>intg</code> – Returns the integer part: <code>intg(x)</code><br />
+</li>
+<li><code>chs</code> – Change sign: <code>-x</code><br />
+</li>
+<li><code>inv</code> – Multiplicative inverse: <code>1/x</code></li>
+</ul>
+<h3 id="complex-numbers">Complex Numbers</h3>
+<ul>
+<li><code>re</code> – Real part of complex number<br />
+</li>
+<li><code>im</code> – Imaginary part<br />
+</li>
+<li><code>abs</code> – Absolute value (modulus)<br />
+</li>
+<li><code>arg</code> – Argument (phase angle)<br />
+</li>
+<li><code>conj</code> – Complex conjugate<br />
+</li>
+<li><code>re2c</code> – Combine two real numbers into a complex<br />
+</li>
+<li><code>split_c</code> – Split complex number into real and imaginary parts<br />
+</li>
+<li><code>j2r</code> – Join two reals into one complex.</li>
+</ul>
+<h3 id="trigonometry">Trigonometry</h3>
+<ul>
+<li><code>sin</code>, <code>cos</code>, <code>tan</code> – Standard trigonometric functions<br />
+</li>
+<li><code>asin</code>, <code>acos</code>, <code>atan</code> – Inverse trig functions</li>
+</ul>
+<h3 id="hyperbolic-functions">Hyperbolic Functions</h3>
+<ul>
+<li><code>sinh</code>, <code>cosh</code>, <code>tanh</code> – Hyperbolic sine, cosine, tangent<br />
+</li>
+<li><code>asinh</code>, <code>acosh</code>, <code>atanh</code> – Inverse hyperbolic functions</li>
+</ul>
+<hr />
+<h2 id="matrices-and-linear-algebra">Matrices and Linear Algebra</h2>
+<ul>
+<li><code>minv</code> – Matrix inverse<br />
+</li>
+<li><code>pinv</code> – Pseudo-inverse<br />
+</li>
+<li><code>det</code> – Determinant<br />
+</li>
+<li><code>eig</code> – Eigenvalues (and eigenvectors?)<br />
+</li>
+<li><code>tran</code> – Transpose<br />
+</li>
+<li><code>reshape</code> – Change matrix shape<br />
+</li>
+<li><code>get_aij</code> – Get element at (i,j)<br />
+</li>
+<li><code>set_aij</code> – Set element at (i,j)<br />
+</li>
+<li><code>split_mat</code> – Split matrix into elements like a pinata</li>
+<li><code>kron</code> – Kronecker product<br />
+</li>
+<li><code>diag</code> – Extract diagonal<br />
+</li>
+<li><code>to_diag</code> – Convert vector to diagonal matrix<br />
+</li>
+<li><code>chol</code> – Cholesky decomposition<br />
+</li>
+<li><code>svd</code> – Singular Value Decomposition<br />
+</li>
+<li><code>dim</code> – Dimensions of matrix<br />
+</li>
+<li><code>eye</code> – Identity matrix<br />
+</li>
+<li><code>join_v</code>, <code>join_h</code> – Vertical/horizontal concatenation<br />
+</li>
+<li><code>cumsum_r</code>, <code>cumsum_c</code> – Cumulative sum (row/col)<br />
+</li>
+<li><code>ones</code>, <code>zeroes</code> – Matrices of ones/zeros<br />
+</li>
+<li><code>rand</code>, <code>randn</code> – Uniform/Gaussian random matrix<br />
+</li>
+<li><code>rrange</code> – Range vector: like <code>[start:step:end]</code><br />
+</li>
+<li><code>cmean</code>, <code>rmean</code> – Column/row mean<br />
+</li>
+<li><code>csum</code>, <code>rsum</code> – Column/row sum<br />
+</li>
+<li><code>cvar</code>, <code>rvar</code> – Column/row variance<br />
+</li>
+<li><code>cmin</code>, <code>cmax</code> – Column min/max<br />
+</li>
+<li><code>rmin</code>, <code>rmax</code> – Row min/max</li>
+</ul>
+<hr />
+<h3 id="polynomials">Polynomials</h3>
+<ul>
+<li><code>roots</code> – Find roots of a polynomial<br />
+</li>
+<li><code>pval</code> – Evaluate polynomial at x</li>
+</ul>
+<h3 id="special-functions">Special Functions</h3>
+<ul>
+<li><code>npdf</code> – Normal probability density function<br />
+</li>
+<li><code>ncdf</code> – Normal cumulative distribution function<br />
+</li>
+<li><code>nquant</code> – Quantile function for normal<br />
+</li>
+<li><code>gamma</code>, <code>ln_gamma</code> – Gamma function and its log<br />
+</li>
+<li><code>beta</code>, <code>ln_beta</code> – Beta function and its log</li>
+</ul>
+<hr />
+<h3 id="constants">Constants</h3>
+<ul>
+<li><code>gravity</code> – 9.81</li>
+<li><code>pi</code> – π</li>
+<li><code>e</code> – Euler’s constant</li>
+<li><code>inf</code>, <code>nan</code> – IEEE infinity and NaN</li>
+</ul>
+<hr />
+<h2 id="stack-operations">Stack Operations</h2>
+<ul>
+<li><code>drop</code> – Remove top item</li>
+<li><code>clst</code> – Clear stack</li>
+<li><code>swap</code> – Swap top two items</li>
+<li><code>dup</code> – Duplicate top item</li>
+<li><code>nip</code> – Remove second item</li>
+<li><code>tuck</code> – Copy top under second</li>
+<li><code>roll</code> – Roll 3rd item to top</li>
+<li><code>over</code> – Copy second to top</li>
+</ul>
+<hr />
+<h2 id="string-functions">String Functions</h2>
+<ul>
+<li><code>scon</code> – Concatenate top two strings<br />
+</li>
+<li><code>s2l</code>, <code>s2u</code> – Lower/upper case<br />
+</li>
+<li><code>slen</code> – Length of string<br />
+</li>
+<li><code>srev</code> – Reverse string<br />
+</li>
+<li><code>int2str</code> – Convert int to string</li>
+</ul>
+<hr />
+<h2 id="register-operations">Register Operations</h2>
+<ul>
+<li><code>rcl</code> – Recall from register<br />
+</li>
+<li><code>sto</code> – Store to register<br />
+</li>
+<li><code>pr</code> – Print registers<br />
+</li>
+<li><code>saveregs</code>, <code>loadregs</code>, <code>clregs</code> – Save/load/clear registers<br />
+</li>
+<li><code>ffr</code> – First Free Register</li>
+</ul>
+<hr />
+<h2 id="printing-and-format-control">Printing and Format Control</h2>
+<ul>
+<li><code>print</code>, <code>pm</code>, <code>ps</code> – Print stack/item/matrix<br />
+</li>
+<li><code>setprec</code> – Set print precision<br />
+</li>
+<li><code>sfs</code> – Swap fixed/scientific format</li>
+</ul>
+<hr />
+<h2 id="tests-and-logic">Tests and Logic</h2>
+<ul>
+<li><code>eq</code>, <code>leq</code>, <code>lt</code>, <code>gt</code>, <code>geq</code>, <code>neq</code> – Comparisons<br />
+</li>
+<li><code>and</code>, <code>or</code>, <code>not</code> – Boolean logic</li>
+</ul>
+<hr />
+<h1 id="date-functions">Date Functions</h1>
+<ul>
+<li><code>ddays</code> – Date difference in days<br />
+</li>
+<li><code>today</code> – Push today’s date<br />
+</li>
+<li><code>dateplus</code> – Add days to date<br />
+</li>
+<li><code>dow</code> – Day of week<br />
+</li>
+<li><code>edmy</code> – Extract day/month/year?</li>
+</ul>
+<hr />
+<h2 id="user-defined-words-macros">User Defined Words / Macros</h2>
+<ul>
+<li><code>listwords</code>, <code>loadwords</code>, <code>savewords</code>, <code>delword</code>, <code>selword</code>, <code>clrwords</code> – Manage user-defined words<br />
+</li>
+<li><code>listmacros</code> – List available macros</li>
+</ul>
+<hr />
+<h2 id="programming">Programming</h2>
+<ul>
+<li><code>top_eq0?</code>, <code>top_ge0?</code>, etc. – Tests for top of stack</li>
+<li><code>ctr_eq0?</code>, <code>ctr_ge0?</code>, etc. – Tests on counters</li>
+<li>[<code>set_ctr</code>, <code>clr_ctr</code>, <code>ctr_inc</code>, <code>ctr_dec</code> – Counter manipulation]</li>
+<li><code>goto</code>, <code>xeq</code>, <code>rtn</code>, <code>end</code>, <code>lbl</code> – Control flow (jump, call, return, etc.)</li>
+<li><code>eval</code>, <code>batch</code>, <code>run</code> – Evaluate strings, scripts, or programs</li>
+</ul>
+<hr />
+<h2 id="miscellaneous">Miscellaneous</h2>
+<ul>
+<li><code>fuck</code> – Pretty self descriptive</li>
+<li><code>help</code> – Print help screen</li>
+<li><code>listfcns</code> – List all available functions</li>
+<li><code>undo</code> – Undo the effects of the last line of input</li>
+<li><code>clrhist</code> – Clear history</li>
+</ul>
+<hr />
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+(undo-tree-save-format-version . 1)
+"80c88ffebc36cfb57f7b164d6ca63c4d6d1c6fbc"
+[nil nil nil nil (26775 40021 879920 679000) 0 nil]
+([nil nil ((#("<" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -911) (undo-tree-id12 . -1) (#("=" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -912) (undo-tree-id13 . -1) (#(" " 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -913) (undo-tree-id14 . -1) 914 (t 26746 50083 0 0)) nil (26775 40068 494466 75000) 0 nil] [nil nil ((1 . 2) (t 26746 50083 0 0)) ((#("x" 0 1 (fontified t)) . 1) (undo-tree-id0 . -1)) (26775 40021 879457 443000) 0 nil])
+([nil nil ((911 . 912)) nil (26775 40068 494464 200000) 0 nil])
+nil
+([nil nil ((912 . 913)) nil (26775 40068 494463 681000) 0 nil])
+([nil nil ((#("," 0 1 (face font-lock-comment-face fontified t)) . -911) (undo-tree-id10 . -1) (#("+" 0 1 (face font-lock-comment-face fontified t)) . -912) (undo-tree-id11 . -1) 913) nil (26775 40068 494462 819000) 0 nil])
+([nil nil ((911 . 914)) nil (26775 40068 494461 471000) 0 nil])
+([nil nil ((#("-" 0 1 (face font-lock-comment-face c-in-sws t fontified t)) . -912) (undo-tree-id8 . -1) (#("=" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . -913) (undo-tree-id9 . -1) 914) nil (26775 40068 494460 583000) 0 nil])
+([nil nil ((912 . 914)) nil (26775 40068 494458 923000) 0 nil])
+([nil nil ((#("<" 0 1 (face font-lock-comment-face c-in-sws t fontified t)) . -911) (undo-tree-id5 . -1) (#("-" 0 1 (face font-lock-comment-face c-in-sws t fontified t)) . -912) (undo-tree-id6 . -1) (#(" " 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . -913) (undo-tree-id7 . -1) 914) nil (26775 40068 494457 607000) 0 nil])
+([nil nil ((911 . 913)) nil (26775 40068 494454 495000) 0 nil])
+([nil nil ((#("<" 0 1 (face font-lock-comment-face fontified t)) . -911) (undo-tree-id3 . -1) (#("=" 0 1 (face font-lock-comment-face fontified t)) . -912) (undo-tree-id4 . -1) 913) nil (26775 40068 494454 13000) 0 nil])
+([nil nil ((911 . 912)) nil (26775 40068 494450 995000) 0 nil])
+([nil nil ((912 . 913)) nil (26775 40068 494450 569000) 0 nil])
+([nil nil ((#("," 0 1 (face font-lock-comment-face c-in-sws t fontified t)) . -911) (undo-tree-id1 . -1) (#("_" 0 1 (face font-lock-comment-face fontified t)) . -912) (undo-tree-id2 . -1) 913) nil (26775 40068 494448 983000) 0 nil])
+([nil nil ((911 . 913)) nil (26775 40068 494436 21000) 0 nil])
+([nil nil ((1345 . 1351) (t 26775 40068 493661 298000)) nil (26775 40112 211084 788000) 0 nil])
+([nil nil ((1350 . 1351)) nil (26775 40112 211080 667000) 0 nil])
+([nil nil ((#("   . TODO: select submatrices; resize matrices and add/remove rows and/or columns" 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 9 (c-in-sws t face ((:foreground "#FFD700") hl-todo font-lock-comment-face) fontified t) 9 81 (c-in-sws t face font-lock-comment-face fontified t)) . 1419) (t 26775 40112 210863 619000)) nil (26775 43014 775181 559000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1419)) nil (26775 43014 775179 589000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 875 . 876) (nil fontified nil 875 . 876) (nil fontified nil 803 . 875) (nil fontified nil 799 . 803) (nil fontified nil 794 . 799) (794 . 876)) nil (26775 43014 775174 844000) 0 nil])
+([nil nil ((#("   . BUG: fix buffer overruns in load_program" 0 45 (c-in-sws t face font-lock-comment-face fontified t)) . 1201) (t 26775 43014 774686 338000)) nil (26775 43064 646604 723000) 0 nil])
+([nil nil ((#("
+" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . 1201)) nil (26775 43064 646604 224000) 0 nil])
+([nil nil ((#("   . FIXME: clean up and consolidate binary_fun.c; cleanup the dispatch table" 0 5 (face font-lock-comment-face fontified t) 5 10 (face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 10 77 (face font-lock-comment-face fontified t)) . 1201)) nil (26775 43064 646603 722000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1201)) nil (26775 43064 646603 336000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 917 . 918) (nil fontified nil 917 . 918) (nil fontified nil 850 . 917) (nil fontified nil 845 . 850) (nil fontified nil 840 . 845) (nil fontified nil 839 . 840) (nil fontified nil 794 . 839) (794 . 918)) nil (26775 43064 646602 870000) 0 nil])
+([nil nil ((#("   . FIXME: clean up the interpreter to have only one dispatch table in the VM" 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 6 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 6 7 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 7 8 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 8 9 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 9 10 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 10 11 (c-in-sws t face font-lock-comment-face fontified t) 11 12 (c-in-sws t face font-lock-comment-face fontified t) 12 78 (c-in-sws t face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646602 138000) 0 nil])
+([nil nil ((#("
+" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646601 890000) 0 nil])
+([nil nil ((#("   . FIXME: ignore NANs in a smart way in reduce_ops;" 0 5 (face font-lock-comment-face fontified t) 5 6 (face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 6 9 (face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 9 10 (face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 10 53 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646601 592000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646601 322000) 0 nil])
+([nil nil ((#("   . NOTE: Write documentation" 0 5 (face font-lock-comment-face fontified t) 5 9 (face ((:foreground "#00FF00") hl-todo font-lock-comment-face) fontified t) 9 30 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646600 959000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646600 674000) 0 nil])
+([nil nil ((#("   . FIXME: check if name is already defined and reject the definition if it is" 0 5 (face font-lock-comment-face fontified t) 5 10 (face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 10 79 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646600 336000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1422)) nil (26775 43064 646599 929000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 1161 . 1162) (nil fontified nil 1161 . 1162) (nil fontified nil 1092 . 1161) (nil fontified nil 1087 . 1092) (nil fontified nil 1082 . 1087) (nil fontified nil 1081 . 1082) (nil fontified nil 1060 . 1081) (nil fontified nil 1056 . 1060) (nil fontified nil 1051 . 1056) (nil fontified nil 1050 . 1051) (nil fontified nil 1007 . 1050) (nil fontified nil 1006 . 1007) (nil fontified nil 1003 . 1006) (nil fontified nil 1002 . 1003) (nil fontified nil 997 . 1002) (nil fontified nil 996 . 997) (nil fontified nil 930 . 996) (nil fontified nil 929 . 930) (nil fontified nil 928 . 929) (nil fontified nil 927 . 928) (nil fontified nil 926 . 927) (nil fontified nil 925 . 926) (nil fontified nil 924 . 925) (nil fontified nil 923 . 924) (nil fontified nil 918 . 923) (918 . 1162)) nil (26775 43064 646599 229000) 0 nil])
+([nil nil ((#("   . NOTE: Write documentation" 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 9 (c-in-sws t face ((:foreground "#00FF00") hl-todo font-lock-comment-face) fontified t) 9 30 (c-in-sws t face font-lock-comment-face fontified t)) . 1051)) nil (26775 43064 646597 254000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 1051)) nil (26775 43064 646596 900000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 824 . 825) (nil fontified nil 824 . 825) (nil fontified nil 803 . 824) (nil fontified nil 799 . 803) (nil fontified nil 794 . 799) (794 . 825)) nil (26775 43064 646596 375000) 0 nil])
+([nil nil ((#("   . TODO: sto ind, rcl ind." 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 9 (c-in-sws t face ((:foreground "#FFD700") hl-todo font-lock-comment-face) fontified t) 9 28 (c-in-sws t face font-lock-comment-face fontified t)) . 1666) (undo-tree-id16 . -28)) nil (26775 43064 646595 361000) 0 nil])
+([nil nil ((#("
+" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . 1666) (undo-tree-id15 . -1)) nil (26775 43064 646592 891000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 1597 . 1598) (nil fontified nil 1597 . 1598) (nil fontified nil 1578 . 1597) (nil fontified nil 1574 . 1578) (nil fontified nil 1569 . 1574) (1569 . 1598)) nil (26775 43064 646576 797000) 0 nil])
+([nil nil ((#("June " 0 5 (face font-lock-comment-face fontified t c-in-sws t)) . -775) (undo-tree-id17 . -5) 780 (t 26775 43064 646926 869000)) nil (26775 43078 734943 856000) 0 nil])
+([nil nil ((775 . 783)) nil (26775 43078 734930 962000) 0 nil])
+([nil nil ((#("1" 0 1 (face font-lock-comment-face fontified t)) . 783) (#("1" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . 783)) nil (26775 43078 734925 843000) 0 nil])
+([nil nil ((782 . 783) (t 26775 43078 734994 813000)) nil (26775 43093 223097 508000) 0 nil])
+([nil nil ((#(" " 0 1 (face font-lock-comment-face fontified t)) . -790) (undo-tree-id25 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t)) . -791) (undo-tree-id26 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t)) . -792) (undo-tree-id27 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t)) . -793) (undo-tree-id28 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t)) . -794) (undo-tree-id29 . -1) 795 (t 26775 43084 604023 117000)) nil (26775 43100 59108 363000) 0 nil] [nil nil ((#("2025 ****" 0 9 (c-in-sws t face font-lock-comment-face fontified t)) . -786) (undo-tree-id18 . -9) 795 (t 26775 43084 604023 117000)) ((786 . 795)) (26775 43093 222662 608000) 0 nil])
+([nil nil ((#("*" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -753) (undo-tree-id20 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -754) (undo-tree-id21 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -755) (undo-tree-id22 . -1) (#("*" 0 1 (face font-lock-comment-face fontified t)) . -756) (undo-tree-id23 . -1) (#(" " 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . -757) (undo-tree-id24 . -1) 758) nil (26775 43100 59078 751000) 0 nil])
+nil
+([nil nil ((753 . 754)) nil (26775 43100 59074 351000) 0 nil])
+([nil nil ((#(" " 0 1 (c-in-sws t face font-lock-comment-delimiter-face fontified t)) . -753) (undo-tree-id19 . -1) 754) nil (26775 43103 736536 559000) 0 nil])
+([nil nil ((753 . 755) (t 26775 43100 59097 654000)) nil (26775 43110 746773 67000) 0 nil] [nil nil ((#(" " 0 1 (face font-lock-comment-delimiter-face fontified t)) . 753) (#("l" 0 1 (face font-lock-comment-face fontified t)) . 753) (#("l" 0 1 (face font-lock-comment-face fontified t)) . 753) (#("i" 0 1 (face font-lock-comment-face fontified t)) . 753) (#("t" 0 1 (face font-lock-comment-face fontified t)) . 753) (#("S" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . 753) (t 26775 43100 59097 654000)) ((753 . 754) (753 . 754) (753 . 754) (753 . 754) (753 . 754) (753 . 754)) (26775 43103 735021 591000) 0 nil])
+([nil nil ((#(" " 0 1 (face font-lock-comment-delimiter-face fontified t)) . -753) (undo-tree-id30 . -1) (#(" " 0 1 (c-in-sws t face font-lock-comment-delimiter-face fontified t)) . -754) (undo-tree-id31 . -1) 755) nil (26775 43110 746769 924000) 0 nil])
+nil
+([nil nil ((#("   . FIXME: check if name is already defined and reject the definition if it is" 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 10 (c-in-sws t face ((:foreground "#FF4500") hl-todo font-lock-comment-face) fontified t) 10 79 (c-in-sws t face font-lock-comment-face fontified t)) . 1074) (t 26775 43110 747149 200000)) nil (26775 43149 374973 527000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t rear-nonsticky t)) . 1074)) nil (26775 43149 374972 973000) 0 nil])
+([nil nil ((nil fontified nil 1153 . 1154) (nil fontified nil 1084 . 1153) (nil fontified nil 1079 . 1084) (nil fontified nil 1074 . 1079) (1074 . 1154)) nil (26775 43149 374972 352000) 0 nil])
+([nil nil ((nil fontified nil 1233 . 1234) (nil fontified nil 1164 . 1233) (nil fontified nil 1159 . 1164) (nil fontified nil 1154 . 1159) (1154 . 1234)) nil (26775 43149 374971 380000) 0 nil])
+([nil nil ((#("check if name is already defined and reject the definition if it is" 0 67 (face font-lock-comment-face fontified t)) . 1166) (undo-tree-id33 . -8) (undo-tree-id34 . -6) (undo-tree-id35 . -6) (undo-tree-id36 . -6) (undo-tree-id37 . -67)) nil (26775 43149 375289 232000) 0 nil])
+([nil nil ((1166 . 1187)) nil (26775 43155 499616 368000) 0 nil] [nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t rear-nonsticky t)) . 1166) (undo-tree-id32 . -1)) ((1166 . 1167)) (26775 43149 374963 944000) 0 nil])
+([nil nil ((1187 . 1194)) nil (26775 43155 499612 731000) 0 nil])
+nil
+([nil nil ((#("   . NOTE: Write documentation" 0 5 (c-in-sws t face font-lock-comment-face fontified t) 5 9 (c-in-sws t face ((:foreground "#00FF00") hl-todo font-lock-comment-face) fontified t) 9 30 (c-in-sws t face font-lock-comment-face fontified t)) . 786) (t 26775 43155 499365 29000)) nil (26775 43286 257419 300000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t rear-nonsticky t)) . 786)) nil (26775 43286 257418 737000) 0 nil])
+([nil nil ((nil fontified nil 1194 . 1195) (nil fontified nil 1173 . 1194) (nil fontified nil 1169 . 1173) (nil fontified nil 1164 . 1169) (1164 . 1195)) nil (26775 43286 257418 152000) 0 nil])
+([nil nil ((#("NOTE" 0 4 (c-in-sws t face ((:foreground "#00FF00") hl-todo font-lock-comment-face) fontified t)) . -1169) (undo-tree-id38 . -4) 1173) nil (26775 43286 257417 222000) 0 nil])
+([nil nil ((1169 . 1173)) nil (26775 43286 942784 102000) 0 nil])
+([nil nil ((786 . 787)) nil (26775 43319 433431 919000) 0 nil] [nil nil ((786 . 787)) ((#("\\" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . 786) (undo-tree-id41 . -1) (undo-tree-id42 . -1) (undo-tree-id43 . -1) (undo-tree-id44 . -1) (undo-tree-id45 . -1) (undo-tree-id46 . -1)) (26775 43286 258062 463000) 0 nil])
+([nil nil ((#("   . BUG: fix buffer overruns in load_program" 0 1 (c-in-sws t face font-lock-comment-face fontified t) 1 3 (c-in-sws t face font-lock-comment-face fontified t) 3 4 (c-in-sws t face font-lock-comment-face fontified t) 4 45 (c-in-sws t face font-lock-comment-face fontified t)) . 787)) nil (26775 43319 433431 349000) 0 nil])
+([nil nil ((#("   " 0 1 (c-is-sws t face font-lock-comment-face fontified nil) 1 3 (face font-lock-comment-face fontified nil)) . 788) (787 . 788)) ((#("
+" 0 1 (face font-lock-comment-face fontified t c-in-sws t)) . 787) (undo-tree-id39 . -1) (undo-tree-id40 . -1) (788 . 791)) (26775 43286 257402 501000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face fontified t)) . 787)) nil (26775 43319 433430 574000) 0 nil])
+nil
+([nil nil ((nil rear-nonsticky nil 832 . 833) (nil fontified nil 832 . 833) (nil fontified nil 791 . 832) (nil fontified nil 790 . 791) (nil fontified nil 788 . 790) (nil fontified nil 787 . 788) (787 . 833)) nil (26775 43319 433429 858000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 831 . 832) (nil fontified nil 831 . 832) (nil fontified nil 790 . 831) (nil fontified nil 789 . 790) (nil fontified nil 787 . 789) (nil fontified nil 786 . 787) (786 . 832)) nil (26775 43319 433428 937000) 0 nil])
+([nil nil ((#("BUG" 0 3 (c-in-sws t face font-lock-comment-face fontified t)) . 791)) nil (26775 43319 433427 703000) 0 nil])
+([nil nil ((791 . 797)) nil (26775 43319 433427 159000) 0 nil])
+([nil nil ((#("W" 0 1 (face font-lock-comment-face fontified t)) . -795) (undo-tree-id52 . -1) (#("E" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . -796) (undo-tree-id53 . -1) 797) nil (26775 43319 433426 555000) 0 nil])
+([nil nil ((795 . 796)) nil (26775 43319 433425 107000) 0 nil])
+([nil nil ((#("
+" 0 1 (face font-lock-comment-face rear-nonsticky t fontified t)) . -833) (undo-tree-id51 . -1) 834) nil (26775 43319 433424 690000) 0 nil])
+([nil nil ((#("overruns in load_program" 0 24 (c-in-sws t face font-lock-comment-face fontified t)) . -809) (undo-tree-id50 . -24) 833) nil (26775 43319 433423 753000) 0 nil])
+([nil nil ((#("buffer " 0 7 (face font-lock-comment-face c-in-sws t fontified t)) . -802) (undo-tree-id49 . -7) 809) nil (26775 43319 433422 772000) 0 nil])
+([nil nil ((#("fix " 0 4 (face font-lock-comment-face c-in-sws t fontified t)) . -798) (undo-tree-id48 . -4) 802) nil (26775 43319 433421 724000) 0 nil])
+([nil nil ((798 . 800)) nil (26775 43319 433420 2000) 0 nil])
+([nil nil ((800 . 821)) nil (26775 43319 433419 665000) 0 nil])
+([nil nil ((821 . 829)) nil (26775 43319 433419 359000) 0 nil])
+([nil nil ((829 . 830)) nil (26775 43319 433418 941000) 0 nil])
+([nil nil ((830 . 834)) nil (26775 43319 433418 194000) 0 nil])
+([nil nil ((#("+" 0 1 (c-in-sws t face font-lock-comment-face fontified t)) . -833) (undo-tree-id47 . -1) 834) nil (26775 43319 433416 470000) 0 nil])
+([nil current ((833 . 836)) nil (26775 43319 433400 717000) 0 nil])
+nil
