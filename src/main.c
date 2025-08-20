@@ -16,18 +16,17 @@
  * along with Mico's toy RPN Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Still TODO as of August 09, 2025
-   . FIXME: read configuration from .config/mm_rpn
-   . BUG: fix buffer overruns in load_program
+/* Still TODO as of August 20, 2025
    . FIXME: clean up and consolidate binary_fun.c; cleanup the dispatch table
    . FIXME: clean up the interpreter to have only one dispatch table in the VM
    . FIXME: ignore NANs in a smart way in reduce_ops;
    . FIXME: check if name is already defined and reject the definition if it is
-   . FIXME: print strings without quotes
+   . TODO: implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
+   . TODO: Plotting of a vector vs vector for a simple function plot
    . TODO: Write documentation
    . TODO: select submatrices; resize matrices and add/remove rows and/or columns
    . TODO: silent mode to skip error warnings
-   . TODO: Overlay for registers -- store varibles; recall values with <-
+   . TODO: Overlay for registers -- store variables; recall values with <-
    . TODO: load program, list program, run program -> separate instructions
    . TODO: implement loop counters and easier comparison registers for iterations;
    . TODO: fully implement counters and tests
@@ -43,9 +42,6 @@
 */
 
 #define _POSIX_C_SOURCE 200809L
-#define HISTORY_FILE ".rpn_history"
-#define CONFIG_FILE "../data/config.txt"
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +61,7 @@
 #include "print_fun.h" 
 #include "words.h" 
 #include "run_machine.h"
+#include "globals.h"
 
 // Globals
 gsl_rng * global_rng; // Global random number generator, used throughout the program
@@ -74,7 +71,6 @@ void my_error_handler(const char *reason, const char *file, int line, int gsl_er
   fprintf(stderr, "GSL ERROR: %s (%s:%d) [code=%d]\n", reason, file, line, gsl_errno);
   // Do NOT call abort(); this allows graceful recovery
 }
-
 
 int repl(void) {
 
@@ -88,7 +84,7 @@ int repl(void) {
   init_registers();
   load_macros_from_file();
   if (verbose_mode) list_macros();
-  load_config(CONFIG_FILE);
+  load_config(CONFIG_PATH); // #define APP_CFG_DIR  HOME_DIR "/.config/mm_15"
   read_history(HISTORY_FILE);
   stifle_history(1000);  // Keep only the last 1000 commands 
   rl_attempted_completion_function = function_name_completion;
@@ -128,7 +124,7 @@ int repl(void) {
   }
 
   // Save config, history, and cleanup
-  save_config("../data/config.txt");
+  save_config(CONFIG_FILE);
   write_history(HISTORY_FILE);
   free_stack(&old_stack);
   free_stack(&stack);

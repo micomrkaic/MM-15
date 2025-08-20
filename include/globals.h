@@ -25,6 +25,24 @@
 
 #define MAX_PATH 2048
 
+#ifndef HOME_DIR
+#error "HOME_DIR must be provided by the build (-DHOME_DIR=...)."
+#endif
+
+#define APP_CFG_DIR  HOME_DIR "/.config/mm_15"
+
+#define HISTORY_FILE ".rpn_history"
+#define WORDS_FILE  "user_words.txt"
+#define REGISTERS_FILE "registers.txt"
+#define CONFIG_FILE "config.txt"
+#define MACROS_FILE "predefined_macros.txt"
+
+#define CONFIG_PATH      APP_CFG_DIR "/" CONFIG_FILE
+#define WORDS_PATH       APP_CFG_DIR "/" WORDS_FILE
+#define REGISTERS_PATH   APP_CFG_DIR "/" REGISTERS_FILE
+#define HISTORY_PATH     APP_CFG_DIR "/" HISTORY_FILE
+#define MACROS_PATH      APP_CFG_DIR "/" MACROS_FILE  // or use a DATADIR if not per-user
+
 extern gsl_rng * global_rng;
 
 extern bool fixed_point;
@@ -42,7 +60,7 @@ extern double fsolve_tolerance;
 int set_print_precision(Stack* stack);
 void swap_fixed_scientific(void);
 void save_config(const char* filename);
-void load_config(const char* filename);
+int load_config(const char* filename);
 
 #endif // GLOBALS_H
 

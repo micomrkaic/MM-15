@@ -39,7 +39,7 @@ void list_macros(void) {
 }
 
 int load_macros_from_file(void) {
-  FILE* f = fopen("../data/predefined_macros.txt", "r");
+  FILE* f = fopen(MACROS_PATH, "r");
   if (!f) {
     perror("Could not open file for reading");
     return -1;
@@ -122,7 +122,7 @@ void clear_words(void) {
 }
 
 int save_words_to_file(void) {
-  FILE* f = fopen("user_words.txt", "w");
+  FILE* f = fopen(WORDS_FILE , "w");
   if (!f) {
     perror("Could not open file for writing");
     return -1;

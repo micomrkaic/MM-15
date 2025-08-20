@@ -283,46 +283,126 @@ void list_program(const Program* prog) {
   }
 }
 
-bool load_program_from_file(const char* filename, Program* prog) {
-  FILE* f = fopen(filename, "r");
-  if (!f) {
-    perror("Failed to open program file");
-    return false;
-  }
-  char line[128];
-  while (fgets(line, sizeof(line), f)) {
-    line[strcspn(line, "\r\n")] = '\0';
-    if (strlen(line) == 0) continue;
+/* bool load_program_from_file(const char* filename, Program* prog) { */
+/*   FILE* f = fopen(filename, "r"); */
+/*   if (!f) { */
+/*     perror("Failed to open program file"); */
+/*     return false; */
+/*   } */
+/*   char line[128]; */
+/*   while (fgets(line, sizeof(line), f)) { */
+/*     line[strcspn(line, "\r\n")] = '\0'; */
+/*     if (strlen(line) == 0) continue; */
 
-    Instruction instr;
-    instr.arg = strdup(line);
+/*     Instruction instr; */
+/*     instr.arg = strdup(line); */
+
+/*     if (strncmp(line, "LBL ", 4) == 0) { */
+/*       instr.type = INSTR_LABEL; */
+/*       strncpy(prog->labels[prog->label_count].label, line + 4, 31); */
+/*       prog->labels[prog->label_count].pc = prog->count; */
+/*       prog->label_count++; */
+/*     } else if (strncmp(line, "GOTO ", 5) == 0) { */
+/*       instr.type = INSTR_GOTO; */
+/*       instr.arg = strdup(line + 5); */
+/*     } else if (strncmp(line, "GOSUB ", 6) == 0) { */
+/*       instr.type = INSTR_GOSUB; */
+/*       instr.arg = strdup(line + 6); */
+/*     } else if (strcmp(line, "RTN") == 0) { */
+/*       instr.type = INSTR_RTN; */
+/*     } else if (strcmp(line, "END") == 0) { */
+/*       instr.type = INSTR_END; */
+/*     } else if (strstr(line, "?") != NULL) { */
+/*       instr.type = INSTR_TEST; */
+/*     } else { */
+/*       instr.type = INSTR_WORD; */
+/*     } */
+
+/*     prog->program[prog->count++] = instr; */
+/*   } */
+/*   fclose(f); */
+/*   return true; */
+/* } */
+
+bool load_program_from_file(const char *filename, Program *prog) {
+  FILE *f = fopen(filename, "r");
+  if (!f) { perror("open program"); return false; }
+
+  char line[256];
+
+  while (fgets(line, sizeof line, f)) {
+    /* chomp \r\n */
+    line[strcspn(line, "\r\n")] = '\0';
+    if (line[0] == '\0') continue;
+
+    /* prepare instruction */
+    Instruction instr = {0};
+    instr.arg = NULL;
 
     if (strncmp(line, "LBL ", 4) == 0) {
-      instr.type = INSTR_LABEL;
-      strncpy(prog->labels[prog->label_count].label, line + 4, 31);
-      prog->labels[prog->label_count].pc = prog->count;
+      /* ensure room for another label */
+      if (prog->label_count >= MAX_LABELS) {
+        fprintf(stderr, "too many labels (max %d)\n", MAX_LABELS);
+        fclose(f);
+        return false;
+      }
+      int idx = prog->label_count;
+
+      /* copy label name safely and ensure NUL */
+      size_t cap = sizeof prog->labels[idx].label;   /* 32 in your struct */
+      int wrote = snprintf(prog->labels[idx].label, cap, "%s", line + 4);
+      if (wrote < 0 || (size_t)wrote >= cap) {
+        fprintf(stderr, "label name too long (max %zu)\n", cap - 1);
+        fclose(f);
+        return false;
+      }
+
+      prog->labels[idx].pc = prog->count;
       prog->label_count++;
+      instr.type = INSTR_LABEL;
+
     } else if (strncmp(line, "GOTO ", 5) == 0) {
       instr.type = INSTR_GOTO;
       instr.arg = strdup(line + 5);
+      if (!instr.arg) { fclose(f); return false; }
+
     } else if (strncmp(line, "GOSUB ", 6) == 0) {
       instr.type = INSTR_GOSUB;
       instr.arg = strdup(line + 6);
+      if (!instr.arg) { fclose(f); return false; }
+
     } else if (strcmp(line, "RTN") == 0) {
       instr.type = INSTR_RTN;
+
     } else if (strcmp(line, "END") == 0) {
       instr.type = INSTR_END;
-    } else if (strstr(line, "?") != NULL) {
+
+    } else if (strchr(line, '?') != NULL) {
       instr.type = INSTR_TEST;
+      instr.arg = strdup(line);
+      if (!instr.arg) { fclose(f); return false; }
+
     } else {
       instr.type = INSTR_WORD;
+      instr.arg = strdup(line);
+      if (!instr.arg) { fclose(f); return false; }
+    }
+
+    /* ensure room for another instruction */
+    if (prog->count >= MAX_PROGRAM) {
+      fprintf(stderr, "program too long (max %d)\n", MAX_PROGRAM);
+      if (instr.arg) free(instr.arg);  /* avoid leaking the just-created arg */
+      fclose(f);
+      return false;
     }
 
     prog->program[prog->count++] = instr;
   }
+
   fclose(f);
   return true;
 }
+
 
 void free_program(Program* prog) {
     for (int i = 0; i < prog->count; ++i) {

@@ -47,6 +47,7 @@
 #include "words.h"
 #include "run_machine.h"
 #include "integration_and_zeros.h"
+#include "globals.h"
 
 typedef void (*unary_func)(Stack *stack);
 
