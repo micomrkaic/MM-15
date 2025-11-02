@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
+#include <limits.h>
 #include "string_fun.h"
 #include "stack.h"
 
@@ -110,22 +112,92 @@ void string_reverse(Stack* stack) {
 }
 
 void top_to_string(Stack* stack) {
-    if (stack->top < 0) {
-        fprintf(stderr, "Error: stack is empty\n");
-        return;
-    }
+  if (stack->top < 0) {
+    fprintf(stderr, "Error: stack is empty\n");
+    return;
+  }
 
-    stack_element* el = &stack->items[stack->top];
+  stack_element* el = &stack->items[stack->top];
 
-    if (el->type != TYPE_REAL) {
-        fprintf(stderr, "Error: top element is not a real number\n");
-        return;
-    }
+  if (el->type != TYPE_REAL) {
+    fprintf(stderr, "Error: top element is not a real number\n");
+    return;
+  }
 
-    char buf[32];
-    long int_part = (long)el->real;  // truncate toward zero
-    snprintf(buf, sizeof(buf), "%ld", int_part);
+  char buf[32];
+  long int_part = (long)el->real;  // truncate toward zero
+  snprintf(buf, sizeof(buf), "%ld", int_part);
 
-    push_string(stack, buf);
+  push_string(stack, buf);
 }
 
+/* Convert a stack element to a non-negative int index (integral) */
+static int elem_to_index(const stack_element *e, int *out) {
+  if (e->type == TYPE_REAL) {
+    double v = e->real;
+    if (!isfinite(v) || floor(v) != v || v < 0.0 ||
+        v > (double)INT_MAX) return 0;
+    *out = (int)v;
+    return 1;
+  }
+  return 0;
+}
+
+/* Pops: end_index, start_index, string. Pushes: substring string. */
+int my_substring(Stack* stack) {
+  if (stack->top < 2) {
+    fprintf(stderr, "Error: substring requires end, start, and a string on the stack\n");
+    return 1;
+  }
+
+  /* Pop in this order: end, start, then string */
+  stack_element e_str  = stack->items[stack->top--];
+  stack_element e_end  = stack->items[stack->top--];
+  stack_element e_start= stack->items[stack->top--];
+
+  /* Validate string type */
+  if (e_str.type != TYPE_STRING) {
+    fprintf(stderr, "Error: substring requires a string as the first popped value\n");
+    return 1;
+  }
+
+  /* Convert indices */
+  int start, end;
+  if (!elem_to_index(&e_start, &start) || !elem_to_index(&e_end, &end)) {
+    fprintf(stderr, "Error: substring indices must be non-negative integers\n");
+    free(e_str.string); /* clean up since we popped it */
+    return 1;
+  }
+
+  const char* s = e_str.string;
+  size_t len = strlen(s);
+
+  /* Bounds: 0 <= start <= end <= len */
+  if ((size_t)start > len || (size_t)end > len || start > end) {
+    fprintf(stderr, "Error: substring range [%d, %d) is out of bounds for length %zu\n",
+            start, end, len);
+    free(e_str.string);
+    return 1;
+  }
+
+  size_t sublen = (size_t)(end - start);
+
+  char* out = (char*)malloc(sublen + 1);
+  if (!out) {
+    fprintf(stderr, "Error: memory allocation failed\n");
+    free(e_str.string);
+    return 1;
+  }
+
+  if (sublen) memcpy(out, s + start, sublen);
+  out[sublen] = '\0';
+
+  /* We’re done with the original string */
+  free(e_str.string);
+
+  /* Push result. Assumes push_string copies the buffer. */
+  push_string(stack, out);
+  free(out);
+
+  return 0;
+}

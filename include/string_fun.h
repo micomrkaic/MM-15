@@ -21,6 +21,7 @@
 
 #include "stack.h"
 
+int my_substring(Stack* stack);
 void concatenate(Stack* stack);
 void to_upper(Stack* stack);
 void to_lower(Stack* stack);

@@ -1,3 +1,21 @@
+/*
+ * This file is part of Mico's toy RPN Calculator
+ *
+ * Mico's toy RPN Calculator is free software: 
+ * you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Mico's toy RPN Calculator is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Mico's toy RPN Calculator. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 
 #include <string.h>
@@ -8,82 +26,62 @@
 
 
 char* function_name_generator(const char* text, int state) {
-    static int phase;  // 0 = builtins, 1 = user words, 2 = macros
-    static int index;
-    static int len;
+  static int phase;  // 0 = builtins, 1 = user words, 2 = macros
+  static int index;
+  static int len;
 
-    extern const char* const function_names[];
-    extern user_word words[];
-    extern int word_count;
-    extern user_word macros[];
-    extern int macro_count;
+  extern const char* const function_names[];
+  extern user_word words[];
+  extern int word_count;
+  extern user_word macros[];
+  extern int macro_count;
 
-    if (!state) {
-        phase = 0;
-        index = 0;
-        len = strlen(text);
+  if (!state) {
+    phase = 0;
+    index = 0;
+    len = strlen(text);
+  }
+
+  while (phase < 3) {
+    const char* candidate = NULL;
+    (void) candidate;
+
+    switch (phase) {
+    case 0:
+      while (function_names[index]) {
+	const char* fn = function_names[index++];
+	if (strncmp(fn, text, len) == 0) {
+	  return strdup(fn);
+	}
+      }
+      break;
+
+    case 1:
+      while (index < word_count) {
+	const char* name = words[index++].name;
+	if (strncmp(name, text, len) == 0) {
+	  return strdup(name);
+	}
+      }
+      break;
+
+    case 2:
+      while (index < macro_count) {
+	const char* name = macros[index++].name;
+	if (strncmp(name, text, len) == 0) {
+	  return strdup(name);
+	}
+      }
+      break;
     }
 
-    while (phase < 3) {
-        const char* candidate = NULL;
-	(void) candidate;
+    // Advance to next phase
+    phase++;
+    index = 0;
+  }
 
-        switch (phase) {
-            case 0:
-                while (function_names[index]) {
-                    const char* fn = function_names[index++];
-                    if (strncmp(fn, text, len) == 0) {
-                        return strdup(fn);
-                    }
-                }
-                break;
-
-            case 1:
-                while (index < word_count) {
-                    const char* name = words[index++].name;
-                    if (strncmp(name, text, len) == 0) {
-                        return strdup(name);
-                    }
-                }
-                break;
-
-            case 2:
-                while (index < macro_count) {
-                    const char* name = macros[index++].name;
-                    if (strncmp(name, text, len) == 0) {
-                        return strdup(name);
-                    }
-                }
-                break;
-        }
-
-        // Advance to next phase
-        phase++;
-        index = 0;
-    }
-
-    return NULL;
+  return NULL;
 }
-
-
-/* // Called repeatedly by readline to find matches */
-/* char* function_name_generator(const char* text, int state) { */
-/*   static int list_index; */
-/*   static size_t len; */
-
-/*   if (state == 0) { */
-/*     list_index = 0; */
-/*     len = strlen(text); */
-/*   } */
-
-/*   while (function_names[list_index]) { */
-/*     const char* name = function_names[list_index++]; */
-/*     if (strncmp(name, text, len) == 0) { */
-/*       return strdup(name);  // Caller will free it */
-/*     } */
-/*   } */
-/*   return NULL;  // No more matches */
-/* } */
 
 char** function_name_completion(const char* text, int start, int end) {
   (void)end;

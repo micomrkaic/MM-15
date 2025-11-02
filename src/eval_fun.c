@@ -249,7 +249,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
     }
 
     if (!strcmp("batch",tok.text)) {
-	if (stack->top < 0) {
+      if (stack->top < 0) {
         fprintf(stderr, "Stack is empty: no batch to run.\n");
         return;
       }
@@ -261,23 +261,23 @@ void evaluate_one_token(Stack *stack, Token tok) {
     }
     
     if (!strcmp("run",tok.text)) {
-	if (stack->top < 0) {
+      if (stack->top < 0) {
         fprintf(stderr, "Stack is empty: no program to run.\n");
         return;
+      }
+      stack_element t = pop(stack);
+      if (t.type != TYPE_STRING) {
+	fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
+      } else {
+	Program prog = {.count = 0, .label_count = 0};
+	if (!load_program_from_file(t.string, &prog)) {
+	  fprintf(stderr, "Failed to load program.\n");
+	  return;
 	}
-	stack_element t = pop(stack);
-	if (t.type != TYPE_STRING) {
-	  fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
-	} else {
-	  Program prog = {.count = 0, .label_count = 0};
-	  if (!load_program_from_file(t.string, &prog)) {
-	    fprintf(stderr, "Failed to load program.\n");
-	    return;
-	  }
-	  list_program(&prog);
-	  run_RPN_code(stack, &prog);
-	  free_program(&prog);
-	}
+	list_program(&prog);
+	run_RPN_code(stack, &prog);
+	free_program(&prog);
+      }
       return;
     }
 
@@ -303,6 +303,8 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("sfs",tok.text)) {swap_fixed_scientific(); return;}
     
     // Date and time functions
+    if (!strcmp("days2eoy",tok.text)) {days_to_end_of_year(stack); return; } 
+    if (!strcmp("num2date",tok.text)) {make_date_string(stack); return; }
     if (!strcmp("ddays",tok.text)) { delta_days_strings(stack); return; }
     if (!strcmp("today",tok.text)) { push_today_date(stack); return; }
     if (!strcmp("dow",tok.text)) { push_weekday_name_from_date_string(stack); return; }
@@ -328,8 +330,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("fzero",tok.text)) { find_zero(stack); return; }
     if (!strcmp("set_intg_tol",tok.text)) { set_integration_precision(stack); return; }
     if (!strcmp("set_f0_tol",tok.text))  { set_f0_precision(stack); return; }
-
-    
+ 
     // Comparison and logic functions
     if (!strcmp("eq",tok.text)) { dot_cmp_top_two(stack, CMP_EQ); return; }
     if (!strcmp("neq",tok.text)) { dot_cmp_top_two(stack, CMP_NE); return; }
@@ -364,6 +365,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("clregs",tok.text)) { free_all_registers(); return; }
 
     // **************** String functions ****************
+    if (!strcmp("substr",tok.text)) {my_substring(stack); return;}
     if (!strcmp("scon",tok.text)) {concatenate(stack); return;}
     if (!strcmp("s2l",tok.text)) { to_lower(stack); return; }
     if (!strcmp("s2u",tok.text)) { to_upper(stack); return; }

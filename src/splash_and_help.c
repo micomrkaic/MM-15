@@ -133,7 +133,7 @@ void splash_screen(void) {
   printf("╔══════════════════════════════════════════════╗\n");
   printf("║                                              ║\n");
   printf("║     Mico's Matrix & Scalar RPN Calculator    ║\n");
-  printf("║          Version beta 0.1  (2025)            ║\n");
+  printf("║          Version beta 0.2  (2025)            ║\n");
   printf("║                                              ║\n");
   printf("║  > Enter RPN expressions                     ║\n");
   printf("║  > Type 'help' for commands                  ║\n");
@@ -196,7 +196,7 @@ void help_menu(void) {
   subtitle("String functions");
   printf("    scon, s2u, s2l, slen, srev, int2str, eval {evaluate string}\n");
   subtitle("Financial and date functions");
-  printf("    npv, irr, ddays, dateplus, today, dow \n");
+  printf("    npv, irr, ddays, dateplus, today, dow, num2date \n");
   subtitle("Output format options");
   printf("    setprec {set print precision}, sfs {fix<->sci}\n");
   subtitle("Help and utilities");

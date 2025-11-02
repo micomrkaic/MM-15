@@ -16,25 +16,31 @@
  * along with Mico's toy RPN Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Still TODO as of August 20, 2025
-   . FIXME: clean up and consolidate binary_fun.c; cleanup the dispatch table
-   . FIXME: clean up the interpreter to have only one dispatch table in the VM
-   . FIXME: ignore NANs in a smart way in reduce_ops;
-   . FIXME: check if name is already defined and reject the definition if it is
-   . TODO: implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
-   . TODO: Plotting of a vector vs vector for a simple function plot
-   . TODO: Write documentation
-   . TODO: select submatrices; resize matrices and add/remove rows and/or columns
-   . TODO: silent mode to skip error warnings
-   . TODO: Overlay for registers -- store variables; recall values with <-
-   . TODO: load program, list program, run program -> separate instructions
-   . TODO: implement loop counters and easier comparison registers for iterations;
-   . TODO: fully implement counters and tests
-   . TODO: sto ind, rcl ind.
-   . REVIEW: Test full HP-41 style programming with GTO, RTN, XEQ, ISG, DSE, LBL etc. and labels
+/* TODO as of October 31, 2025
+   . Replace "Mico's toy RPN Calculator: with MM-15
+   . write literal programming for documentation of all functions
+   . product and the sum of all elements on the stack -- if they are all reals
+   . clean up and consolidate binary_fun.c; cleanup the dispatch table
+   . clean up the interpreter to have only one dispatch table in the VM
+   . ignore NANs in a smart way in reduce_ops;
+   . check if name is already defined and reject the definition if it is
+   . make all helper function static
+   . make all string functions safe
+   . implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
+   . Plotting of a vector vs vector for a simple function plot
+   . Write documentation
+   . select submatrices; resize matrices and add/remove rows and/or columns
+   . silent mode to skip error warnings
+   . Overlay for registers -- store variables; recall values with <-
+   . load program, list program, run program -> separate instructions
+   . implement loop counters and easier comparison registers for iterations;
+   . fully implement counters and tests
+   . sto ind, rcl ind.
+
+   REVIEW: Test full HP-41 style programming with GTO, RTN, XEQ, ISG, DSE, LBL etc. and labels
    
    . WOULD BE NICE
-   . Automatic cleanup of matrices with __cleanup__ 
+   . Automatic cleanup of matrices and strings with __cleanup__ 
    . fft (nice to have, but not a must).
    . add loading of data frames; turn on the PMS mode 
    . (Nice to have) load a CSV file into a dataframe; add dataframe as a stack object
@@ -138,5 +144,3 @@ int main(void) {
   repl();
   return 0;
 }
-
-

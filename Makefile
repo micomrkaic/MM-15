@@ -16,11 +16,14 @@ MKDIR_P    ?= mkdir -p
 CONFIG_FILES := config.txt predefined_macros.txt
 
 # Compiler and flags
-CC = clang
-CFLAGS = -g -std=c11 -Wall -Wextra -Werror -Wpedantic -Iinclude
+CC = gcc
+CFLAGS = -g -std=c17 -Wall -Wextra -Werror -Wpedantic -Iinclude
 LDFLAGS =
 LDLIBS = -lgsl -lgslcblas -lreadline -lm
 CPPFLAGS += -DHOME_DIR='"$(HOME)"'
+
+# Auto-deps: generate .d files per source
+DEPFLAGS = -MMD -MP
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -37,9 +40,10 @@ OBJ_DIR = build
 # Executable
 TARGET = $(BIN_DIR)/$(APP)
 
-# Sources / objects
+# Sources / objects / deps
 SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
+DEPS := $(OBJS:.o=.d)
 
 # -------- Rules --------
 .PHONY: all install install-system uninstall clean doc
@@ -51,10 +55,13 @@ $(TARGET): $(OBJS)
 	@$(MKDIR_P) "$(BIN_DIR)"
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-# Compile
+# Compile (+ auto header deps)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MKDIR_P) "$(OBJ_DIR)"
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEPFLAGS) -c $< -o $@
+
+# Pull in auto-generated header dependencies (safe if missing)
+-include $(DEPS)
 
 # --- User-local install (default) ---
 install: $(TARGET)
@@ -88,3 +95,4 @@ clean:
 
 doc:
 	doxygen Doxyfile
+
