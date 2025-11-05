@@ -1,47 +1,40 @@
 /*
- * This file is part of Mico's toy RPN Calculator
+ * This file is part of Mico's MM-15 Calculator
  *
- * Mico's toy RPN Calculator is free software: 
+ * Mico's MM-15 Calculator is free software: 
  * you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Mico's toy RPN Calculator is distributed in the hope that it will be useful,
+ * Mico's MM-15 Calculator is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Mico's toy RPN Calculator. If not, see <https://www.gnu.org/licenses/>.
+ * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* TODO as of October 31, 2025
-   . Replace "Mico's toy RPN Calculator: with MM-15
+/* TODO as of November 2, 2025
    . write literal programming for documentation of all functions
-   . product and the sum of all elements on the stack -- if they are all reals
+   . Write documentation in general
+   . select submatrices; resize matrices and add/remove rows and/or columns
    . clean up and consolidate binary_fun.c; cleanup the dispatch table
    . clean up the interpreter to have only one dispatch table in the VM
-   . ignore NANs in a smart way in reduce_ops;
    . check if name is already defined and reject the definition if it is
    . make all helper function static
-   . make all string functions safe
+   . make all string functions safe against overruns
    . implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
    . Plotting of a vector vs vector for a simple function plot
-   . Write documentation
-   . select submatrices; resize matrices and add/remove rows and/or columns
    . silent mode to skip error warnings
    . Overlay for registers -- store variables; recall values with <-
    . load program, list program, run program -> separate instructions
    . implement loop counters and easier comparison registers for iterations;
    . fully implement counters and tests
    . sto ind, rcl ind.
-
-   REVIEW: Test full HP-41 style programming with GTO, RTN, XEQ, ISG, DSE, LBL etc. and labels
-   
-   . WOULD BE NICE
+   . Test full HP-41 style programming with GTO, RTN, XEQ, ISG, DSE, LBL etc. and labels
    . Automatic cleanup of matrices and strings with __cleanup__ 
-   . fft (nice to have, but not a must).
    . add loading of data frames; turn on the PMS mode 
    . (Nice to have) load a CSV file into a dataframe; add dataframe as a stack object
    

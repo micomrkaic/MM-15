@@ -1,7 +1,7 @@
 /*
- * This file is part of Mico's toy RPN Calculator
+ * This file is part of Mico's MM-15 Calculator
  *
- * Mico's toy RPN Calculator is free software: 
+ * Mico's MM-15 Calculator is free software: 
  * you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
