@@ -296,6 +296,653 @@
 <li><code>clrhist</code> – Clear history</li>
 </ul>
 <hr />
+<h2 id="appendix-i-all">Appendix I: All /*</h2>
+<table>
+<thead>
+<tr class="header">
+<th>function</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.*</code></td>
+<td>Element-wise multiply</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td>Element-wise divide</td>
+</tr>
+<tr class="odd">
+<td><code>.^</code></td>
+<td>Element-wise power</td>
+</tr>
+<tr class="even">
+<td><code>abs</code></td>
+<td>Absolute value</td>
+</tr>
+<tr class="odd">
+<td><code>acos</code></td>
+<td>Arccosine</td>
+</tr>
+<tr class="even">
+<td><code>acosh</code></td>
+<td>Inverse hyperbolic cosine</td>
+</tr>
+<tr class="odd">
+<td><code>and</code></td>
+<td>Logical AND</td>
+</tr>
+<tr class="even">
+<td><code>arg</code></td>
+<td>Argument/phase of complex number</td>
+</tr>
+<tr class="odd">
+<td><code>asin</code></td>
+<td>Arcsine</td>
+</tr>
+<tr class="even">
+<td><code>asinh</code></td>
+<td>Inverse hyperbolic sine</td>
+</tr>
+<tr class="odd">
+<td><code>atan</code></td>
+<td>Arctangent</td>
+</tr>
+<tr class="even">
+<td><code>atanh</code></td>
+<td>Inverse hyperbolic tangent</td>
+</tr>
+<tr class="odd">
+<td><code>batch</code></td>
+<td>Run commands from file</td>
+</tr>
+<tr class="even">
+<td><code>beta</code></td>
+<td>Beta function</td>
+</tr>
+<tr class="odd">
+<td><code>chol</code></td>
+<td>Cholesky factorization</td>
+</tr>
+<tr class="even">
+<td><code>chs</code></td>
+<td>Change sign (negation)</td>
+</tr>
+<tr class="odd">
+<td><code>clr_ctr</code></td>
+<td>Clear counter</td>
+</tr>
+<tr class="even">
+<td><code>clregs</code></td>
+<td>Clear registers</td>
+</tr>
+<tr class="odd">
+<td><code>clrhist</code></td>
+<td>Clear history</td>
+</tr>
+<tr class="even">
+<td><code>clrwords</code></td>
+<td>Clear words</td>
+</tr>
+<tr class="odd">
+<td><code>clst</code></td>
+<td>Clear stack</td>
+</tr>
+<tr class="even">
+<td><code>cmax</code></td>
+<td>Column maxima</td>
+</tr>
+<tr class="odd">
+<td><code>cmean</code></td>
+<td>Column means</td>
+</tr>
+<tr class="even">
+<td><code>cmin</code></td>
+<td>Column minima</td>
+</tr>
+<tr class="odd">
+<td><code>csum</code></td>
+<td>Column sums</td>
+</tr>
+<tr class="even">
+<td><code>cumsum_c</code></td>
+<td>Column-wise cumulative sum</td>
+</tr>
+<tr class="odd">
+<td><code>cumsum_r</code></td>
+<td>Row-wise cumulative sum</td>
+</tr>
+<tr class="even">
+<td><code>cvar</code></td>
+<td>Column variances</td>
+</tr>
+<tr class="odd">
+<td><code>ctr_dec</code></td>
+<td>Decrement counter</td>
+</tr>
+<tr class="even">
+<td><code>ctr_eq0?</code></td>
+<td>Predicate: counter == 0</td>
+</tr>
+<tr class="odd">
+<td><code>ctr_ge0?</code></td>
+<td>Predicate: counter &gt;= 0</td>
+</tr>
+<tr class="even">
+<td><code>ctr_gt0?</code></td>
+<td>Predicate: counter &gt; 0</td>
+</tr>
+<tr class="odd">
+<td><code>ctr_inc</code></td>
+<td>Increment counter</td>
+</tr>
+<tr class="even">
+<td><code>ctr_le0?</code></td>
+<td>Predicate: counter &lt;= 0</td>
+</tr>
+<tr class="odd">
+<td><code>ctr_lt0?</code></td>
+<td>Predicate: counter &lt; 0</td>
+</tr>
+<tr class="even">
+<td><code>delword</code></td>
+<td>Delete word</td>
+</tr>
+<tr class="odd">
+<td><code>det</code></td>
+<td>Determinant</td>
+</tr>
+<tr class="even">
+<td><code>ddays</code></td>
+<td>Day difference between two dates</td>
+</tr>
+<tr class="odd">
+<td><code>diag</code></td>
+<td>Extract diagonal or form diagonal matrix</td>
+</tr>
+<tr class="even">
+<td><code>dim</code></td>
+<td>Dimensions/shape</td>
+</tr>
+<tr class="odd">
+<td><code>dow</code></td>
+<td>Day of week</td>
+</tr>
+<tr class="even">
+<td><code>drop</code></td>
+<td>Drop top of stack</td>
+</tr>
+<tr class="odd">
+<td><code>dup</code></td>
+<td>Duplicate top of stack</td>
+</tr>
+<tr class="even">
+<td><code>e</code></td>
+<td>Math constant e</td>
+</tr>
+<tr class="odd">
+<td><code>edmy</code></td>
+<td>Expand date into day, month adn year</td>
+</tr>
+<tr class="even">
+<td><code>eig</code></td>
+<td>Eigenvalues/eigenvectors</td>
+</tr>
+<tr class="odd">
+<td><code>end</code></td>
+<td>End block/program</td>
+</tr>
+<tr class="even">
+<td><code>eval</code></td>
+<td>Evaluate string/expression</td>
+</tr>
+<tr class="odd">
+<td><code>exp</code></td>
+<td>Exponential (e^x)</td>
+</tr>
+<tr class="even">
+<td><code>eye</code></td>
+<td>Identity matrix</td>
+</tr>
+<tr class="odd">
+<td><code>ffr</code></td>
+<td>First free register</td>
+</tr>
+<tr class="even">
+<td><code>frac</code></td>
+<td>Fractional part</td>
+</tr>
+<tr class="odd">
+<td><code>fzero</code></td>
+<td>Find function root (solve f(x)=0)</td>
+</tr>
+<tr class="even">
+<td><code>fuck</code></td>
+<td>Kinda obvious</td>
+</tr>
+<tr class="odd">
+<td><code>gamma</code></td>
+<td>Gamma function</td>
+</tr>
+<tr class="even">
+<td><code>geq</code></td>
+<td>Greater than or equal</td>
+</tr>
+<tr class="odd">
+<td><code>get_aij</code></td>
+<td>Get matrix element a[i,j]</td>
+</tr>
+<tr class="even">
+<td><code>goto</code></td>
+<td>Jump to label</td>
+</tr>
+<tr class="odd">
+<td><code>gravity</code></td>
+<td>9.81 [/s^2]</td>
+</tr>
+<tr class="even">
+<td><code>gt</code></td>
+<td>Greater than</td>
+</tr>
+<tr class="odd">
+<td><code>help</code></td>
+<td>Show help</td>
+</tr>
+<tr class="even">
+<td><code>im</code></td>
+<td>Imaginary part of complex number</td>
+</tr>
+<tr class="odd">
+<td><code>inf</code></td>
+<td>Infinity</td>
+</tr>
+<tr class="even">
+<td><code>int2str</code></td>
+<td>Convert integer to string</td>
+</tr>
+<tr class="odd">
+<td><code>intg</code></td>
+<td>Integration</td>
+</tr>
+<tr class="even">
+<td><code>inv</code></td>
+<td>Multiplicative inverse (1/x) or inverse; context-dependent</td>
+</tr>
+<tr class="odd">
+<td><code>join_h</code></td>
+<td>Join/concatenate horizontally</td>
+</tr>
+<tr class="even">
+<td><code>join_v</code></td>
+<td>Join/concatenate vertically</td>
+</tr>
+<tr class="odd">
+<td><code>j2r</code></td>
+<td>Join 2 reals into one complex number</td>
+</tr>
+<tr class="even">
+<td><code>kron</code></td>
+<td>Kronecker product</td>
+</tr>
+<tr class="odd">
+<td><code>lbl</code></td>
+<td>Define label</td>
+</tr>
+<tr class="even">
+<td><code>leq</code></td>
+<td>Less than or equal</td>
+</tr>
+<tr class="odd">
+<td><code>listfcns</code></td>
+<td>List available functions</td>
+</tr>
+<tr class="even">
+<td><code>listmacros</code></td>
+<td>List macros</td>
+</tr>
+<tr class="odd">
+<td><code>listwords</code></td>
+<td>List stored words</td>
+</tr>
+<tr class="even">
+<td><code>ln</code></td>
+<td>Natural logarithm (base e)</td>
+</tr>
+<tr class="odd">
+<td><code>ln_beta</code></td>
+<td>Log beta function</td>
+</tr>
+<tr class="even">
+<td><code>ln_gamma</code></td>
+<td>Log gamma function</td>
+</tr>
+<tr class="odd">
+<td><code>loadregs</code></td>
+<td>Load registers</td>
+</tr>
+<tr class="even">
+<td><code>loadwords</code></td>
+<td>Load words</td>
+</tr>
+<tr class="odd">
+<td><code>log</code></td>
+<td>Logarithm (base 10)</td>
+</tr>
+<tr class="even">
+<td><code>lt</code></td>
+<td>Less than</td>
+</tr>
+<tr class="odd">
+<td><code>minv</code></td>
+<td>Matrix inverse</td>
+</tr>
+<tr class="even">
+<td><code>nan</code></td>
+<td>Not-a-Number</td>
+</tr>
+<tr class="odd">
+<td><code>ncdf</code></td>
+<td>Normal distribution CDF</td>
+</tr>
+<tr class="even">
+<td><code>neq</code></td>
+<td>Not equal</td>
+</tr>
+<tr class="odd">
+<td><code>nip</code></td>
+<td>Drop second item on stack</td>
+</tr>
+<tr class="even">
+<td><code>npdf</code></td>
+<td>Normal distribution PDF</td>
+</tr>
+<tr class="odd">
+<td><code>nquant</code></td>
+<td>Normal distribution quantile (inverse CDF)</td>
+</tr>
+<tr class="even">
+<td><code>not</code></td>
+<td>Logical NOT</td>
+</tr>
+<tr class="odd">
+<td><code>num2date</code></td>
+<td>Convert serial number to date</td>
+</tr>
+<tr class="even">
+<td><code>ones</code></td>
+<td>Vector/matrix of ones</td>
+</tr>
+<tr class="odd">
+<td><code>or</code></td>
+<td>Logical OR</td>
+</tr>
+<tr class="even">
+<td><code>over</code></td>
+<td>Copy second item to top</td>
+</tr>
+<tr class="odd">
+<td><code>pi</code></td>
+<td>Math constant π</td>
+</tr>
+<tr class="even">
+<td><code>pinv</code></td>
+<td>Moore–Penrose pseudoinverse</td>
+</tr>
+<tr class="odd">
+<td><code>pm</code></td>
+<td>Print the matrix on top of stack</td>
+</tr>
+<tr class="even">
+<td><code>pr</code></td>
+<td>Print registers</td>
+</tr>
+<tr class="odd">
+<td><code>print</code></td>
+<td>Print value</td>
+</tr>
+<tr class="even">
+<td><code>ps</code></td>
+<td>Print stack</td>
+</tr>
+<tr class="odd">
+<td><code>pval</code></td>
+<td>Evaluate polynomial at x</td>
+</tr>
+<tr class="even">
+<td><code>rand</code></td>
+<td>Uniform random numbers</td>
+</tr>
+<tr class="odd">
+<td><code>randn</code></td>
+<td>Normal random numbers</td>
+</tr>
+<tr class="even">
+<td><code>rcl</code></td>
+<td>Recall register</td>
+</tr>
+<tr class="odd">
+<td><code>re</code></td>
+<td>Real part of complex number</td>
+</tr>
+<tr class="even">
+<td><code>re2c</code></td>
+<td>Real to complex conversion</td>
+</tr>
+<tr class="odd">
+<td><code>reshape</code></td>
+<td>Reshape array/matrix</td>
+</tr>
+<tr class="even">
+<td><code>roll</code></td>
+<td>Rotate stack</td>
+</tr>
+<tr class="odd">
+<td><code>roots</code></td>
+<td>Polynomial roots</td>
+</tr>
+<tr class="even">
+<td><code>rrange</code></td>
+<td>Row range from 0 to top of stack - 1</td>
+</tr>
+<tr class="odd">
+<td><code>rsum</code></td>
+<td>Row sums</td>
+</tr>
+<tr class="even">
+<td><code>rtn</code></td>
+<td>Return from subroutine</td>
+</tr>
+<tr class="odd">
+<td><code>rmax</code></td>
+<td>Row maxima</td>
+</tr>
+<tr class="even">
+<td><code>rmean</code></td>
+<td>Row means</td>
+</tr>
+<tr class="odd">
+<td><code>rmin</code></td>
+<td>Row minima</td>
+</tr>
+<tr class="even">
+<td><code>rvar</code></td>
+<td>Row variances</td>
+</tr>
+<tr class="odd">
+<td><code>run</code></td>
+<td>Run current program/script</td>
+</tr>
+<tr class="even">
+<td><code>saveregs</code></td>
+<td>Save all registers</td>
+</tr>
+<tr class="odd">
+<td><code>scon</code></td>
+<td>String concatenate</td>
+</tr>
+<tr class="even">
+<td><code>s2l</code></td>
+<td>String to lowercase</td>
+</tr>
+<tr class="odd">
+<td><code>s2u</code></td>
+<td>String to uppercase</td>
+</tr>
+<tr class="even">
+<td><code>selword</code></td>
+<td>Select word</td>
+</tr>
+<tr class="odd">
+<td><code>set_aij</code></td>
+<td>Set matrix element a[i,j]</td>
+</tr>
+<tr class="even">
+<td><code>set_ctr</code></td>
+<td>Set counter value</td>
+</tr>
+<tr class="odd">
+<td><code>set_f0_tol</code></td>
+<td>Set root-finding tolerance</td>
+</tr>
+<tr class="even">
+<td><code>set_intg_tol</code></td>
+<td>Set integration tolerance</td>
+</tr>
+<tr class="odd">
+<td><code>setprec</code></td>
+<td>Set numeric precision</td>
+</tr>
+<tr class="even">
+<td><code>sfs</code></td>
+<td>Swap fixed-scientific notation</td>
+</tr>
+<tr class="odd">
+<td><code>sinh</code></td>
+<td>Hyperbolic sine</td>
+</tr>
+<tr class="even">
+<td><code>sin</code></td>
+<td>Sine</td>
+</tr>
+<tr class="odd">
+<td><code>slen</code></td>
+<td>String length</td>
+</tr>
+<tr class="even">
+<td><code>split_c</code></td>
+<td>Split complex into two reals</td>
+</tr>
+<tr class="odd">
+<td><code>split_mat</code></td>
+<td>Split matrix into parts</td>
+</tr>
+<tr class="even">
+<td><code>sqrt</code></td>
+<td>Square root</td>
+</tr>
+<tr class="odd">
+<td><code>sto</code></td>
+<td>Store to register</td>
+</tr>
+<tr class="even">
+<td><code>substr</code></td>
+<td>Substring</td>
+</tr>
+<tr class="odd">
+<td><code>svd</code></td>
+<td>Singular value decomposition</td>
+</tr>
+<tr class="even">
+<td><code>swap</code></td>
+<td>Swap top two stack items</td>
+</tr>
+<tr class="odd">
+<td><code>tan</code></td>
+<td>Tangent</td>
+</tr>
+<tr class="even">
+<td><code>tanh</code></td>
+<td>Hyperbolic tangent</td>
+</tr>
+<tr class="odd">
+<td><code>to_diag</code></td>
+<td>Convert vector to diagonal matrix</td>
+</tr>
+<tr class="even">
+<td><code>today</code></td>
+<td>Current date</td>
+</tr>
+<tr class="odd">
+<td><code>top_eg?</code></td>
+<td>Predicate: top two equal</td>
+</tr>
+<tr class="even">
+<td><code>top_eq0?</code></td>
+<td>Predicate: top == 0</td>
+</tr>
+<tr class="odd">
+<td><code>top_ge?</code></td>
+<td>Predicate: top &gt;= than 2nd second stack entry</td>
+</tr>
+<tr class="even">
+<td><code>top_ge0?</code></td>
+<td>Predicate: top &gt;= 0</td>
+</tr>
+<tr class="odd">
+<td><code>top_gt?</code></td>
+<td>Predicate: top &gt; than 2nd second stack entry</td>
+</tr>
+<tr class="even">
+<td><code>top_gt0?</code></td>
+<td>Predicate: top &gt; 0</td>
+</tr>
+<tr class="odd">
+<td><code>top_le?</code></td>
+<td>Predicate: top &lt;= than 2nd second stack entry</td>
+</tr>
+<tr class="even">
+<td><code>top_le0?</code></td>
+<td>Predicate: top &lt;= 0</td>
+</tr>
+<tr class="odd">
+<td><code>top_lt?</code></td>
+<td>Predicate: top &lt; than 2nd second stack entry</td>
+</tr>
+<tr class="even">
+<td><code>top_lt0?</code></td>
+<td>Predicate: top &lt; 0</td>
+</tr>
+<tr class="odd">
+<td><code>tran</code></td>
+<td>Matrix transpose</td>
+</tr>
+<tr class="even">
+<td><code>tuck</code></td>
+<td>Copy top item under second</td>
+</tr>
+<tr class="odd">
+<td><code>undo</code></td>
+<td>Undo last operation</td>
+</tr>
+<tr class="even">
+<td><code>xeq</code></td>
+<td>Execute label/subroutine</td>
+</tr>
+<tr class="odd">
+<td><code>zeroes</code></td>
+<td>Vector/matrix of zeros</td>
+</tr>
+<tr class="even">
+<td><code>dateplus</code></td>
+<td>Add days to a date</td>
+</tr>
+<tr class="odd">
+<td><code>days2eoy</code></td>
+<td>Days until end of year</td>
+</tr>
+</tbody>
+</table>
 
 </body>
 </html>

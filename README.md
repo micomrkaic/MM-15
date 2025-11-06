@@ -235,3 +235,165 @@ bash
 
 ---
 
+## Appendix I: All /*
+| function       | description                                                |
+| -------------- | ---------------------------------------------------------- |
+| `.*`           | Element-wise multiply                                      |
+| `./`           | Element-wise divide                                        |
+| `.^`           | Element-wise power                                         |
+| `abs`          | Absolute value                                             |
+| `acos`         | Arccosine                                                  |
+| `acosh`        | Inverse hyperbolic cosine                                  |
+| `and`          | Logical AND                                                |
+| `arg`          | Argument/phase of complex number                           |
+| `asin`         | Arcsine                                                    |
+| `asinh`        | Inverse hyperbolic sine                                    |
+| `atan`         | Arctangent                                                 |
+| `atanh`        | Inverse hyperbolic tangent                                 |
+| `batch`        | Run commands from file                                     |
+| `beta`         | Beta function                                              |
+| `chol`         | Cholesky factorization                                     |
+| `chs`          | Change sign (negation)                                     |
+| `clr_ctr`      | Clear counter                                              |
+| `clregs`       | Clear registers                                            |
+| `clrhist`      | Clear history                                              |
+| `clrwords`     | Clear words                                                |
+| `clst`         | Clear stack                                                |
+| `cmax`         | Column maxima                                              |
+| `cmean`        | Column means                                               |
+| `cmin`         | Column minima                                              |
+| `csum`         | Column sums                                                |
+| `cumsum_c`     | Column-wise cumulative sum                                 |
+| `cumsum_r`     | Row-wise cumulative sum                                    |
+| `cvar`         | Column variances                                           |
+| `ctr_dec`      | Decrement counter                                          |
+| `ctr_eq0?`     | Predicate: counter == 0                                    |
+| `ctr_ge0?`     | Predicate: counter >= 0                                    |
+| `ctr_gt0?`     | Predicate: counter > 0                                     |
+| `ctr_inc`      | Increment counter                                          |
+| `ctr_le0?`     | Predicate: counter <= 0                                    |
+| `ctr_lt0?`     | Predicate: counter < 0                                     |
+| `delword`      | Delete word                                                |
+| `det`          | Determinant                                                |
+| `ddays`        | Day difference between two dates                           |
+| `diag`         | Extract diagonal or form diagonal matrix                   |
+| `dim`          | Dimensions/shape                                           |
+| `dow`          | Day of week                                                |
+| `drop`         | Drop top of stack                                          |
+| `dup`          | Duplicate top of stack                                     |
+| `e`            | Math constant e                                            |
+| `edmy`         | Expand date into day, month adn year                       |
+| `eig`          | Eigenvalues/eigenvectors                                   |
+| `end`          | End block/program                                          |
+| `eval`         | Evaluate string/expression                                 |
+| `exp`          | Exponential (e^x)                                          |
+| `eye`          | Identity matrix                                            |
+| `ffr`          | First free register                                        |
+| `frac`         | Fractional part                                            |
+| `fzero`        | Find function root (solve f(x)=0)                          |
+| `fuck`         | Kinda obvious                                              |
+| `gamma`        | Gamma function                                             |
+| `geq`          | Greater than or equal                                      |
+| `get_aij`      | Get matrix element a[i,j]                                  |
+| `goto`         | Jump to label                                              |
+| `gravity`      | 9.81 [/s^2]                                                |
+| `gt`           | Greater than                                               |
+| `help`         | Show help                                                  |
+| `im`           | Imaginary part of complex number                           |
+| `inf`          | Infinity                                                   |
+| `int2str`      | Convert integer to string                                  |
+| `intg`         | Integration                                                |
+| `inv`          | Multiplicative inverse (1/x) or inverse; context-dependent |
+| `join_h`       | Join/concatenate horizontally                              |
+| `join_v`       | Join/concatenate vertically                                |
+| `j2r`          | Join 2 reals into one complex number                       |
+| `kron`         | Kronecker product                                          |
+| `lbl`          | Define label                                               |
+| `leq`          | Less than or equal                                         |
+| `listfcns`     | List available functions                                   |
+| `listmacros`   | List macros                                                |
+| `listwords`    | List stored words                                          |
+| `ln`           | Natural logarithm (base e)                                 |
+| `ln_beta`      | Log beta function                                          |
+| `ln_gamma`     | Log gamma function                                         |
+| `loadregs`     | Load registers                                             |
+| `loadwords`    | Load words                                                 |
+| `log`          | Logarithm (base 10)                                        |
+| `lt`           | Less than                                                  |
+| `minv`         | Matrix inverse                                             |
+| `nan`          | Not-a-Number                                               |
+| `ncdf`         | Normal distribution CDF                                    |
+| `neq`          | Not equal                                                  |
+| `nip`          | Drop second item on stack                                  |
+| `npdf`         | Normal distribution PDF                                    |
+| `nquant`       | Normal distribution quantile (inverse CDF)                 |
+| `not`          | Logical NOT                                                |
+| `num2date`     | Convert serial number to date                              |
+| `ones`         | Vector/matrix of ones                                      |
+| `or`           | Logical OR                                                 |
+| `over`         | Copy second item to top                                    |
+| `pi`           | Math constant π                                            |
+| `pinv`         | Moore–Penrose pseudoinverse                                |
+| `pm`           | Print the matrix on top of stack                           |
+| `pr`           | Print registers                                            |
+| `print`        | Print value                                                |
+| `ps`           | Print stack                                                |
+| `pval`         | Evaluate polynomial at x                                   |
+| `rand`         | Uniform random numbers                                     |
+| `randn`        | Normal random numbers                                      |
+| `rcl`          | Recall register                                            |
+| `re`           | Real part of complex number                                |
+| `re2c`         | Real to complex conversion                                 |
+| `reshape`      | Reshape array/matrix                                       |
+| `roll`         | Rotate stack                                               |
+| `roots`        | Polynomial roots                                           |
+| `rrange`       | Row range from 0 to top of stack - 1                       |
+| `rsum`         | Row sums                                                   |
+| `rtn`          | Return from subroutine                                     |
+| `rmax`         | Row maxima                                                 |
+| `rmean`        | Row means                                                  |
+| `rmin`         | Row minima                                                 |
+| `rvar`         | Row variances                                              |
+| `run`          | Run current program/script                                 |
+| `saveregs`     | Save all registers                                         |
+| `scon`         | String concatenate                                         |
+| `s2l`          | String to lowercase                                        |
+| `s2u`          | String to uppercase                                        |
+| `selword`      | Select word                                                |
+| `set_aij`      | Set matrix element a[i,j]                                  |
+| `set_ctr`      | Set counter value                                          |
+| `set_f0_tol`   | Set root-finding tolerance                                 |
+| `set_intg_tol` | Set integration tolerance                                  |
+| `setprec`      | Set numeric precision                                      |
+| `sfs`          | Swap fixed-scientific notation                             |
+| `sinh`         | Hyperbolic sine                                            |
+| `sin`          | Sine                                                       |
+| `slen`         | String length                                              |
+| `split_c`      | Split complex into two reals                               |
+| `split_mat`    | Split matrix into parts                                    |
+| `sqrt`         | Square root                                                |
+| `sto`          | Store to register                                          |
+| `substr`       | Substring                                                  |
+| `svd`          | Singular value decomposition                               |
+| `swap`         | Swap top two stack items                                   |
+| `tan`          | Tangent                                                    |
+| `tanh`         | Hyperbolic tangent                                         |
+| `to_diag`      | Convert vector to diagonal matrix                          |
+| `today`        | Current date                                               |
+| `top_eg?`      | Predicate: top two equal                                   |
+| `top_eq0?`     | Predicate: top == 0                                        |
+| `top_ge?`      | Predicate: top >= than 2nd second stack entry              |
+| `top_ge0?`     | Predicate: top >= 0                                        |
+| `top_gt?`      | Predicate: top > than 2nd second stack entry               |
+| `top_gt0?`     | Predicate: top > 0                                         |
+| `top_le?`      | Predicate: top <= than 2nd second stack entry              |
+| `top_le0?`     | Predicate: top <= 0                                        |
+| `top_lt?`      | Predicate: top < than 2nd second stack entry               |
+| `top_lt0?`     | Predicate: top < 0                                         |
+| `tran`         | Matrix transpose                                           |
+| `tuck`         | Copy top item under second                                 |
+| `undo`         | Undo last operation                                        |
+| `xeq`          | Execute label/subroutine                                   |
+| `zeroes`       | Vector/matrix of zeros                                     |
+| `dateplus`     | Add days to a date                                         |
+| `days2eoy`     | Days until end of year                                     |
