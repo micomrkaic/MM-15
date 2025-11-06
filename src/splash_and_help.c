@@ -194,9 +194,9 @@ void help_menu(void) {
   subtitle("Register functions");
   printf("    sto, rcl, pr {print registers}, save, load, ffr {1st free register} \n");
   subtitle("String functions");
-  printf("    scon, s2u, s2l, slen, srev, int2str, eval {evaluate string}\n");
+  printf("    scon, substr, s2u, s2l, slen, srev, int2str, eval {evaluate string}\n");
   subtitle("Financial and date functions");
-  printf("    npv, irr, ddays, dateplus, today, dow, num2date \n");
+  printf("    npv, irr, ddays, dateplus, today, days2eoy, dow, edmy, num2date \n");
   subtitle("Output format options");
   printf("    setprec {set print precision}, sfs {fix<->sci}\n");
   subtitle("Help and utilities");
