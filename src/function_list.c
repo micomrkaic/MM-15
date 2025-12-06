@@ -27,7 +27,7 @@ const char* const function_names[] = {
   "npdf", "ncdf", "nquant","gamma", "ln_gamma","beta","ln_beta",
   "re2c", "split_c", "j2r","frac","intg",
   "chs", "inv",
-  "fuck", "help", "listfcns",
+  "fuck", "help", "listfcns","usage",
   "gravity", "pi", "e", "inf", "nan",
   "drop", "clst", "swap", "dup", "nip", "tuck", "roll", "over",
   "scon", "s2l", "s2u", "slen", "srev", "int2str","substr",
@@ -50,6 +50,7 @@ const char* const function_names[] = {
   "ctr_eq0?", "ctr_ge0?",  "ctr_gt0?", "ctr_le0?",  "ctr_lt0?",
   "set_ctr", "clr_ctr", "ctr_inc", "ctr_dec",
   "goto", "xeq", "rtn", "end", "lbl",
-  "eval", "batch", "run", 
+  "eval", "batch", "run",
+  "sunrise","sunset",
   NULL
 };

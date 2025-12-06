@@ -35,7 +35,8 @@
 #include "math_helpers.h"
 #include "binary_fun.h"
 #include "unary_fun.h"
-#include "splash_and_help.h"
+#include "splash.h"
+#include "help.h"
 #include "print_fun.h"
 #include "my_date_fun.h"
 #include "matrix_fun.h"
@@ -48,6 +49,7 @@
 #include "run_machine.h"
 #include "integration_and_zeros.h"
 #include "globals.h"
+#include "my_astronomy.h"
 
 typedef void (*unary_func)(Stack *stack);
 
@@ -291,6 +293,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
 
     // Misc
     if (!strcmp("help",tok.text)) { help_menu(); return; }
+    if (!strcmp("usage",tok.text)) { op_usage(stack); return; }
     if (!strcmp("listfcns",tok.text)) { list_all_functions_sorted(); return; }
     if (!strcmp("clrhist",tok.text)) { clear_history(); return; }
     if (!strcmp("fuck",tok.text)) { whose_place(); return; }
@@ -310,7 +313,11 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("dow",tok.text)) { push_weekday_name_from_date_string(stack); return; }
     if (!strcmp("dateplus",tok.text)) { date_plus_days(stack); return; }
     if (!strcmp("edmy",tok.text)) {  extract_day_month_year(stack); return; }
- 
+
+    // Astronomy functions
+    if (!strcmp("sunrise",tok.text)) {sunrise(stack); return; } 
+    if (!strcmp("sunset",tok.text)) {sunset(stack); return; } 
+    
     // Stack functions
     if (!strcmp("drop",tok.text)) { pop_and_free(stack); return; }
     if (!strcmp("clst",tok.text)) { free_stack(stack); return; }

@@ -21,3 +21,6 @@ sto_sub over rcl - sto
 sto_mul over rcl .* sto
 sto_div over rcl ./ sto
 XprimeX dup ' swap *
+f2c 32 - 9 / 5 *
+c2f 9 * 5 / 32 +
+dec_hr dup 0 2 roll substr eval swap 3 5 roll substr eval 60 / +

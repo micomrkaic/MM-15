@@ -1,3 +1,7 @@
+GIT_VERSION := $(shell git describe --always --dirty 2>/dev/null)
+CPPFLAGS += -DVERSION='"$(GIT_VERSION)"'
+
+
 # --- portability knobs (Linux + macOS) ---
 SHELL      := /bin/sh
 APP        ?= mm_15
@@ -13,7 +17,10 @@ APP_CONF_DIR := $(CONFIG_HOME)/$(APP)
 INSTALL    ?= install
 MKDIR_P    ?= mkdir -p
 
+# Config files live in data/
+DATA_DIR := data
 CONFIG_FILES := config.txt predefined_macros.txt
+CONFIG_SRC  := $(addprefix $(DATA_DIR)/,$(CONFIG_FILES))
 
 # Compiler and flags
 CC = gcc
@@ -71,12 +78,13 @@ install: $(TARGET)
 
 	@echo "Installing config to $(APP_CONF_DIR)"
 	$(INSTALL) -d "$(APP_CONF_DIR)"
-	@for f in $(CONFIG_FILES); do \
-	  if [ ! -f "$(APP_CONF_DIR)/$$f" ]; then \
-	    echo "  -> $$f (new)"; \
-	    $(INSTALL) -m 644 "$$f" "$(APP_CONF_DIR)/$$f"; \
+	@for f in $(CONFIG_SRC); do \
+	  base=$$(basename "$$f"); \
+	  if [ ! -f "$(APP_CONF_DIR)/$$base" ]; then \
+	    echo "  -> $$base (new)"; \
+	    $(INSTALL) -m 644 "$$f" "$(APP_CONF_DIR)/$$base"; \
 	  else \
-	    echo "  -> $$f exists; keeping user's copy"; \
+	    echo "  -> $$base exists; keeping user's copy"; \
 	  fi; \
 	done
 

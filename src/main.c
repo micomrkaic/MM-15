@@ -16,7 +16,12 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* TODO as of November 2, 2025
+/* TODO as of December 6, 2025
+   . HMS and HR functions for strings and numbers
+   . allow numbers like .3 instead of only 0.3
+   . capture the input of shell output into stirgs
+   . call from emacs and shell as a calculator/evaluator
+   . store all config files and macros etc in a ~/.config/mm_15 directory
    . write literal programming for documentation of all functions
    . Write documentation in general
    . select submatrices; resize matrices and add/remove rows and/or columns
@@ -55,7 +60,8 @@
 #include "stack.h"
 #include "eval_fun.h" 
 #include "registers.h" 
-#include "splash_and_help.h" 
+#include "splash.h" 
+#include "help.h" 
 #include "tab_completion.h" 
 #include "print_fun.h" 
 #include "words.h" 

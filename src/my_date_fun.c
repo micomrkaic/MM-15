@@ -25,7 +25,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <ctype.h>
 #include "stack.h"
+
 
 int extract_day_month_year(Stack* stack) {
   if (stack->top < 0) {
@@ -233,6 +235,144 @@ int push_today_date(Stack* stack) {
   return 0;
 }
 
+/* ---- helpers ---- */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <time.h>
+
+/* Helper: Leap Year Check */
+static int is_leap_year(int y) {
+    return (y % 4 == 0) && ((y % 100 != 0) || (y % 400 == 0));
+}
+
+/* Helper: Days in Month */
+static int days_in_month(int y, int m) {
+    static const int dim[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    if (m == 2) return 28 + is_leap_year(y);
+    if (m >= 1 && m <= 12) return dim[m - 1];
+    return 0;
+}
+
+/* * Relaxed parser with Trailing Check:
+ * - Allows "2.3.2025", "02.03.2025"
+ * - Rejects "2.3.2025abc" (trailing junk)
+ * - Rejects "2.3.2025 " (trailing space)
+ */
+static int parse_date_relaxed(const char *s, int *d, int *m, int *y) {
+    if (!s) return 0;
+    
+    int consumed = 0;
+
+    // %d.%d.%d reads the numbers
+    // %n stores the count of characters read so far into 'consumed'
+    if (sscanf(s, "%d.%d.%d%n", d, m, y, &consumed) != 3) {
+        return 0;
+    }
+
+    // Check for trailing characters
+    // If consumed length != string length, there is extra junk
+    if (s[consumed] != '\0') {
+        return 0;
+    }
+
+    // Validate Month
+    if (*m < 1 || *m > 12) return 0;
+
+    // Validate Day based on Month/Year
+    int dim = days_in_month(*y, *m);
+    if (*d < 1 || *d > dim) return 0;
+
+    // Optional: Year sanity check
+    if (*y < 1900) return 0;
+
+    return 1;
+}
+
+int delta_days_strings(Stack* stack) {
+    if (stack->top < 1) {
+        fprintf(stderr, "Error: delta_days requires two values on the stack\n");
+        return 1;
+    }
+
+    stack_element b = stack->items[stack->top--];
+    stack_element a = stack->items[stack->top--];
+
+    if (a.type != TYPE_STRING || b.type != TYPE_STRING) {
+        fprintf(stderr, "Error: delta_days requires two strings\n");
+        return 1;
+    }
+
+    int d1, m1, y1, d2, m2, y2;
+    
+    if (!parse_date_relaxed(a.string, &d1, &m1, &y1) ||
+        !parse_date_relaxed(b.string, &d2, &m2, &y2)) {
+        fprintf(stderr, "Error: invalid date format. Use D.M.YYYY (e.g., 2.3.2025) with no trailing text.\n");
+        return 1;
+    }
+
+    struct tm tm1 = {0}, tm2 = {0};
+    
+    tm1.tm_mday = d1;
+    tm1.tm_mon  = m1 - 1;
+    tm1.tm_year = y1 - 1900;
+    tm1.tm_hour = 12;
+    tm1.tm_isdst = -1;
+
+    tm2.tm_mday = d2;
+    tm2.tm_mon  = m2 - 1;
+    tm2.tm_year = y2 - 1900;
+    tm2.tm_hour = 12;
+    tm2.tm_isdst = -1;
+
+    time_t t1 = mktime(&tm1);
+    time_t t2 = mktime(&tm2);
+
+    if (t1 == (time_t)-1 || t2 == (time_t)-1) {
+        fprintf(stderr, "Error: failed to convert date to time_t\n");
+        return 1;
+    }
+
+    int days = (int)(difftime(t2, t1) / (60 * 60 * 24));
+    push_real(stack, (double)days);
+
+    return 0;
+}
+
+/* static int is_leap_year(int y) { */
+/*   return (y % 4 == 0) && ((y % 100 != 0) || (y % 400 == 0)); */
+/* } */
+
+/* static int days_in_month(int y, int m) { */
+/*   static const int dim[12] = {31,28,31,30,31,30,31,31,30,31,30,31}; */
+/*   if (m == 2) return 28 + is_leap_year(y); */
+/*   if (m >= 1 && m <= 12) return dim[m - 1]; */
+/*   return 0; */
+/* } */
+
+/* /\* strict "DD.MM.YYYY" parser: exactly 10 chars, digits except dots at 2 and 5 *\/ */
+/* static int parse_date_strict(const char *s, int *d, int *m, int *y) { */
+/*   if (!s || strlen(s) != 10) return 0; */
+/*   for (int i = 0; i < 10; ++i) { */
+/*     if (i == 2 || i == 5) { */
+/*       if (s[i] != '.') return 0; */
+/*     } else if (!isdigit((unsigned char)s[i])) { */
+/*       return 0; */
+/*     } */
+/*   } */
+/*   // two-digit day, two-digit month, four-digit year */
+/*   *d = (s[0]-'0')*10 + (s[1]-'0'); */
+/*   *m = (s[3]-'0')*10 + (s[4]-'0'); */
+/*   *y = (s[6]-'0')*1000 + (s[7]-'0')*100 + (s[8]-'0')*10 + (s[9]-'0'); */
+
+/*   if (*m < 1 || *m > 12) return 0; */
+/*   int dim = days_in_month(*y, *m); */
+/*   if (*d < 1 || *d > dim) return 0; */
+
+/*   return 1; */
+/* } */
+
 /* int delta_days_strings(Stack* stack) { */
 /*   if (stack->top < 1) { */
 /*     fprintf(stderr, "Error: delta_days requires two values on the stack\n"); */
@@ -247,20 +387,25 @@ int push_today_date(Stack* stack) {
 /*     return 1; */
 /*   } */
 
-/*   struct tm tm1 = {0}, tm2 = {0}; */
-/*   if (sscanf(a.string, "%d.%d.%d", &tm1.tm_mday, &tm1.tm_mon, &tm1.tm_year) != 3 || */
-/*       sscanf(b.string, "%d.%d.%d", &tm2.tm_mday, &tm2.tm_mon, &tm2.tm_year) != 3) { */
-/*     fprintf(stderr, "Error: invalid date format. Use DD.MM.YYYY\n"); */
+/*   int d1, m1, y1, d2, m2, y2; */
+/*   if (!parse_date_strict(a.string, &d1, &m1, &y1) || */
+/*       !parse_date_strict(b.string, &d2, &m2, &y2)) { */
+/*     fprintf(stderr, "Error: invalid date. Use DD.MM.YYYY and a real calendar date\n"); */
 /*     return 1; */
 /*   } */
 
-/*   // Normalize to struct tm */
-/*   tm1.tm_mon -= 1;  // months since January */
-/*   tm1.tm_year -= 1900; */
-/*   tm1.tm_hour = 12; // avoid DST edge cases */
-/*   tm2.tm_mon -= 1; */
-/*   tm2.tm_year -= 1900; */
+/*   struct tm tm1 = {0}, tm2 = {0}; */
+/*   tm1.tm_mday = d1; */
+/*   tm1.tm_mon  = m1 - 1;       // 0..11 */
+/*   tm1.tm_year = y1 - 1900;    // years since 1900 */
+/*   tm1.tm_hour = 12;           // avoid DST edge cases */
+/*   tm1.tm_isdst = -1;          // let libc determine */
+
+/*   tm2.tm_mday = d2; */
+/*   tm2.tm_mon  = m2 - 1; */
+/*   tm2.tm_year = y2 - 1900; */
 /*   tm2.tm_hour = 12; */
+/*   tm2.tm_isdst = -1; */
 
 /*   time_t t1 = mktime(&tm1); */
 /*   time_t t2 = mktime(&tm2); */
@@ -270,107 +415,14 @@ int push_today_date(Stack* stack) {
 /*     return 1; */
 /*   } */
 
-/*   int days = (int) difftime(t2, t1) / (60 * 60 * 24); */
-/*   push_real(stack, (double) days);  // or push_int if you have it */
+/*   /\* Convert to whole days (truncates toward zero; adjust if you want rounding) *\/ */
+/*   int days = (int)(difftime(t2, t1) / (60 * 60 * 24)); */
+/*   push_real(stack, (double)days);  // or push_int if you have it */
 
 /*   return 0; */
 /* } */
 
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <ctype.h>
-
-/* ---- helpers ---- */
-
-static int is_leap_year(int y) {
-  return (y % 4 == 0) && ((y % 100 != 0) || (y % 400 == 0));
-}
-
-static int days_in_month(int y, int m) {
-  static const int dim[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
-  if (m == 2) return 28 + is_leap_year(y);
-  if (m >= 1 && m <= 12) return dim[m - 1];
-  return 0;
-}
-
-/* strict "DD.MM.YYYY" parser: exactly 10 chars, digits except dots at 2 and 5 */
-static int parse_date_strict(const char *s, int *d, int *m, int *y) {
-  if (!s || strlen(s) != 10) return 0;
-  for (int i = 0; i < 10; ++i) {
-    if (i == 2 || i == 5) {
-      if (s[i] != '.') return 0;
-    } else if (!isdigit((unsigned char)s[i])) {
-      return 0;
-    }
-  }
-  // two-digit day, two-digit month, four-digit year
-  *d = (s[0]-'0')*10 + (s[1]-'0');
-  *m = (s[3]-'0')*10 + (s[4]-'0');
-  *y = (s[6]-'0')*1000 + (s[7]-'0')*100 + (s[8]-'0')*10 + (s[9]-'0');
-
-  if (*m < 1 || *m > 12) return 0;
-  int dim = days_in_month(*y, *m);
-  if (*d < 1 || *d > dim) return 0;
-
-  return 1;
-}
-
-/* ---- your function, refactored ---- */
-
-int delta_days_strings(Stack* stack) {
-  if (stack->top < 1) {
-    fprintf(stderr, "Error: delta_days requires two values on the stack\n");
-    return 1;
-  }
-
-  stack_element b = stack->items[stack->top--];
-  stack_element a = stack->items[stack->top--];
-
-  if (a.type != TYPE_STRING || b.type != TYPE_STRING) {
-    fprintf(stderr, "Error: delta_days requires two strings in DD.MM.YYYY format\n");
-    return 1;
-  }
-
-  int d1, m1, y1, d2, m2, y2;
-  if (!parse_date_strict(a.string, &d1, &m1, &y1) ||
-      !parse_date_strict(b.string, &d2, &m2, &y2)) {
-    fprintf(stderr, "Error: invalid date. Use DD.MM.YYYY and a real calendar date\n");
-    return 1;
-  }
-
-  struct tm tm1 = {0}, tm2 = {0};
-  tm1.tm_mday = d1;
-  tm1.tm_mon  = m1 - 1;       // 0..11
-  tm1.tm_year = y1 - 1900;    // years since 1900
-  tm1.tm_hour = 12;           // avoid DST edge cases
-  tm1.tm_isdst = -1;          // let libc determine
-
-  tm2.tm_mday = d2;
-  tm2.tm_mon  = m2 - 1;
-  tm2.tm_year = y2 - 1900;
-  tm2.tm_hour = 12;
-  tm2.tm_isdst = -1;
-
-  time_t t1 = mktime(&tm1);
-  time_t t2 = mktime(&tm2);
-
-  if (t1 == (time_t)-1 || t2 == (time_t)-1) {
-    fprintf(stderr, "Error: failed to convert date to time_t\n");
-    return 1;
-  }
-
-  /* Convert to whole days (truncates toward zero; adjust if you want rounding) */
-  int days = (int)(difftime(t2, t1) / (60 * 60 * 24));
-  push_real(stack, (double)days);  // or push_int if you have it
-
-  return 0;
-}
-
-
 /* ---- function: build string "DD.MM.YYYY" from three numbers ---- */
-/* ---- helpers (reuse if already defined elsewhere) ---- */
-
 /* Accept TYPE_INT or TYPE_REAL that is integral. Adjust to your real type names. */
 static int elem_to_int(const stack_element *e, int *out) {
   if (e->type == TYPE_REAL) {
