@@ -16,14 +16,12 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* TODO as of December 6, 2025
-   . HMS and HR functions for strings and numbers
+/* TODO as of December 7, 2025
+   . save all config files and macros etc in a ~/.config/mm_15 directory
    . allow numbers like .3 instead of only 0.3
    . capture the input of shell output into stirgs
    . call from emacs and shell as a calculator/evaluator
-   . store all config files and macros etc in a ~/.config/mm_15 directory
-   . write literal programming for documentation of all functions
-   . Write documentation in general
+   . improve documentation
    . select submatrices; resize matrices and add/remove rows and/or columns
    . clean up and consolidate binary_fun.c; cleanup the dispatch table
    . clean up the interpreter to have only one dispatch table in the VM
@@ -90,7 +88,7 @@ int repl(void) {
   load_macros_from_file();
   if (verbose_mode) list_macros();
   load_config(CONFIG_PATH); // #define APP_CFG_DIR  HOME_DIR "/.config/mm_15"
-  read_history(HISTORY_FILE);
+  read_history(HISTORY_PATH);
   stifle_history(1000);  // Keep only the last 1000 commands 
   rl_attempted_completion_function = function_name_completion;
 
@@ -129,8 +127,8 @@ int repl(void) {
   }
 
   // Save config, history, and cleanup
-  save_config(CONFIG_FILE);
-  write_history(HISTORY_FILE);
+  save_config(CONFIG_PATH);
+  write_history(HISTORY_PATH);
   free_stack(&old_stack);
   free_stack(&stack);
   free_all_registers();

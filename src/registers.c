@@ -221,9 +221,9 @@ void save_registers_to_file(const char* filename) {
       }
     }
     }
+  }
   fclose(f);
   printf("Registers saved to %s\n", filename);
-}
 }
 
 void load_registers_from_file(const char* filename) {
@@ -314,11 +314,11 @@ void load_registers_from_file(const char* filename) {
 extern Register registers[MAX_REG];  // Your global register array
 
 void find_first_free_register(Stack *stack) {
-    for (int i = 0; i < MAX_REG; ++i) {
-        if (!registers[i].occupied) {
-	  push_real(stack,(double)i);
-	  return;
-        }
+  for (int i = 0; i < MAX_REG; ++i) {
+    if (!registers[i].occupied) {
+      push_real(stack,(double)i);
+      return;
     }
-    printf("All registers are occupied\n");    
+  }
+  printf("All registers are occupied\n");    
 }

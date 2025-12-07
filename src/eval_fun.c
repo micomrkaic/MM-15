@@ -367,8 +367,8 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("rcl",tok.text)) { recall_from_register(stack); return; }
     if (!strcmp("sto",tok.text)) { store_to_register(stack); return; }
     if (!strcmp("pr",tok.text)) { show_registers_status(); return; }
-    if (!strcmp("saveregs",tok.text)) { save_registers_to_file("registers.txt"); return; }
-    if (!strcmp("loadregs",tok.text)) { load_registers_from_file("registers.txt"); return; }
+    if (!strcmp("saveregs",tok.text)) { save_registers_to_file(REGISTERS_PATH); return; }
+    if (!strcmp("loadregs",tok.text)) { load_registers_from_file(REGISTERS_PATH); return; }
     if (!strcmp("clregs",tok.text)) { free_all_registers(); return; }
 
     // **************** String functions ****************

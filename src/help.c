@@ -61,7 +61,7 @@ void help_menu(void) {
   printf("    Matrix min and max: cmin, rmin, cmax, rmax\n");  
   printf("    Linear algebra: tran, {also '}, det, minv, pinv, chol, eig, svd\n");  
   subtitle("Register functions");
-  printf("    sto, rcl, pr {print registers}, save, load, ffr {1st free register} \n");
+  printf("    sto, rcl, pr {print registers}, saveregs, load, ffr {1st free register} \n");
   subtitle("String functions");
   printf("    scon, substr, s2u, s2l, slen, srev, int2str, eval {evaluate string}\n");
   subtitle("Financial and date functions");
