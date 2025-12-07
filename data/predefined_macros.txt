@@ -24,3 +24,7 @@ XprimeX dup ' swap *
 f2c 32 - 9 / 5 *
 c2f 9 * 5 / 32 +
 dec_hr dup 0 2 roll substr eval swap 3 5 roll substr eval 60 / +
+alexandria 38.805059 -77.046981
+duluth 34.0028845317 -84.1445505386 
+durham 35.993776 -78.898473
+kranj 46.2411111 14.3616667
