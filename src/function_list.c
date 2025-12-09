@@ -51,6 +51,6 @@ const char* const function_names[] = {
   "set_ctr", "clr_ctr", "ctr_inc", "ctr_dec",
   "goto", "xeq", "rtn", "end", "lbl",
   "eval", "batch", "run",
-  "sunrise","sunset",
+  "sunrise","sunset","dawn","dusk",
   NULL
 };

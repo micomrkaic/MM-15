@@ -24,7 +24,7 @@ CONFIG_SRC  := $(addprefix $(DATA_DIR)/,$(CONFIG_FILES))
 
 # Compiler and flags
 CC = gcc
-CFLAGS = -g -std=c17 -Wall -Wextra -Werror -Wpedantic -Iinclude
+CFLAGS = -g -std=c17 -Wall -Wextra -Werror -Wpedantic -Iinclude -fno-common
 LDFLAGS =
 LDLIBS = -lgsl -lgslcblas -lreadline -lm
 CPPFLAGS += -DHOME_DIR='"$(HOME)"'

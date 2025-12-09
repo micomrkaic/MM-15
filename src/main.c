@@ -16,7 +16,8 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* TODO as of December 7, 2025
+/* TODO as of December 8, 2025
+   . test astronomy functions
    . save all config files and macros etc in a ~/.config/mm_15 directory
    . allow numbers like .3 instead of only 0.3
    . capture the input of shell output into stirgs
@@ -68,7 +69,7 @@
 
 // Globals
 gsl_rng * global_rng; // Global random number generator, used throughout the program
-Register registers[MAX_REG];  // Global or static array
+Register registers[MAX_REG] ={0};  // Global or static array
 
 void my_error_handler(const char *reason, const char *file, int line, int gsl_errno) {
   fprintf(stderr, "GSL ERROR: %s (%s:%d) [code=%d]\n", reason, file, line, gsl_errno);

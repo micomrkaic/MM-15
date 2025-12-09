@@ -30,5 +30,7 @@
 
 int sunrise(Stack *stack);
 int sunset(Stack *stack);
+int dawn(Stack *stack);
+int dusk(Stack *stack);
 
 #endif /* MY_ASTRONOMY_H */

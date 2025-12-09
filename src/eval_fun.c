@@ -317,6 +317,8 @@ void evaluate_one_token(Stack *stack, Token tok) {
     // Astronomy functions
     if (!strcmp("sunrise",tok.text)) {sunrise(stack); return; } 
     if (!strcmp("sunset",tok.text)) {sunset(stack); return; } 
+    if (!strcmp("dawn",tok.text)) {dawn(stack); return; } 
+    if (!strcmp("dusk",tok.text)) {dusk(stack); return; } 
     
     // Stack functions
     if (!strcmp("drop",tok.text)) { pop_and_free(stack); return; }
