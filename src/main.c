@@ -16,12 +16,7 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* As of December 29, 2025
-   . TODO add examples of use into README.md
-   . TODO improve documentation
-*/
-
-/* TODO for later
+/* TODO as of December 29, 2025
    . call from emacs and shell as a calculator/evaluator
    . implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
    . Simple plotting of a vector vs vector for a simple function plot etc.
