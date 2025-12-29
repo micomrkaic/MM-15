@@ -9,6 +9,10 @@
 #define BUILD_STAMP __DATE__ " " __TIME__
 #endif
 
+#ifndef MM15_WEATHER
+#define MM15_WEATHER 0
+#endif
+
 #include <ctype.h>        // for isalnum
 #include <stdio.h>        // for printf, snprintf, fclose, fgets, sscanf, fopen
 #include <stdlib.h>       // for system
@@ -176,6 +180,8 @@ static void get_location(const char *ip) {
     }
 }
 
+
+#if MM15_WEATHER
 static void get_weather(char *weather, size_t size) {
   if (!weather || size == 0) return;
   
@@ -187,17 +193,20 @@ static void get_weather(char *weather, size_t size) {
   }
   chomp_newline(weather);
 }
+#endif
 
 static void snazz(void) {
   char ip[64] = {0};
-  char weather[128] = {0};
 
   get_ip(ip, sizeof(ip));
   get_location(ip);
-  get_weather(weather, sizeof(weather));
-
   printf("🌐 IP: %s\n", ip);
-  printf("☁️ Weather: %s", weather);
+
+#if MM15_WEATHER
+  char weather[128] = {0};
+  get_weather(weather, sizeof(weather));
+  printf("☁️  %s\n", weather);   // wttr already includes location etc
+#endif
 }
 
 

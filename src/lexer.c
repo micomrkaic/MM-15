@@ -107,7 +107,8 @@ bool is_function_name(const char* name) {
 Token lex_number(Lexer* lexer) {
   size_t start = lexer->pos;
 
-  if (peek(lexer) == '-') advance(lexer);
+  //  if (peek(lexer) == '-') advance(lexer);
+  if (peek(lexer) == '-' || peek(lexer) == '+') advance(lexer);
 
   while (isdigit((unsigned char)peek(lexer))) advance(lexer);
 
