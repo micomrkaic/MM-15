@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MM15_WEATHER
-#define MM15_WEATHER 0
+#define MM15_WEATHER 1
 #endif
 
 #include <ctype.h>        // for isalnum

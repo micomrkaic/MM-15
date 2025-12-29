@@ -120,13 +120,21 @@ test-asan: asan
 .PHONY: all install install-system uninstall clean doc
 
 # Regenerate git version header when HEAD or index changes
-$(GIT_HEADER): .git/HEAD .git/index
+# Rebuild when HEAD changes (new commit) or refs change (branch moves / packed-refs updates)
+$(GIT_HEADER): .git/HEAD .git/packed-refs
 	@$(MKDIR_P) "$(@D)"
-	@printf '%s\n' \
-	  '#pragma once' \
-	  '#define VERSION "$(GIT_VERSION)"' \
-	  > "$@"
+	@ver=$$(git rev-parse --short HEAD 2>/dev/null || echo unknown); \
+	  dirty=$$(git diff --no-ext-diff --quiet --ignore-submodules -- 2>/dev/null || echo -dirty); \
+	  tmp="$@.tmp"; \
+	  { printf '%s\n' '#pragma once' "#define VERSION \"$$ver$$dirty\""; } > "$$tmp"; \
+	  if [ ! -f "$@" ] || ! cmp -s "$$tmp" "$@"; then mv "$$tmp" "$@"; else rm -f "$$tmp"; fi
 
+# $(GIT_HEADER): .git/HEAD .git/index
+# 	@$(MKDIR_P) "$(@D)"
+# 	@printf '%s\n' \
+# 	  '#pragma once' \
+# 	  '#define VERSION "$(GIT_VERSION)"' \
+# 	  > "$@"
 
 all: $(TARGET)
 
