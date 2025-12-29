@@ -19,13 +19,14 @@
 #define MAX_ROMBERG_ITER 20
 #define MAX_BISECTION_ITER 40
 
-#include <math.h>
-#include <stdio.h>
-#include "words.h"
-#include "globals.h"
-#include "stack.h"
-#include "eval_fun.h"
-#include "integration_and_zeros.h"
+#include <math.h>                   // for fabs, pow
+#include <stdbool.h>                // for false, bool, true
+#include <stdio.h>                  // for fprintf, stderr
+#include "eval_fun.h"               // for evaluate_line
+#include "globals.h"                // for fsolve_tolerance, intg_tolerance
+#include "integration_and_zeros.h"  // for bisection, find_zero, integrate
+#include "stack.h"                  // for (anonymous struct)::(anonymous), pop
+#include "words.h"                  // for words
 
 void find_zero(Stack *stack) {
   if (stack->top < 1) {
@@ -79,16 +80,14 @@ void integrate(Stack *stack) {
   push_real(stack, result);
 }
 
-
-
 // Romberg integration
-double romberg(double (*f)(double), double a, double b, double tol, int max_iter) {
+double romberg(double (*func)(double), double a, double b, double tol, int max_iter) {
   double R[MAX_ROMBERG_ITER][MAX_ROMBERG_ITER];
   int i, j;
   double h = b - a;
 
   // R[0][0] is the trapezoidal rule with 1 interval
-  R[0][0] = 0.5 * h * (f(a) + f(b));
+  R[0][0] = 0.5 * h * (func(a) + func(b));
 
   for (i = 1; i < max_iter; i++) {
     h *= 0.5;
@@ -97,7 +96,7 @@ double romberg(double (*f)(double), double a, double b, double tol, int max_iter
     double sum = 0.0;
     int n = 1 << (i - 1); // 2^(i-1)
     for (int k = 1; k <= n; k++) {
-      sum += f(a + (2 * k - 1) * h);
+      sum += func(a + (2 * k - 1) * h);
     }
     
     R[i][0] = 0.5 * R[i - 1][0] + h * sum;
@@ -143,26 +142,10 @@ double stack_helper(double x) {
   return a.real;
 }
 
-/* void integrate(Stack *stack) { */
-/*   stack_element b = pop(stack);  */
-/*   stack_element a = pop(stack); */
-/*   push_real(stack,romberg(stack_helper,a.real,b.real,intg_tolerance,MAX_ROMBERG_ITER)); */
-/* } */
-
-/* void find_zero(Stack *stack) { */
-/*   stack_element b = pop(stack);  */
-/*   stack_element a = pop(stack); */
-/*   double root; */
-/*   if (bisection(stack_helper, a.real, b.real, fsolve_tolerance, &root)) */
-/*     push_real(stack,root); */
-/*   else */
-/*     push_real(stack,a.real); */
-/* } */
-
 // Bisection function
-bool bisection(double (*f)(double), double a, double b, double tol, double* root) {
-  double fa = f(a);
-  double fb = f(b);
+bool bisection(double (*func)(double), double a, double b, double tol, double* root) {
+  double fa = func(a);
+  double fb = func(b);
 
   // Check for a sign change
   if (fa * fb > 0) {
@@ -174,7 +157,7 @@ bool bisection(double (*f)(double), double a, double b, double tol, double* root
 
   for (int i = 0; i < MAX_BISECTION_ITER; ++i) {
     double mid = 0.5 * (a + b);
-    double fmid = f(mid);
+    double fmid = func(mid);
 
     if (fabs(fmid) < tol || (b - a) < tol) {
       *root = mid;

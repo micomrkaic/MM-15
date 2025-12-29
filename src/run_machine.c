@@ -18,26 +18,14 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <stdbool.h>
-#include <gsl/gsl_rng.h>
-#include <readline/history.h>
-#include <readline/readline.h>
-#include "lexer.h"
-#include "stack.h"
-#include "eval_fun.h" 
-#include "registers.h" 
-#include "splash.h" 
-#include "help.h" 
-#include "tab_completion.h" 
-#include "print_fun.h" 
-#include "words.h" 
-#include "stack.h"
-#include "registers.h"
-#include "run_machine.h"
+#include <stdbool.h>      // for false, bool, true
+#include <stdio.h>        // for fclose, fprintf, NULL, stderr, printf, fopen
+#include <stdlib.h>       // for free
+#include <string.h>       // for strcmp, strdup, strncmp, strcspn, strchr
+#include "eval_fun.h"     // for evaluate_line
+#include "globals.h"      // for completed_batch
+#include "run_machine.h"  // for Program, INSTR_GOSUB, INSTR_GOTO, INSTR_LABEL
+#include "stack.h"        // for (anonymous struct)::(anonymous), TYPE_REAL
 
 #define MAX_COUNTERS 32
 
@@ -219,7 +207,7 @@ compare_dispatch_entry compare_dispatch_table[] = {
     {NULL, NULL}  // Sentinel
 };
 
-compare_fn get_compare_fn(const char* name) {
+static compare_fn get_compare_fn(const char* name) {
     for (int i = 0; compare_dispatch_table[i].name != NULL; ++i) {
         if (strcmp(compare_dispatch_table[i].name, name) == 0) {
             return compare_dispatch_table[i].fn;
@@ -249,7 +237,7 @@ int run_batch(Stack *stack, char *fname) {
   return 0;
 }
 
-bool evaluate_test_condition(Stack* stack, const char* test_name) {
+static bool evaluate_test_condition(Stack* stack, const char* test_name) {
   bool result;
   compare_fn fn = get_compare_fn(test_name);
   if (fn) {
@@ -261,7 +249,7 @@ bool evaluate_test_condition(Stack* stack, const char* test_name) {
   return result;
 }
 
-int find_label(const Program* prog, const char* label) {
+static int find_label(const Program* prog, const char* label) {
   for (int i = 0; i < prog->label_count; ++i) {
     if (strcmp(prog->labels[i].label, label) == 0)
       return prog->labels[i].pc;
@@ -283,47 +271,6 @@ void list_program(const Program* prog) {
     printf("%3d: %-6s %s\n", i, type_str, prog->program[i].arg ? prog->program[i].arg : "");
   }
 }
-
-/* bool load_program_from_file(const char* filename, Program* prog) { */
-/*   FILE* f = fopen(filename, "r"); */
-/*   if (!f) { */
-/*     perror("Failed to open program file"); */
-/*     return false; */
-/*   } */
-/*   char line[128]; */
-/*   while (fgets(line, sizeof(line), f)) { */
-/*     line[strcspn(line, "\r\n")] = '\0'; */
-/*     if (strlen(line) == 0) continue; */
-
-/*     Instruction instr; */
-/*     instr.arg = strdup(line); */
-
-/*     if (strncmp(line, "LBL ", 4) == 0) { */
-/*       instr.type = INSTR_LABEL; */
-/*       strncpy(prog->labels[prog->label_count].label, line + 4, 31); */
-/*       prog->labels[prog->label_count].pc = prog->count; */
-/*       prog->label_count++; */
-/*     } else if (strncmp(line, "GOTO ", 5) == 0) { */
-/*       instr.type = INSTR_GOTO; */
-/*       instr.arg = strdup(line + 5); */
-/*     } else if (strncmp(line, "GOSUB ", 6) == 0) { */
-/*       instr.type = INSTR_GOSUB; */
-/*       instr.arg = strdup(line + 6); */
-/*     } else if (strcmp(line, "RTN") == 0) { */
-/*       instr.type = INSTR_RTN; */
-/*     } else if (strcmp(line, "END") == 0) { */
-/*       instr.type = INSTR_END; */
-/*     } else if (strstr(line, "?") != NULL) { */
-/*       instr.type = INSTR_TEST; */
-/*     } else { */
-/*       instr.type = INSTR_WORD; */
-/*     } */
-
-/*     prog->program[prog->count++] = instr; */
-/*   } */
-/*   fclose(f); */
-/*   return true; */
-/* } */
 
 bool load_program_from_file(const char *filename, Program *prog) {
   FILE *f = fopen(filename, "r");

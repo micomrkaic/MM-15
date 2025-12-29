@@ -18,16 +18,15 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include <stdio.h>
-#include <time.h>
-#include <math.h>  // for fabs()
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <limits.h>
-#include <ctype.h>
-#include "stack.h"
-
+#include <gsl/gsl_complex.h>  // for GSL_REAL
+#include <limits.h>           // for INT_MAX, INT_MIN
+#include <math.h>             // for floor, isfinite
+#include <stdio.h>            // for fprintf, stderr, sscanf, snprintf, NULL
+#include <stdlib.h>           // for free
+#include <string.h>           // for strdup
+#include <time.h>             // for tm, time_t, mktime, localtime, time
+#include "stack.h"            // for stack_element, (anonymous struct)::(ano...
+#include "my_date_fun.h"      // for date_plus_days, days_to_end_of_year
 
 int extract_day_month_year(Stack* stack) {
   if (stack->top < 0) {
@@ -436,57 +435,113 @@ static int elem_to_int(const stack_element *e, int *out) {
   return 0;
 }
 
-int make_date_string(Stack* stack) {
-  if (stack->top < 2) {
-    fprintf(stderr, "Error: make_date_string requires three numeric values (day, month, year)\n");
+/* int make_date_string(Stack* stack) { */
+/*   if (stack->top < 2) { */
+/*     fprintf(stderr, "Error: make_date_string requires three numeric values (day, month, year)\n"); */
+/*     return 1; */
+/*   } */
+
+/*   /\* Pop in reverse: year (top), month, day *\/ */
+/*   stack_element ed = stack->items[stack->top--]; */
+/*   stack_element em = stack->items[stack->top--]; */
+/*   stack_element ey = stack->items[stack->top--]; */
+
+/*   int d, m, y; */
+/*   if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) { */
+/*     fprintf(stderr, "Error: make_date_string requires integer-like numbers (day, month, year)\n"); */
+/*     return 1; */
+/*   } */
+
+/*   /\* Basic sanity checks (tweak year bounds as you like) *\/ */
+/*   if (m < 1 || m > 12) { */
+/*     fprintf(stderr, "Error: invalid month: %d (must be 1..12)\n", m); */
+/*     return 1; */
+/*   } */
+/*   int dim = days_in_month(y, m); */
+/*   if (d < 1 || d > dim) { */
+/*     fprintf(stderr, "Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim); */
+/*     return 1; */
+/*   } */
+
+/*   /\* Optional: normalize with mktime to catch exotic calendar issues/DST */
+/*      Not strictly required since we already validated the calendar date. *\/ */
+/*   struct tm tmv = {0}; */
+/*   tmv.tm_mday = d; */
+/*   tmv.tm_mon  = m - 1; */
+/*   tmv.tm_year = y - 1900; */
+/*   tmv.tm_hour = 12; */
+/*   tmv.tm_isdst = -1; */
+
+/*   if (mktime(&tmv) == (time_t)-1) { */
+/*     fprintf(stderr, "Error: failed to normalize date\n"); */
+/*     return 1; */
+/*   } */
+
+/*   /\* Format "DD.MM.YYYY" *\/ */
+/*   char buf[11]; /\* "DD.MM.YYYY" + '\0' *\/ */
+/*   snprintf(buf, sizeof(buf), "%02d.%02d.%04d", d, m, y); */
+
+/*   /\* Push as string (assumes push_string copies) *\/ */
+/*   push_string(stack, buf); */
+
+/*   return 0; */
+/* } */
+
+int make_date_string(Stack *stack)
+{
+    if (!stack) {
+        fprintf(stderr, "Error: make_date_string: null stack\n");
+        return 0;
+    }
+
+    GUARANTEE_STACK(stack, 3);
+
+    /* Stack order expected: ... day month year (year on top) */
+    stack_element ey = pop(stack);
+    stack_element em = pop(stack);
+    stack_element ed = pop(stack);
+
+    int d = 0, m = 0, y = 0;
+    if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) {
+        fprintf(stderr, "Error: make_date_string requires integer-like numbers (day, month, year)\n");
+        return 0;
+    }
+
+    if (m < 1 || m > 12) {
+        fprintf(stderr, "Error: invalid month: %d (must be 1..12)\n", m);
+        return 0;
+    }
+
+    int dim = days_in_month(y, m);
+    if (d < 1 || d > dim) {
+        fprintf(stderr, "Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim);
+        return 0;
+    }
+
+    /* Optional normalization check */
+    struct tm tmv = {0};
+    tmv.tm_mday  = d;
+    tmv.tm_mon   = m - 1;
+    tmv.tm_year  = y - 1900;
+    tmv.tm_hour  = 12;
+    tmv.tm_isdst = -1;
+
+    if (mktime(&tmv) == (time_t)-1) {
+        fprintf(stderr, "Error: failed to normalize date\n");
+        return 0;
+    }
+
+    char buf[11]; /* "DD.MM.YYYY" + '\0' */
+    int n = snprintf(buf, sizeof(buf), "%02d.%02d.%04d", d, m, y);
+    if (n < 0 || (size_t)n >= sizeof(buf)) {
+        fprintf(stderr, "Error: date formatting failed\n");
+        return 0;
+    }
+
+    push_string(stack, buf);
     return 1;
-  }
-
-  /* Pop in reverse: year (top), month, day */
-  stack_element ed = stack->items[stack->top--];
-  stack_element em = stack->items[stack->top--];
-  stack_element ey = stack->items[stack->top--];
-
-  int d, m, y;
-  if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) {
-    fprintf(stderr, "Error: make_date_string requires integer-like numbers (day, month, year)\n");
-    return 1;
-  }
-
-  /* Basic sanity checks (tweak year bounds as you like) */
-  if (m < 1 || m > 12) {
-    fprintf(stderr, "Error: invalid month: %d (must be 1..12)\n", m);
-    return 1;
-  }
-  int dim = days_in_month(y, m);
-  if (d < 1 || d > dim) {
-    fprintf(stderr, "Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim);
-    return 1;
-  }
-
-  /* Optional: normalize with mktime to catch exotic calendar issues/DST
-     Not strictly required since we already validated the calendar date. */
-  struct tm tmv = {0};
-  tmv.tm_mday = d;
-  tmv.tm_mon  = m - 1;
-  tmv.tm_year = y - 1900;
-  tmv.tm_hour = 12;
-  tmv.tm_isdst = -1;
-
-  if (mktime(&tmv) == (time_t)-1) {
-    fprintf(stderr, "Error: failed to normalize date\n");
-    return 1;
-  }
-
-  /* Format "DD.MM.YYYY" */
-  char buf[11]; /* "DD.MM.YYYY" + '\0' */
-  snprintf(buf, sizeof(buf), "%02d.%02d.%04d", d, m, y);
-
-  /* Push as string (assumes push_string copies) */
-  push_string(stack, buf);
-
-  return 0;
 }
+
 
 /* Pushes the count of days left in the current year (excludes today). */
 int days_to_end_of_year(Stack* stack) {

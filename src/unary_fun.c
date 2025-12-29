@@ -17,17 +17,15 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <complex.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include "stack.h"
-#include "math_parsers.h"
-#include "math_helpers.h"
-#include "binary_fun.h"
-#include "unary_fun.h"
+#include <complex.h>                        // for cabs
+#include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_rect
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_free, gsl_matr...
+#include <stdio.h>                          // for fprintf, size_t, stderr
+#include "math_helpers.h"                   // for to_double_complex
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "unary_fun.h"                      // for apply_complex_matrix_unar...
 
 // === Unary math functions for real and complex ===
 void apply_real_unary(Stack* stack, double (*func)(double)) {

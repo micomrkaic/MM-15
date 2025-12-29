@@ -18,16 +18,18 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "eval_fun.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <complex.h>
-#include <time.h>
 #include <readline/history.h>
-#include <readline/readline.h>
+#include <gsl/gsl_complex.h>        // for gsl_complex
+#include <gsl/gsl_math.h>           // for M_PI
+#include <stdbool.h>                // for true
 #include "lexer.h"
 #include "stack.h"
+#include "stack_io.h"
 #include "string_fun.h"
 #include "linear_algebra.h"
 #include "matrix_fun.h"
@@ -35,16 +37,13 @@
 #include "math_helpers.h"
 #include "binary_fun.h"
 #include "unary_fun.h"
-#include "splash.h"
 #include "help.h"
 #include "print_fun.h"
 #include "my_date_fun.h"
-#include "matrix_fun.h"
 #include "poly_fun.h"
 #include "stat_fun.h"
 #include "registers.h"
 #include "compare_fun.h"
-#include "eval_fun.h"
 #include "words.h"
 #include "run_machine.h"
 #include "integration_and_zeros.h"
@@ -135,15 +134,30 @@ static const matrix_op matrix_ops[] = {
 
 // **************** The main loop in this file ****************
 void evaluate_line(Stack *stack, char* line) {
-  Lexer lexer = {line, 0};
+  int def = is_word_definition(line);
+  if (def != 0) {
+    // definition line (accepted or rejected) is already handled; do not lex it
+    return;
+  }
+  
+  Lexer lexer = (Lexer){ .input = line, .pos = 0 };
   Token tok;
-
-  if (!is_word_definition(line))   // Check if a new word; insert  if it is
-    do {   // The lexer loop
-      tok = next_token(&lexer);
-      evaluate_one_token(stack, tok);    
-    } while (tok.type != TOK_EOF);
+  do {
+    tok = next_token(&lexer);
+    evaluate_one_token(stack, tok);
+  } while (tok.type != TOK_EOF);
 }
+
+/* void evaluate_line(Stack *stack, char* line) { */
+/*   Lexer lexer = {line, 0}; */
+/*   Token tok; */
+
+/*   if (!is_word_definition(line))   // Check if a new word; insert  if it is */
+/*     do {   // The lexer loop */
+/*       tok = next_token(&lexer); */
+/*       evaluate_one_token(stack, tok);     */
+/*     } while (tok.type != TOK_EOF); */
+/* } */
 
 // **************** Process one token ****************
 void evaluate_one_token(Stack *stack, Token tok) {
@@ -329,6 +343,8 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("tuck",tok.text)) { stack_tuck(stack); return; }
     if (!strcmp("roll",tok.text)) { stack_roll(stack,2); return; }
     if (!strcmp("over",tok.text)) { stack_over(stack); return; }
+    if (!strcmp("savestack",tok.text)) { save_stack_to_file(stack, STACK_PATH); return; }
+    if (!strcmp("loadstack",tok.text)) { load_stack_from_file(stack, STACK_PATH); return; }
 
     // Polynomial functions
     if (!strcmp("roots",tok.text)) { poly_roots(stack); return;}

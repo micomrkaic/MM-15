@@ -23,6 +23,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#include <stdbool.h>
 #include "stack.h"
 
 gsl_complex my_complex_asin(gsl_complex z);

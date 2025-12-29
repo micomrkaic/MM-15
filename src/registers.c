@@ -17,10 +17,16 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdlib.h>
-#include <stdbool.h>
-#include "stack.h"
-#include "registers.h"
+#include <gsl/gsl_complex.h>                // for GSL_IMAG, GSL_REAL, gsl_c...
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_rect
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_alloc
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_alloc, gsl_mat...
+#include <stdbool.h>                        // for false, true
+#include <stdio.h>                          // for fprintf, printf, sscanf
+#include <stdlib.h>                         // for size_t, NULL, free
+#include <string.h>                         // for strchr, strcmp, strdup
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "registers.h"                      // for registers, MAX_REG, Register
 
 stack_element copy_element(const stack_element* src) {
   stack_element copy;
@@ -204,8 +210,8 @@ void save_registers_to_file(const char* filename) {
     case TYPE_MATRIX_REAL: {
       gsl_matrix* m = el->matrix_real;
       fprintf(f, "MATRIX_REAL %zu %zu", m->size1, m->size2);
-      for (size_t i = 0; i < m->size1 * m->size2; ++i) {
-	fprintf(f, " %.17g", m->data[i]);
+      for (size_t i_cnt = 0; i_cnt < m->size1 * m->size2; ++i_cnt) {
+	fprintf(f, " %.17g", m->data[i_cnt]);
       }
       fprintf(f, "\n");
       break;
@@ -213,9 +219,9 @@ void save_registers_to_file(const char* filename) {
     case TYPE_MATRIX_COMPLEX: {
       gsl_matrix_complex* m = el->matrix_complex;
       fprintf(f, "MATRIX_COMPLEX %zu %zu", m->size1, m->size2);
-      for (size_t i = 0; i < m->size1; ++i) {
+      for (size_t i_cnt = 0; i_cnt < m->size1; ++i_cnt) {
         for (size_t j = 0; j < m->size2; ++j) {
-	  gsl_complex z = gsl_matrix_complex_get(m, i, j);
+	  gsl_complex z = gsl_matrix_complex_get(m, i_cnt, j);
 	  fprintf(f, " (%.17g,%.17g)", GSL_REAL(z), GSL_IMAG(z));
         }
       }

@@ -17,28 +17,18 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <complex.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_complex_math.h>
-#include <gsl/gsl_blas.h>         // For gsl_blas_dgemm, gsl_blas_zgemm
-#include <gsl/gsl_linalg.h>       // For LU decomposition/inversion
-#include <gsl/gsl_permutation.h>  // For gsl_permutation and related
-#include <gsl/gsl_vector_complex.h>      // for gsl_vector_complex
-#include <gsl/gsl_eigen.h>        // for eigen decomposition functions
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
-#include "stack.h"
-#include "math_parsers.h"
-#include "binary_fun.h"
-#include "unary_fun.h"
-
-
-#include "stat_fun.h"
+#include <gsl/gsl_cdf.h>                    // for gsl_cdf_ugaussian_P, gsl_...
+#include <gsl/gsl_complex.h>                // for gsl_complex, GSL_REAL
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_calloc
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_calloc, gsl_ma...
+#include <gsl/gsl_randist.h>                // for gsl_ran_gaussian_pdf
+#include <stdbool.h>                        // for bool
+#include <math.h>                           // for INFINITY
+#include <stdio.h>                          // for fprintf, size_t, stderr
+#include <string.h>                         // for strcmp
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "stat_fun.h"                       // for matrix_column_means, matr...
 
 // Wrapper for standard normal PDF: mean = 0, sigma = 1
 double standard_normal_pdf(double x) {
@@ -363,7 +353,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       result = gsl_matrix_calloc(rows, 1);
       for (size_t i = 0; i < rows; ++i) {
         double acc = 0.0, acc_sq = 0.0;
-        double extreme = do_max ? -GSL_POSINF : GSL_POSINF;
+        double extreme = do_max ? -INFINITY : INFINITY;
         for (size_t j = 0; j < cols; ++j) {
           double val = gsl_matrix_get(mat, i, j);
           acc += val;
@@ -386,7 +376,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       result = gsl_matrix_calloc(1, cols);
       for (size_t j = 0; j < cols; ++j) {
         double acc = 0.0, acc_sq = 0.0;
-        double extreme = do_max ? -GSL_POSINF : GSL_POSINF;
+        double extreme = do_max ? -INFINITY : INFINITY;
         for (size_t i = 0; i < rows; ++i) {
           double val = gsl_matrix_get(mat, i, j);
           acc += val;
@@ -430,7 +420,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       for (size_t i = 0; i < rows; ++i) {
         gsl_complex acc = gsl_complex_rect(0.0, 0.0);
         gsl_complex acc_sq = gsl_complex_rect(0.0, 0.0);
-        double maxabs = -GSL_POSINF, minabs = GSL_POSINF;
+        double maxabs = -INFINITY, minabs = INFINITY;
         gsl_complex maxz = gsl_complex_rect(0, 0), minz = gsl_complex_rect(0, 0);
 
         for (size_t j = 0; j < cols; ++j) {
@@ -460,7 +450,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       for (size_t j = 0; j < cols; ++j) {
         gsl_complex acc = gsl_complex_rect(0.0, 0.0);
         gsl_complex acc_sq = gsl_complex_rect(0.0, 0.0);
-        double maxabs = -GSL_POSINF, minabs = GSL_POSINF;
+        double maxabs = -INFINITY, minabs = INFINITY;
         gsl_complex maxz = gsl_complex_rect(0, 0), minz = gsl_complex_rect(0, 0);
 
         for (size_t i = 0; i < rows; ++i) {

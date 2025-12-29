@@ -16,18 +16,19 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <math.h>
-#include <complex.h>
-#include <stdbool.h>
-#include <gsl/gsl_complex_math.h>
-#include "stack.h"
-#include "unary_fun.h"
-#include "binary_fun.h"
-#include "stat_fun.h"
-#include "spec_fun.h"
-#include "math_helpers.h"
-
+#include <complex.h>                        // for complex, cimag, cacos
+#include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_alloc
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matrix
+#include <math.h>                           // for log, modf, log10, sqrt, fabs
+#include <stdbool.h>                        // for bool, false, true
+#include <stdio.h>                          // for fprintf, stderr, size_t
+#include "math_helpers.h"                   // for abs_wrapper, acos_wrapper
+#include "spec_fun.h"                       // for gamma_function, ln_gamma_...
+#include "stack.h"                          // for stack_top_type, pop, (ano...
+#include "stat_fun.h"                       // for standard_normal_cdf, stan...
+#include "unary_fun.h"                      // for apply_real_matrix_unary_i...
 
 gsl_complex my_complex_asin(gsl_complex z) {
   double complex x = to_double_complex(z);

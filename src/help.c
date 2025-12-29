@@ -5,16 +5,14 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/utsname.h>
-#include <time.h>
-#include "function_list.h"
-#include "globals.h"
-#include "help.h"
-#include "stack.h"
+#include <stdbool.h>        // for true
+#include <stdio.h>          // for printf, fprintf, NULL, stderr
+#include <stdlib.h>         // for free, malloc, qsort
+#include <string.h>         // for strcmp
+#include "function_list.h"  // for function_names
+#include "globals.h"        // for skip_stack_printing
+#include "help.h"           // for HelpEntry, help_menu, list_all_functions
+#include "stack.h"          // for (anonymous struct)::(anonymous), TYPE_STRING
 
 #define BOLD      "\033[1m"
 #define ITALIC    "\033[3m"
@@ -23,6 +21,11 @@
 
 #define title(s) printf(BOLD s RESET "\n")
 #define subtitle(s) printf(UNDERLINE s RESET "\n")
+
+void whose_place(void) {
+  printf("Your place or mine?\n");
+  return;
+}
 
 void help_menu(void) {
   //  printf("\n\n_mico's toy Matrix and Scalar RPN Calculator\n");
@@ -36,7 +39,7 @@ void help_menu(void) {
   printf("    Read matrix from file as [#rows, #cols, \"filename\"].\n");
   printf("    You can undo the last line entry with undo.\n");
   subtitle("Stack manipulations");
-  printf("    drop, dup, swap, clst, nip, tuck, roll, over\n");
+  printf("    drop, dup, swap, clst, nip, tuck, roll, over, savestack, loadstack\n");
   subtitle("Math functions");
   printf("    Math functions work on scalars and matrices wherever possible. \n");
   printf("    Basic stuff: +, -, *, /, ^,  ln, exp, log, chs, inv, pct, pctchg \n");
@@ -92,10 +95,11 @@ void list_all_functions(void) {
 }
 
 // Compare function for qsort
-static int compare_strings(const void* a, const void* b) {
-  const char* sa = *(const char**)a;
-  const char* sb = *(const char**)b;
-  return strcmp(sa, sb);
+static int compare_strings(const void *a, const void *b)
+{
+  const char * const *sa = a;
+  const char * const *sb = b;
+  return strcmp(*sa, *sb);
 }
 
 void list_all_functions_sorted(void) {

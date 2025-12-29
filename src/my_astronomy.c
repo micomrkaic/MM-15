@@ -16,13 +16,11 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
-#include "stack.h"
-#include "my_astronomy.h"
+#include <math.h>          // for floor, sin, cos, acos, asin, atan, tan
+#include <stdio.h>         // for fprintf, stderr, snprintf, sscanf, size_t
+#include <string.h>        // for memcpy
+#include "my_astronomy.h"  // for dawn, dusk, sunrise, sunset
+#include "stack.h"         // for pop, push_string, Stack, (anonymous struct...
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

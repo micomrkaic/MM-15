@@ -17,24 +17,22 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <complex.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_complex_math.h>
-#include <gsl/gsl_blas.h>         // For gsl_blas_dgemm, gsl_blas_zgemm
-#include <gsl/gsl_linalg.h>       // For LU decomposition/inversion
-#include <gsl/gsl_permutation.h>  // For gsl_permutation and related
-#include <gsl/gsl_vector_complex.h>      // for gsl_vector_complex
-#include <gsl/gsl_eigen.h>        // for eigen decomposition functions
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include "stack.h"
-#include "math_helpers.h"
-#include "linear_algebra.h"
+#include <float.h>                          // for DBL_EPSILON
+#include <gsl/gsl_blas.h>                   // for gsl_blas_dgemm
+#include <gsl/gsl_cblas.h>                  // for CBLAS_TRANSPOSE
+#include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
+#include <gsl/gsl_eigen.h>                  // for gsl_eigen_nonsymmv_free
+#include <gsl/gsl_errno.h>                  // for GSL_SUCCESS
+#include <gsl/gsl_linalg.h>                 // for gsl_linalg_LU_decomp, gsl...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_free
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_free, gsl_matr...
+#include <gsl/gsl_permutation.h>            // for gsl_permutation_free, gsl...
+#include <gsl/gsl_vector_complex_double.h>  // for gsl_vector_complex_free
+#include <gsl/gsl_vector_double.h>          // for gsl_vector_free, gsl_vect...
+#include <math.h>                           // for fabs, isnan
+#include <stdio.h>                          // for fprintf, stderr, size_t
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "linear_algebra.h"                 // for matrix_cholesky, matrix_d...
 
 int matrix_inverse(Stack* stack) {
   if (stack->top < 0) {
@@ -482,27 +480,27 @@ int matrix_svd(Stack* stack) {
 }
 
 
-// Computes the Frobenius norm of a GSL matrix
-double gls_matrix_frobenius_norm(const gsl_matrix* A) {
-  double sum = 0.0;
-  for (size_t i = 0; i < A->size1; ++i) {
-    for (size_t j = 0; j < A->size2; ++j) {
-      double val = gsl_matrix_get(A, i, j);
-      sum += val * val;
-    }
-  }
-  return sqrt(sum);
-}
+/* // Computes the Frobenius norm of a GSL matrix */
+/* double gls_matrix_frobenius_norm(const gsl_matrix* A) { */
+/*   double sum = 0.0; */
+/*   for (size_t i = 0; i < A->size1; ++i) { */
+/*     for (size_t j = 0; j < A->size2; ++j) { */
+/*       double val = gsl_matrix_get(A, i, j); */
+/*       sum += val * val; */
+/*     } */
+/*   } */
+/*   return sqrt(sum); */
+/* } */
 
-int matrix_frobenius_norm(Stack *stack) {
-  if (stack->top < 0) {
-    fprintf(stderr,"No matrix to invert\n");
-    return 1;
-  }
+/* int matrix_frobenius_norm(Stack *stack) { */
+/*   if (stack->top < 0) { */
+/*     fprintf(stderr,"No matrix to invert\n"); */
+/*     return 1; */
+/*   } */
 
-  // To do a wrapper for real and complex matrices
-  return 0;
-}
+/*   // To do a wrapper for real and complex matrices */
+/*   return 0; */
+/* } */
 
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

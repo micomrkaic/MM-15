@@ -20,12 +20,16 @@
 // Mico Mrkaic, mrkaic.mico@gmail.com
 
 #define _POSIX_C_SOURCE 200809L
-#include <math.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_complex_math.h>
-#include "stack.h"
-#include "globals.h"
-#include "print_fun.h"
+#include <gsl/gsl_complex.h>                // for GSL_IMAG, GSL_REAL, gsl_c...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matrix
+#include <math.h>                           // for fabs
+#include <stdio.h>                          // for printf, size_t, snprintf
+#include <stdlib.h>                         // for calloc, free
+#include <string.h>                         // for strlen
+#include "globals.h"                        // for print_precision, fixed_point
+#include "print_fun.h"                      // for print_complex_matrix, pri...
+#include "stack.h"                          // for (anonymous struct)::(anon...
 
 void print_top_scalar(const Stack* stack) {
   if (stack->top == -1) {
@@ -110,7 +114,12 @@ void print_matrix(Stack *stack) {
 void print_real_matrix(const gsl_matrix* m) {
   size_t rows = m->size1;
   size_t cols = m->size2;
-  int col_width[cols];
+
+  int *col_width = calloc(cols, sizeof(*col_width));
+  if (!col_width) {
+    fprintf(stderr, "print_real_matrix: out of memory\n");
+    return;
+  }
 
   // Step 1: find max width per column
   for (size_t j = 0; j < cols; ++j) {
@@ -141,12 +150,18 @@ void print_real_matrix(const gsl_matrix* m) {
     }
     printf("|\n");
   }
+  free(col_width);
 }
 
 void print_complex_matrix(const gsl_matrix_complex* m) {
   size_t rows = m->size1;
   size_t cols = m->size2;
-  int col_width[cols];
+
+  int *col_width = calloc(cols, sizeof(*col_width));
+  if (!col_width) {
+    fprintf(stderr, "print_real_matrix: out of memory\n");
+    return;
+  }
 
   // Step 1: find max width per column
   for (size_t j = 0; j < cols; ++j) {
@@ -187,6 +202,7 @@ void print_complex_matrix(const gsl_matrix_complex* m) {
     }
     printf("|\n");
   }
+  free(col_width);
 }
 
 

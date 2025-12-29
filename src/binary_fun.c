@@ -17,22 +17,19 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <complex.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_complex_math.h>
-#include <gsl/gsl_blas.h>         // For gsl_blas_dgemm, gsl_blas_zgemm
-#include <gsl/gsl_linalg.h>       // For LU decomposition/inversion
-#include <gsl/gsl_permutation.h>  // For gsl_permutation and related
-#include <gsl/gsl_vector_complex.h>      // for gsl_vector_complex
-#include <gsl/gsl_eigen.h>        // for eigen decomposition functions
-#include "stack.h"
-#include "math_parsers.h"
-#include "math_helpers.h"
+#include <gsl/gsl_blas.h>                   // for gsl_blas_dgemm, gsl_blas_...
+#include <gsl/gsl_cblas.h>                  // for CBLAS_TRANSPOSE
+#include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
+#include <gsl/gsl_linalg.h>                 // for gsl_linalg_LU_decomp, gsl...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_alloc
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matri...
+#include <gsl/gsl_permutation.h>            // for gsl_permutation_alloc
+#include <math.h>                           // for pow
+#include <stdio.h>                          // for size_t, fprintf, stderr
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "math_helpers.h"                   // for is_zero_comple
+#include "binary_fun.h"                     // for add_top_two, add_top_two_...
 
 void add_top_two_scalars(Stack* stack) {
   if (stack->top < 1) {

@@ -36,12 +36,14 @@
 #define REGISTERS_FILE "registers.txt"
 #define CONFIG_FILE "config.txt"
 #define MACROS_FILE "predefined_macros.txt"
+#define STACK_FILE "stack_backup.dat"
 
 #define CONFIG_PATH      APP_CFG_DIR "/" CONFIG_FILE
 #define WORDS_PATH       APP_CFG_DIR "/" WORDS_FILE
 #define REGISTERS_PATH   APP_CFG_DIR "/" REGISTERS_FILE
 #define HISTORY_PATH     APP_CFG_DIR "/" HISTORY_FILE
 #define MACROS_PATH      APP_CFG_DIR "/" MACROS_FILE  // or use a DATADIR if not per-user
+#define STACK_PATH      APP_CFG_DIR "/" STACK_FILE  
 
 extern gsl_rng * global_rng;
 

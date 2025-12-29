@@ -75,8 +75,6 @@ void free_stack(Stack* stack);
 gsl_matrix* load_matrix_from_file(int rows, int cols, const char* filename);
 value_type stack_top_type(const Stack* stack);
 value_type stack_next2_top_type(const Stack* stack);
-int save_stack_to_file(Stack* stack, const char* filename);
-int load_stack_from_file(Stack* stack, const char* filename);
 int copy_stack(Stack* dest, const Stack* src);
 
 #endif // STACK_H

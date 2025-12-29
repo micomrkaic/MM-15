@@ -17,23 +17,13 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <complex.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_complex_math.h>
-#include <gsl/gsl_blas.h>         // For gsl_blas_dgemm, gsl_blas_zgemm
-#include <gsl/gsl_linalg.h>       // For LU decomposition/inversion
-#include <gsl/gsl_permutation.h>  // For gsl_permutation and related
-#include <gsl/gsl_vector_complex.h>      // for gsl_vector_complex
-#include <gsl/gsl_eigen.h>        // for eigen decomposition functions
-#include "stack.h"
-#include "math_parsers.h"
-#include "math_helpers.h"
-#include "compare_fun.h"
+#include <gsl/gsl_complex.h>                // for gsl_complex
+#include <gsl/gsl_complex_math.h>           // for gsl_complex_abs, gsl_comp...
+#include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
+#include <gsl/gsl_matrix_double.h>          // for gsl_matrix_alloc, gsl_mat...
+#include <stdio.h>                          // for size_t, fprintf, stderr
+#include "stack.h"                          // for (anonymous struct)::(anon...
+#include "compare_fun.h"                    // for comparison_op, CMP_AND
 
 static int cmp_real(double a, double b, comparison_op op) {
   switch (op) {

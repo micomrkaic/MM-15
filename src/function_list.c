@@ -17,8 +17,6 @@
  */
 
 #include <string.h>
-#include <stdbool.h>
-#include "function_list.h"
 
 const char* const function_names[] = {
   "sin", "cos", "tan", "asin", "acos", "atan",
@@ -30,6 +28,7 @@ const char* const function_names[] = {
   "fuck", "help", "listfcns","usage",
   "gravity", "pi", "e", "inf", "nan",
   "drop", "clst", "swap", "dup", "nip", "tuck", "roll", "over",
+  "savestack","loadstack",
   "scon", "s2l", "s2u", "slen", "srev", "int2str","substr",
   "minv", "pinv", "det", "eig", "tran", "reshape", "get_aij", "set_aij","split_mat","'",
   "kron", "diag", "to_diag", "chol", "svd", "dim", "eye",

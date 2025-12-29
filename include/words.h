@@ -50,6 +50,6 @@ int save_words_to_file(void);
 int load_words_from_file(void);
 user_word* find_word(char* name);
 void word_select(Stack *stack);
-bool is_word_definition(const char *s);
+int is_word_definition(const char *s);
 
 #endif // WORDS_H

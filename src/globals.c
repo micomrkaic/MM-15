@@ -29,13 +29,12 @@ char path_to_data_and_programs[MAX_PATH];
 double intg_tolerance = 1.0e-5;
 double fsolve_tolerance = 1.0e-6;
 
-#include <stdio.h>
-#include <complex.h>
-#include <stdbool.h>
-#include <string.h>
 #include "globals.h"
-
-//#pragma message ("HOME_DIR=" HOME_DIR)
+#include <gsl/gsl_complex.h>  // for GSL_IMAG, GSL_REAL
+#include <stdbool.h>          // for bool, false, true
+#include <stdio.h>            // for fprintf, fclose, fopen, perror, stderr
+#include <stdlib.h>           // for atoi
+#include <string.h>           // for strcmp, strchr, strcspn, strncpy
 
 int set_print_precision(Stack* stack) {
   if (stack->top < 0) {

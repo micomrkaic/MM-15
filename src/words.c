@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with MM-14 If not, see <https://www.gnu.org/licenses/>.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include "globals.h"
-#include "words.h"
+
+#include <ctype.h>    // for isspace, isalnum
+#include <stdbool.h>  // for false
+#include <stdio.h>    // for fprintf, stderr, fclose, fopen, perror, printf
+#include <string.h>   // for strncpy, strcmp, strlen
+#include "globals.h"  // for MACROS_PATH, WORDS_FILE, selected_function
+#include "stack.h"    // for pop, (anonymous struct)::(anonymous), Stack
+#include "words.h"    // for MAX_WORD_NAME, MAX_WORD_BODY, MAX_WORDS, user_word
 
 user_word words[MAX_WORDS];
 int word_count = 0;
@@ -166,62 +167,74 @@ user_word* find_word(char* name) {
   return NULL;
 }
 
-bool is_word_definition(const char *s) {
-    // Skip leading whitespace
-    while (isspace((unsigned char)*s)) s++;
+int is_word_definition(const char *s) {
+  // Skip leading whitespace
+  while (isspace((unsigned char)*s)) s++;
 
-    if (*s != ':') return false;
-    s++; // move past ':'
+  if (*s != ':') return 0; // Not a definition
+  s++; // move past ':'
 
-    // Skip whitespace after ':'
-    while (isspace((unsigned char)*s)) s++;
+  // Skip whitespace after ':'
+  while (isspace((unsigned char)*s)) s++;
 
-    // Parse the name
-    const char *name_start = s;
-    while (isalnum((unsigned char)*s) || *s == '_') s++;
-    const char *name_end = s;
+  // Parse the name
+  const char *name_start = s;
+  while (isalnum((unsigned char)*s) || *s == '_') s++;
+  const char *name_end = s;
 
-    if (name_start == name_end) return false;  // No valid name
+  if (name_start == name_end) return false;  // No valid name
 
-    // Copy name
-    size_t name_len = name_end - name_start;
-    if (name_len >= MAX_WORD_NAME) name_len = MAX_WORD_NAME - 1;
-    char name[MAX_WORD_NAME];
-    strncpy(name, name_start, name_len);
-    name[name_len] = '\0';
+  // Copy name
+  size_t name_len = name_end - name_start;
+  if (name_len >= MAX_WORD_NAME) name_len = MAX_WORD_NAME - 1;
+  char name[MAX_WORD_NAME];
+  strncpy(name, name_start, name_len);
+  name[name_len] = '\0';
 
-    // Must be at least one space after name
-    if (!isspace((unsigned char)*s)) return false;
-    while (isspace((unsigned char)*s)) s++;
+  // Must be at least one space after name
+  if (!isspace((unsigned char)*s)) return false;
+  while (isspace((unsigned char)*s)) s++;
 
-    // Now s points to the body start
-    const char *body_start = s;
+  // Now s points to the body start
+  const char *body_start = s;
 
-    // Find the last non-whitespace character
-    const char *end = s + strlen(s) - 1;
-    while (end > s && isspace((unsigned char)*end)) end--;
+  // Find the last non-whitespace character
+  const char *end = s + strlen(s) - 1;
+  while (end > s && isspace((unsigned char)*end)) end--;
 
-    if (*end != ';') return false;
+  if (*end != ';') return false;
 
-    // Point just before the final semicolon
-    const char *body_end = end;
-    while (body_end > body_start && isspace((unsigned char)*(body_end - 1))) body_end--;
+  // Point just before the final semicolon
+  const char *body_end = end;
+  while (body_end > body_start && isspace((unsigned char)*(body_end - 1))) body_end--;
 
-    // Copy body text
-    size_t body_len = body_end - body_start;
-    if (body_len >= MAX_WORD_BODY) body_len = MAX_WORD_BODY - 1;
+  // Copy body text
+  size_t body_len = body_end - body_start;
+  if (body_len >= MAX_WORD_BODY) body_len = MAX_WORD_BODY - 1;
 
-    if (word_count >= MAX_WORDS) {
-      fprintf(stderr, "Too many word definitions.\n");
-      return false;
-    }
+  if (word_count >= MAX_WORDS) {
+    fprintf(stderr, "Too many word definitions.\n");
+    return false;
+  }
 
-    user_word *w = &words[word_count++];
-    strncpy(w->name, name, MAX_WORD_NAME);
-    w->name[MAX_WORD_NAME - 1] = '\0';
+  // ---- FIX: reject redefinition ----
+  if (find_word(name) != NULL) {
+    fprintf(stderr, "Word '%s' is already defined.\n", name);
+    return -1;
+  }
+  // Optional: also prevent collisions with macros
+  if (find_macro(name) != NULL) {
+    fprintf(stderr, "Name '%s' is already used as a macro.\n", name);
+    return -1;
+  }
+  // ----------------------------------
+    
+  user_word *w = &words[word_count++];
+  strncpy(w->name, name, MAX_WORD_NAME);
+  w->name[MAX_WORD_NAME - 1] = '\0';
 
-    strncpy(w->body, body_start, body_len);
-    w->body[body_len] = '\0';
-    printf("New word %s <- %s\n",w->name,w->body);
-    return true;
+  strncpy(w->body, body_start, body_len);
+  w->body[body_len] = '\0';
+  printf("New word %s <- %s\n",w->name,w->body);
+  return 1;
 }

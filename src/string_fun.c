@@ -21,37 +21,59 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <math.h>
 #include <limits.h>
 #include "string_fun.h"
 #include "stack.h"
 
-void concatenate(Stack* stack) {
-  if (stack->top < 1
-      || stack->items[stack->top - 1].type != TYPE_STRING
-      || stack->items[stack->top].type != TYPE_STRING) {
-    fprintf(stderr,"Both top items must be strings\n");
-    return;
-  }
+void concatenate(Stack *stack)
+{
+    if (!stack) {
+        fprintf(stderr, "concatenate: null stack\n");
+        return;
+    }
 
-  const char* str1 = stack->items[stack->top - 1].string;
-  const char* str2 = stack->items[stack->top].string;
+    if (stack->top < 1 ||
+        stack->items[stack->top - 1].type != TYPE_STRING ||
+        stack->items[stack->top].type     != TYPE_STRING) {
+        fprintf(stderr, "Both top items must be strings\n");
+        return;
+    }
 
-  size_t new_len = strlen(str1) + strlen(str2) + 1;
-  char* result = malloc(new_len);
-  if (!result) {
-    fprintf(stderr,"Memory allocation failed\n");
-    return;
-  }
+    char *s1 = stack->items[stack->top - 1].string;
+    char *s2 = stack->items[stack->top].string;
+    if (!s1) s1 = (char *)"";
+    if (!s2) s2 = (char *)"";
 
-  strcpy(result, str1);
-  strcat(result, str2);
+    size_t n1 = strlen(s1);
+    size_t n2 = strlen(s2);
 
-  free(stack->items[stack->top].string);
-  free(stack->items[stack->top - 1].string);
-  stack->top -= 2;
-  push_string(stack, result);
-  free(result);
+    /* overflow guard (paranoid, but cheap) */
+    if (n1 > SIZE_MAX - n2 - 1) {
+        fprintf(stderr, "String length overflow\n");
+        return;
+    }
+
+    char *out = malloc(n1 + n2 + 1);
+    if (!out) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return;
+    }
+
+    memcpy(out,      s1, n1);
+    memcpy(out + n1, s2, n2);
+    out[n1 + n2] = '\0';
+
+    /* Free old strings and replace the lower one with the concatenation */
+    free(stack->items[stack->top].string);
+    free(stack->items[stack->top - 1].string);
+
+    stack->items[stack->top - 1].type = TYPE_STRING;
+    stack->items[stack->top - 1].string = out;
+
+    /* Pop one item (we consumed two and left one) */
+    stack->top -= 1;
 }
 
 void to_upper(Stack* stack) {

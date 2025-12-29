@@ -18,12 +18,10 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include <string.h>
-#include <readline/history.h>
-#include <readline/readline.h>
-#include "words.h"
-#include "function_list.h"
-
+#include <readline/readline.h>  // for rl_completion_matches, rl_line_buffer
+#include <string.h>             // for strdup, strncmp, NULL, strlen
+#include "tab_completion.h"     // for function_name_completion, function_na...
+#include "words.h"              // for user_word
 
 char* function_name_generator(const char* text, int state) {
   static int phase;  // 0 = builtins, 1 = user words, 2 = macros
