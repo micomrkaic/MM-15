@@ -1,6 +1,3 @@
-GIT_VERSION := $(shell git describe --always --dirty 2>/dev/null)
-CPPFLAGS += -DVERSION='"$(GIT_VERSION)"'
-
 # --- portability knobs (Linux + macOS) ---
 SHELL      := /bin/sh
 APP        ?= mm_15
@@ -45,6 +42,16 @@ SRC_DIR = src
 INC_DIR = include
 BIN_DIR = bin/$(MODE)
 OBJ_DIR = build/$(MODE)
+
+# --- Git version header (reliable + rebuilds when git state changes) ---
+GIT_HEADER := $(OBJ_DIR)/git_version.h
+GIT_HASH   := $(shell git rev-parse --short HEAD 2>/dev/null)
+GIT_DIRTY  := $(shell git diff-index --quiet HEAD -- 2>/dev/null || echo -dirty)
+GIT_VERSION:= $(GIT_HASH)$(GIT_DIRTY)
+
+# Force-include the generated header in every compile
+CPPFLAGS += -include $(GIT_HEADER)
+
 
 # Executable (mode-specific)
 TARGET = $(BIN_DIR)/$(APP)
@@ -112,6 +119,15 @@ test-asan: asan
 # -------- Rules --------
 .PHONY: all install install-system uninstall clean doc
 
+# Regenerate git version header when HEAD or index changes
+$(GIT_HEADER): .git/HEAD .git/index
+	@$(MKDIR_P) "$(@D)"
+	@printf '%s\n' \
+	  '#pragma once' \
+	  '#define VERSION "$(GIT_VERSION)"' \
+	  > "$@"
+
+
 all: $(TARGET)
 
 # Link
@@ -120,7 +136,8 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 # Compile (+ auto header deps)
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+# Compile (+ auto header deps)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(GIT_HEADER)
 	@$(MKDIR_P) "$(@D)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEPFLAGS) -c $< -o $@
 

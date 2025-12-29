@@ -26,3 +26,6 @@ token
 
 # binaries from this project
 mm_*
+# build outputs
+build/
+bin/
