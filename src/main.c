@@ -16,7 +16,11 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* TODO as of December 29, 2025
+/* TODO as of January 18, 2026
+   . use pop() consistently instead of accessing stack internally through the pointer
+   . make sure strings do not leak after date operations
+   . fix the date format in my_date.c to throw error on e.g., "33.14.2026"
+   . physical constants
    . call from emacs and shell as a calculator/evaluator
    . implement in JSON save_stack_to_file in the interpreter and load_stack_from_file
    . Simple plotting of a vector vs vector for a simple function plot etc.
