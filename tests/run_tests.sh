@@ -52,10 +52,30 @@ mkdir -p "$SANDBOX/.config/mm_15"
 : > "$SANDBOX/.config/mm_15/predefined_macros.txt"
 : > "$SANDBOX/.config/mm_15/user_words.txt"
 
-# ASan: don't abort the whole run on first leak; we want every test to run.
-# detect_leaks=1 keeps leak detection on so a regression still fails the case.
-export ASAN_OPTIONS="detect_leaks=1:exitcode=1:abort_on_error=0"
+# LeakSanitizer (detect_leaks) is Linux-only. On macOS, detect_leaks=1
+# makes ASan abort before the program runs ("detect_leaks is not supported
+# on this platform"), producing empty output for every case. Disable it on
+# macOS; ASan still catches use-after-free / heap-overflow there, just not
+# leaks. UBSan works on both.
+if [ "$(uname -s)" = "Darwin" ]; then
+  export ASAN_OPTIONS="detect_leaks=0:exitcode=1:abort_on_error=0"
+  LEAK_DETECTION="off (macOS: LeakSanitizer unavailable)"
+else
+  export ASAN_OPTIONS="detect_leaks=1:exitcode=1:abort_on_error=0"
+  LEAK_DETECTION="on"
+fi
 export UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1"
+
+# macOS/BSD grep treats lines with multibyte chars (the ℝ/ℂ/𝒮 type markers)
+# as binary under a C/POSIX locale and silently skips them, which breaks
+# value extraction. Force a UTF-8 locale so grep treats output as text on
+# both Linux and macOS regardless of the caller's environment.
+if locale -a 2>/dev/null | grep -qi '^en_US\.UTF-*8$'; then
+  export LC_ALL="en_US.UTF-8"
+else
+  export LC_ALL="C.UTF-8"
+fi
+export LANG="$LC_ALL"
 
 pass=0
 fail=0
@@ -65,11 +85,14 @@ failed_names=()
 # Handles real ([..] ℝ : 42), the value may be complex/string — for those
 # the expected value is compared as a raw string instead.
 extract_last_value() {
-  # Last line containing the " : " result separator produced by `print`.
+  # The result line from `print` is:  [<n>] <type-glyph> : <value>
+  # Only the trailing " : <value>" is ASCII and reliable across locales.
+  # -a forces text mode so BSD grep won't skip lines with the multibyte
+  # type marker. Anchor on "[<digits>] " (ASCII) then take everything
+  # after the last " : ".
   local line
-  line="$(grep -E '^\[[0-9]+\] .+ : ' "$1" | tail -n 1)"
-  # Strip everything up to and including the first " : ".
-  printf '%s' "${line#*: }"
+  line="$(grep -a -E '^\[[0-9]+\] ' "$1" | grep -a ' : ' | tail -n 1)"
+  printf '%s' "${line##* : }"
 }
 
 # Numeric compare with tolerance. Returns 0 if |a-b| <= tol.
@@ -90,6 +113,7 @@ fi
 echo "MM-15 test harness"
 echo "binary : $BIN"
 echo "cases  : ${#cases[@]}"
+echo "leaks  : ${LEAK_DETECTION}"
 echo "------------------------------------------------------------"
 
 for case_file in "${cases[@]}"; do
@@ -109,8 +133,12 @@ for case_file in "${cases[@]}"; do
   input="$(grep -vE '^#(EXPECT|TOL):' "$case_file" | grep -vE '^#')"
   out_file="$SANDBOX/$name.out"
 
-  printf '%s\nprint\nq\n' "$input" \
-    | HOME="$SANDBOX" "$BIN" > "$out_file" 2>&1
+  # Write input to a file and feed via redirection. The earlier
+  # "printf ... | HOME=x BIN > out" form (pipe + inline-env + redirect on a
+  # continued line) is parsed unreliably by macOS bash 3.2; plain
+  # "BIN < in > out" is identical across all shells.
+  printf '%s\nprint\nq\n' "$input" > "$SANDBOX/stdin.txt"
+  HOME="$SANDBOX" "$BIN" < "$SANDBOX/stdin.txt" > "$out_file" 2>&1
   run_status=$?
 
   # Sanitizer triage:
