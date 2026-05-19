@@ -17,6 +17,7 @@
  */
 
 #include <ctype.h>    // for isspace, isalnum
+#include <math.h>     // for isfinite
 #include <stdbool.h>  // for false
 #include <stdio.h>    // for fprintf, stderr, fclose, fopen, perror, printf
 #include <string.h>   // for strncpy, strcmp, strlen
@@ -47,15 +48,18 @@ int load_macros_from_file(void) {
   }
 
   macro_count = 0;
-  while (macro_count < MAX_WORDS && !feof(f)) {
+  while (macro_count < MAX_WORDS) {
     char name[MAX_WORD_NAME];
     char body[MAX_WORD_BODY];
 
-    if (fscanf(f, "%15s %[^\n]", name, body) == 2) {
-      strncpy(macros[macro_count].name, name, MAX_WORD_NAME);
-      strncpy(macros[macro_count].body, body, MAX_WORD_BODY);
-      macro_count++;
-    }
+    // Bound the body field so a long line cannot overflow body[].
+    if (fscanf(f, "%15s %1023[^\n]", name, body) != 2)
+      break;
+    strncpy(macros[macro_count].name, name, MAX_WORD_NAME);
+    macros[macro_count].name[MAX_WORD_NAME - 1] = '\0';
+    strncpy(macros[macro_count].body, body, MAX_WORD_BODY);
+    macros[macro_count].body[MAX_WORD_BODY - 1] = '\0';
+    macro_count++;
   }
 
   fclose(f);
@@ -84,6 +88,10 @@ void delete_word(Stack *stack) {
     fprintf(stderr,"Invalid index type\n");
     return;
   } else {
+    if (!isfinite(a.real)) {
+      fprintf(stderr,"Invalid index value\n");
+      return;
+    }
     int index = (int)a.real;
     delete_word_by_index(index);
   }
@@ -109,6 +117,10 @@ void word_select(Stack * stack) {
     fprintf(stderr,"Invalid index type\n");
     return;
   } else {
+    if (!isfinite(a.real)) {
+      fprintf(stderr,"Invalid index\n");
+      return;
+    }
     int index = (int)a.real;
     if (index < 0 || index >= word_count) {
       fprintf(stderr,"Invalid index\n");
@@ -145,15 +157,18 @@ int load_words_from_file(void) {
   }
 
   word_count = 0;
-  while (word_count < MAX_WORDS && !feof(f)) {
+  while (word_count < MAX_WORDS) {
     char name[MAX_WORD_NAME];
     char body[MAX_WORD_BODY];
 
-    if (fscanf(f, "%15s %[^\n]", name, body) == 2) {
-      strncpy(words[word_count].name, name, MAX_WORD_NAME);
-      strncpy(words[word_count].body, body, MAX_WORD_BODY);
-      word_count++;
-    }
+    // Bound the body field so a long line cannot overflow body[].
+    if (fscanf(f, "%15s %1023[^\n]", name, body) != 2)
+      break;
+    strncpy(words[word_count].name, name, MAX_WORD_NAME);
+    words[word_count].name[MAX_WORD_NAME - 1] = '\0';
+    strncpy(words[word_count].body, body, MAX_WORD_BODY);
+    words[word_count].body[MAX_WORD_BODY - 1] = '\0';
+    word_count++;
   }
 
   fclose(f);

@@ -232,6 +232,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
 	sub_tok = next_token(&sub_lexer);
 	evaluate_one_token(stack, sub_tok);    
       } while (sub_tok.type != TOK_EOF);
+      free(sub_line);
       return;
     }
     
@@ -246,6 +247,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
 	sub_tok = next_token(&sub_lexer);
 	evaluate_one_token(stack, sub_tok);    
       } while (sub_tok.type != TOK_EOF);
+      free(sub_line);
     }
     return;
   }
@@ -261,6 +263,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
       if (t.type != TYPE_STRING) {
         fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
       } else evaluate_line(stack, t.string);
+      if (t.type == TYPE_STRING) free(t.string);
       return;
     }
 
@@ -273,6 +276,7 @@ void evaluate_one_token(Stack *stack, Token tok) {
       if (t.type != TYPE_STRING) {
         fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
       } else run_batch(stack, t.string);
+      if (t.type == TYPE_STRING) free(t.string);
       return;
     }
     
@@ -288,12 +292,15 @@ void evaluate_one_token(Stack *stack, Token tok) {
 	Program prog = {.count = 0, .label_count = 0};
 	if (!load_program_from_file(t.string, &prog)) {
 	  fprintf(stderr, "Failed to load program.\n");
+	  free_program(&prog);   // load may have strdup'd args before failing
+	  free(t.string);
 	  return;
 	}
 	list_program(&prog);
 	run_RPN_code(stack, &prog);
 	free_program(&prog);
       }
+      if (t.type == TYPE_STRING) free(t.string);
       return;
     }
 
