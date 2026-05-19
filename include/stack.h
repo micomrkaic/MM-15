@@ -58,6 +58,15 @@ typedef struct {
   int top;
 } Stack;
 
+/* Element-level resource management.
+ * stack_element_free: release any heap memory owned by *e (matrix/string) and
+ *               leave it in a safe, NULL/zeroed state. Scalars are no-ops.
+ * stack_element_clone: deep-copy src into dst (independent matrix/string storage).
+ *               Returns 0 on success, -1 on allocation/unknown-type failure.
+ */
+void stack_element_free(stack_element* e);
+int  stack_element_clone(stack_element* dst, const stack_element* src);
+
 void init_stack(Stack* stack);
 int stack_size(const Stack* stack);
 void push_real(Stack* stack, double value);

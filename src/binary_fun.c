@@ -345,10 +345,10 @@ void add_top_two(Stack* stack) {
   }
 
   // Free any heap-allocated matrix in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Overwrite a with result and reduce stack
   *a = result;
@@ -511,10 +511,10 @@ void sub_top_two(Stack* stack) {
   }
 
   // Free memory in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result and pop
   *a = result;
@@ -649,10 +649,10 @@ void mul_top_two(Stack* stack) {
   }
 
   // Free memory in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result in-place and pop b
   *a = result;
@@ -833,10 +833,10 @@ void div_top_two(Stack* stack) {
   }
 
   // ---- Cleanup and finalize ----
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   *a = result;
   stack->top--;
@@ -927,10 +927,10 @@ void pow_top_two(Stack* stack) {
   }
 
   // Free a’s previous data
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result in a and pop b
   *a = result;
@@ -1146,10 +1146,10 @@ int kronecker_top_two(Stack* stack) {
   }
 
   // Cleanup: free first matrix if allocated
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   *a = result;
   stack->top--;
@@ -1280,10 +1280,10 @@ void dot_div_top_two(Stack* stack) {
   }
 
   // Free memory in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result and pop
   *a = result;
@@ -1413,10 +1413,10 @@ void dot_mult_top_two(Stack* stack) {
   }
 
   // Free memory in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result and pop
   *a = result;
@@ -1530,10 +1530,10 @@ void dot_pow_top_two(Stack* stack) {
   }
 
   // Free memory in a
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
+  // Release BOTH consumed operands. The old code freed only 'a';
+  // 'b' (the top) was dropped by stack->top-- and its matrix leaked.
+  stack_element_free(a);
+  stack_element_free(b);
 
   // Store result and pop
   *a = result;

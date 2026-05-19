@@ -272,7 +272,11 @@ static Token lex_matrix_inline_j(Lexer* lexer) {
     }
 
     if (len + (size_t)written + 1 >= cap) {
-      cap *= 2;
+      // Loop, not a single doubling: one token can be larger than 2*cap
+      // (a long numeric literal), in which case a single doubling still
+      // overflows the following memcpy.
+      while (len + (size_t)written + 1 >= cap)
+        cap *= 2;
       char* new_buf = realloc(buf, cap);
       if (!new_buf) {
         free(buf);
