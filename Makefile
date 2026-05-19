@@ -116,6 +116,14 @@ test-asan: asan
 
 	@echo "Done. If ASan found anything, you already saw the stack trace."
 
+# -------- Functional test harness --------
+# `make test` builds the ASan binary and runs tests/run_tests.sh against it,
+# so every functional test also gets leak/UB checking for free. Exit status
+# is nonzero if any case fails, so this is CI-usable.
+.PHONY: test
+test: asan
+	@bash tests/run_tests.sh
+
 # -------- Rules --------
 .PHONY: all install install-system uninstall clean doc
 
