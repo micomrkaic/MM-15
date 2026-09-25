@@ -41,7 +41,7 @@ const char* const function_names[] = {
   "print", "pm", "ps", "setprec","sfs","undo",
   ".*", "./", ".^",
   "eq","leq","lt","gt","geq","neq","and","or","not",
-  "ddays","today","dateplus","dow","edmy","num2date","days2eoy",
+  "ddays","today","now","tz_offset","dateplus","dow","edmy","num2date","days2eoy",
   "listwords",  "loadwords", "savewords", "delword", "selword","clrwords", "listmacros",
   "clrhist",
   "top_eq0?", "top_ge0?",  "top_gt0?", "top_le0?",  "top_lt0?",

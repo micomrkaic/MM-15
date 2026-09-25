@@ -20,6 +20,7 @@
 #include <stdio.h>         // for fprintf, stderr, snprintf, sscanf, size_t
 #include <string.h>        // for memcpy
 #include "my_astronomy.h"  // for dawn, dusk, sunrise, sunset
+#include "my_date_fun.h"   // for parse_date_relaxed, zone_offset_hours
 #include "stack.h"         // for pop, push_string, Stack, (anonymous struct...
 
 #ifndef M_PI
@@ -210,8 +211,14 @@ static void format_time_hhmm(double h, char *buf, size_t len) {
  *
  * Expects on stack (from bottom to top):
  *   ... "d.m.y" lat lon utc_offset
+ *   ... "d.m.y" lat lon "Area/City"
  *
  * where the date string is like "3.4.2025" or "03.04.2025".
+ *
+ * The fourth item may be either a real UTC offset in hours (e.g. -4) or an
+ * IANA time-zone name string (e.g. "America/New_York").  In the latter case
+ * the offset is resolved for *the date on the stack*, so DST is handled for
+ * dates other than today, and the caller never has to know the rule.
  */
 static int fetch_astro_args(const Stack *stack,
                             const char **date_str_out,
@@ -233,18 +240,36 @@ static int fetch_astro_args(const Stack *stack,
             "Error: date must be a string \"d.m.y\" (e.g. \"3.4.2025\" or \"03.04.2025\").\n");
     return 0;
   }
-  if (e_lat->type != TYPE_REAL ||
-      e_lon->type != TYPE_REAL ||
-      e_utc->type != TYPE_REAL) {
+  if (e_lat->type != TYPE_REAL || e_lon->type != TYPE_REAL) {
     fprintf(stderr,
-            "Error: latitude, longitude, and UTC offset must be real numbers.\n");
+            "Error: latitude and longitude must be real numbers.\n");
+    return 0;
+  }
+
+  double utc_offset;
+  if (e_utc->type == TYPE_REAL) {
+    utc_offset = e_utc->real;
+  } else if (e_utc->type == TYPE_STRING) {
+    int d, m, y;
+    if (!parse_date_relaxed(e_date->string, &d, &m, &y)) {
+      fprintf(stderr,
+              "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\").\n",
+              e_date->string);
+      return 0;
+    }
+    if (!zone_offset_hours(e_utc->string, d, m, y, &utc_offset))
+      return 0; /* message already printed */
+  } else {
+    fprintf(stderr,
+            "Error: 4th argument must be a UTC offset (real, e.g. -4) or a zone name "
+            "(string, e.g. \"America/New_York\").\n");
     return 0;
   }
 
   *date_str_out   = e_date->string;
   *lat_out        = e_lat->real;
   *lon_out        = e_lon->real;
-  *utc_offset_out = e_utc->real;
+  *utc_offset_out = utc_offset;
 
   return 1;
 }
@@ -252,6 +277,7 @@ static int fetch_astro_args(const Stack *stack,
 /*
  * SUNRISE word:
  *   ... "d.m.y" lat lon utc_offset  SUNRISE
+ *   ... "d.m.y" lat lon "Area/City" SUNRISE
  *   -> ... "HH:MM"
  */
 int sunrise(Stack *stack)
@@ -262,18 +288,27 @@ int sunrise(Stack *stack)
   if (!fetch_astro_args(stack, &date_str, &lat, &lon, &utc_offset))
     return 0; /* error already printed */
 
-  /* Now safely pop the 4 arguments */
-  (void)pop(stack); /* utc_offset */
-  (void)pop(stack); /* lon */
-  (void)pop(stack); /* lat */
-  (void)pop(stack); /* date string */
+  /* Keep a copy of the date for error messages; the stack copy is freed
+   * below, and compute_*() must run while the arguments are still live. */
+  char date_copy[32];
+  snprintf(date_copy, sizeof date_copy, "%s", date_str);
 
   double sun_h;
   int rc = compute_one_sun_time(date_str, lat, lon, utc_offset, 0, &sun_h);
+
+  /* Pop the 4 arguments now that they have been consumed.  pop_and_free()
+   * releases the date string (and the zone string, if that form was used);
+   * the original bare pop() leaked them, and freeing before compute_*()
+   * would have been a use-after-free through date_str. */
+  pop_and_free(stack); /* utc_offset or zone name */
+  pop_and_free(stack); /* lon */
+  pop_and_free(stack); /* lat */
+  pop_and_free(stack); /* date string */
+
   if (rc == -1) {
     fprintf(stderr,
             "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\").\n",
-            date_str);
+            date_copy);
     return 0;
   } else if (rc == -2) {
     fprintf(stderr,
@@ -295,6 +330,7 @@ int sunrise(Stack *stack)
 /*
  * SUNSET word:
  *   ... "d.m.y" lat lon utc_offset  SUNSET
+ *   ... "d.m.y" lat lon "Area/City" SUNSET
  *   -> ... "HH:MM"
  */
 int sunset(Stack *stack)
@@ -305,18 +341,27 @@ int sunset(Stack *stack)
   if (!fetch_astro_args(stack, &date_str, &lat, &lon, &utc_offset))
     return 0; /* error already printed */
 
-  /* Now safely pop the 4 arguments */
-  (void)pop(stack); /* utc_offset */
-  (void)pop(stack); /* lon */
-  (void)pop(stack); /* lat */
-  (void)pop(stack); /* date string */
+  /* Keep a copy of the date for error messages; the stack copy is freed
+   * below, and compute_*() must run while the arguments are still live. */
+  char date_copy[32];
+  snprintf(date_copy, sizeof date_copy, "%s", date_str);
 
   double sun_h;
   int rc = compute_one_sun_time(date_str, lat, lon, utc_offset, 1, &sun_h);
+
+  /* Pop the 4 arguments now that they have been consumed.  pop_and_free()
+   * releases the date string (and the zone string, if that form was used);
+   * the original bare pop() leaked them, and freeing before compute_*()
+   * would have been a use-after-free through date_str. */
+  pop_and_free(stack); /* utc_offset or zone name */
+  pop_and_free(stack); /* lon */
+  pop_and_free(stack); /* lat */
+  pop_and_free(stack); /* date string */
+
   if (rc == -1) {
     fprintf(stderr,
             "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\").\n",
-            date_str);
+            date_copy);
     return 0;
   } else if (rc == -2) {
     fprintf(stderr,
@@ -348,18 +393,27 @@ int dawn(Stack *stack)
   if (!fetch_astro_args(stack, &date_str, &lat, &lon, &utc_offset))
     return 0; /* error already printed */
 
-  /* Pop the 4 arguments */
-  (void)pop(stack); /* utc_offset */
-  (void)pop(stack); /* lon */
-  (void)pop(stack); /* lat */
-  (void)pop(stack); /* date string */
+  /* Keep a copy of the date for error messages; the stack copy is freed
+   * below, and compute_*() must run while the arguments are still live. */
+  char date_copy[32];
+  snprintf(date_copy, sizeof date_copy, "%s", date_str);
 
   double t_h;
   int rc = compute_one_civil_twilight(date_str, lat, lon, utc_offset, 0, &t_h);
+
+  /* Pop the 4 arguments now that they have been consumed.  pop_and_free()
+   * releases the date string (and the zone string, if that form was used);
+   * the original bare pop() leaked them, and freeing before compute_*()
+   * would have been a use-after-free through date_str. */
+  pop_and_free(stack); /* utc_offset or zone name */
+  pop_and_free(stack); /* lon */
+  pop_and_free(stack); /* lat */
+  pop_and_free(stack); /* date string */
+
   if (rc == -1) {
     fprintf(stderr,
             "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\").\n",
-            date_str);
+            date_copy);
     return 0;
   } else if (rc == -2 || rc == -3) {
     fprintf(stderr,
@@ -386,18 +440,27 @@ int dusk(Stack *stack)
   if (!fetch_astro_args(stack, &date_str, &lat, &lon, &utc_offset))
     return 0; /* error already printed */
 
-  /* Pop the 4 arguments */
-  (void)pop(stack); /* utc_offset */
-  (void)pop(stack); /* lon */
-  (void)pop(stack); /* lat */
-  (void)pop(stack); /* date string */
+  /* Keep a copy of the date for error messages; the stack copy is freed
+   * below, and compute_*() must run while the arguments are still live. */
+  char date_copy[32];
+  snprintf(date_copy, sizeof date_copy, "%s", date_str);
 
   double t_h;
   int rc = compute_one_civil_twilight(date_str, lat, lon, utc_offset, 1, &t_h);
+
+  /* Pop the 4 arguments now that they have been consumed.  pop_and_free()
+   * releases the date string (and the zone string, if that form was used);
+   * the original bare pop() leaked them, and freeing before compute_*()
+   * would have been a use-after-free through date_str. */
+  pop_and_free(stack); /* utc_offset or zone name */
+  pop_and_free(stack); /* lon */
+  pop_and_free(stack); /* lat */
+  pop_and_free(stack); /* date string */
+
   if (rc == -1) {
     fprintf(stderr,
             "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\").\n",
-            date_str);
+            date_copy);
     return 0;
   } else if (rc == -2 || rc == -3) {
     fprintf(stderr,

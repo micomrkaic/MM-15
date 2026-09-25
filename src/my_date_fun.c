@@ -24,7 +24,8 @@
 #include <stdio.h>            // for fprintf, stderr, sscanf, snprintf, NULL
 #include <stdlib.h>           // for free
 #include <string.h>           // for strdup
-#include <time.h>             // for tm, time_t, mktime, localtime, time
+#include <sys/stat.h>         // for stat, S_ISREG (zone name validation)
+#include <time.h>             // for tm, time_t, mktime, localtime, time, tzset
 #include "stack.h"            // for stack_element, (anonymous struct)::(ano...
 #include "my_date_fun.h"      // for date_plus_days, days_to_end_of_year
 
@@ -259,7 +260,7 @@ static int days_in_month(int y, int m) {
  * - Rejects "2.3.2025abc" (trailing junk)
  * - Rejects "2.3.2025 " (trailing space)
  */
-static int parse_date_relaxed(const char *s, int *d, int *m, int *y) {
+int parse_date_relaxed(const char *s, int *d, int *m, int *y) {
     if (!s) return 0;
     
     int consumed = 0;
@@ -578,3 +579,161 @@ int days_to_end_of_year(Stack* stack) {
   return 0;
 }
 
+/* ---------------------------------------------------------------------
+ * now  ( -- "HH:MM" )
+ * Push the current local wall-clock time as a string, in the same HH:MM
+ * form that sunrise/sunset/dawn/dusk produce, so the same string helpers
+ * (e.g. the dec_hr macro) work on both.
+ * ------------------------------------------------------------------- */
+int push_now_time(Stack* stack) {
+  time_t now = time(NULL);
+  if (now == (time_t)(-1)) {
+    fprintf(stderr, "Error: could not get current time\n");
+    return 1;
+  }
+  struct tm tm_now;
+  if (!localtime_r(&now, &tm_now)) {
+    fprintf(stderr, "Error: could not convert time to local time\n");
+    return 1;
+  }
+  char buffer[8]; /* "HH:MM" + NUL */
+  snprintf(buffer, sizeof buffer, "%02d:%02d", tm_now.tm_hour, tm_now.tm_min);
+  push_string(stack, buffer);
+  return 0;
+}
+
+/* ---------------------------------------------------------------------
+ * zone_offset_hours
+ *
+ * Compute the UTC offset, in hours, that IANA zone `zone` (e.g.
+ * "America/New_York") is on at local noon on d.m.y.  Uses the system
+ * tzdata through TZ/tzset/mktime, so the DST rule in force on that date
+ * is honoured.  The process TZ is saved and restored.
+ *
+ * Returns 1 and sets *hours_out on success; 0 (with a message on stderr)
+ * on failure.  Noon is used so the instant can never fall inside a
+ * spring-forward gap.
+ *
+ * Portability: relies only on POSIX (setenv/unsetenv/tzset/localtime_r/
+ * gmtime_r/stat).  The offset is derived by differencing the local and
+ * UTC broken-down times rather than reading tm_gmtoff, which is a BSD/
+ * glibc extension not visible under _POSIX_C_SOURCE.
+ * ------------------------------------------------------------------- */
+int zone_offset_hours(const char *zone, int d, int m, int y, double *hours_out) {
+  if (!zone || !*zone || !hours_out) return 0;
+
+  /* libc silently treats an unknown TZ as UTC, so validate against the
+   * zoneinfo directory ourselves.  Also refuse anything that could walk
+   * out of that directory. */
+  if (zone[0] == '/' || strstr(zone, "..") != NULL || strchr(zone, ':') != NULL) {
+    fprintf(stderr, "Error: invalid time zone name \"%s\"\n", zone);
+    return 0;
+  }
+  char path[512];
+  int n = snprintf(path, sizeof path, "/usr/share/zoneinfo/%s", zone);
+  if (n < 0 || (size_t)n >= sizeof path) {
+    fprintf(stderr, "Error: time zone name too long\n");
+    return 0;
+  }
+  struct stat st;
+  if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
+    fprintf(stderr,
+            "Error: unknown time zone \"%s\" (expected an IANA name such as \"Europe/Ljubljana\")\n",
+            zone);
+    return 0;
+  }
+
+  /* Save the caller's TZ so we can restore it exactly (set vs. unset). */
+  const char *old_tz = getenv("TZ");
+  char *saved_tz = NULL;
+  if (old_tz) {
+    saved_tz = strdup(old_tz);
+    if (!saved_tz) {
+      fprintf(stderr, "Error: memory allocation failed\n");
+      return 0;
+    }
+  }
+
+  int ok = 0;
+  double hours = 0.0;
+
+  if (setenv("TZ", zone, 1) == 0) {
+    tzset();
+
+    struct tm lt;
+    memset(&lt, 0, sizeof lt);
+    lt.tm_mday  = d;
+    lt.tm_mon   = m - 1;
+    lt.tm_year  = y - 1900;
+    lt.tm_hour  = 12;
+    lt.tm_isdst = -1;
+
+    time_t t = mktime(&lt);
+    if (t != (time_t)-1) {
+      struct tm loc, utc;
+      if (localtime_r(&t, &loc) && gmtime_r(&t, &utc)) {
+        long days;
+        if      (loc.tm_year > utc.tm_year) days =  1;
+        else if (loc.tm_year < utc.tm_year) days = -1;
+        else                                days = loc.tm_yday - utc.tm_yday;
+        long secs = days * 86400L
+                  + (long)(loc.tm_hour - utc.tm_hour) * 3600L
+                  + (long)(loc.tm_min  - utc.tm_min ) * 60L
+                  + (long)(loc.tm_sec  - utc.tm_sec );
+        hours = (double)secs / 3600.0;
+        ok = 1;
+      }
+    }
+  }
+
+  /* Restore TZ before doing anything else. */
+  if (saved_tz) {
+    setenv("TZ", saved_tz, 1);
+    free(saved_tz);
+  } else {
+    unsetenv("TZ");
+  }
+  tzset();
+
+  if (!ok) {
+    fprintf(stderr, "Error: could not compute the offset for \"%s\" on %d.%d.%d\n",
+            zone, d, m, y);
+    return 0;
+  }
+  *hours_out = hours;
+  return 1;
+}
+
+/* ---------------------------------------------------------------------
+ * tz_offset  ( "d.m.y" "Area/City" -- hours )
+ * Push the UTC offset that the zone is on at local noon on the given date.
+ * ------------------------------------------------------------------- */
+int tz_offset(Stack* stack) {
+  if (stack->top < 1) {
+    fprintf(stderr, "Error: tz_offset needs a date string and a zone name on the stack\n");
+    return 1;
+  }
+  const stack_element *zone_e = &stack->items[stack->top];
+  const stack_element *date_e = &stack->items[stack->top - 1];
+
+  if (zone_e->type != TYPE_STRING || date_e->type != TYPE_STRING) {
+    fprintf(stderr, "Error: tz_offset expects \"d.m.y\" \"Area/City\" (two strings)\n");
+    return 1;
+  }
+
+  int d, m, y;
+  if (!parse_date_relaxed(date_e->string, &d, &m, &y)) {
+    fprintf(stderr, "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\")\n",
+            date_e->string);
+    return 1;
+  }
+
+  double hours;
+  if (!zone_offset_hours(zone_e->string, d, m, y, &hours))
+    return 1; /* message already printed; stack untouched */
+
+  pop_and_free(stack); /* zone */
+  pop_and_free(stack); /* date */
+  push_real(stack, hours);
+  return 0;
+}

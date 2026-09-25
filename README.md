@@ -98,6 +98,52 @@ MM-15 v1.0
 
 ---
 
+## Dates, Time & Sunrise
+
+Dates are strings in `d.m.yyyy` form. `today` and `now` read the clock.
+
+```text
+> today
+"25.09.2026"
+
+> now
+"14:07"
+
+> today 100 dateplus
+"03.01.2027"
+
+> "1.1.2025" "1.1.2026" ddays
+365
+```
+
+Sunrise, sunset, and civil dawn/dusk take a date, latitude, longitude, and
+a time zone. The zone can be a UTC offset in hours **or an IANA zone name**;
+with a zone name the offset is resolved *for the date on the stack*, so DST
+is never your problem:
+
+```text
+> "21.6.2026" 46.24 14.36 "Europe/Ljubljana" sunset
+"21:37"
+
+> "21.12.2026" 46.24 14.36 "Europe/Ljubljana" sunset
+"16:54"
+
+> "1.12.2026" "America/New_York" tz_offset
+-5
+```
+
+The shipped `predefined_macros.txt` includes location macros that carry
+their zone, so planning a drive is one line:
+
+```text
+> today 100 dateplus durham dawn
+"06:58"
+```
+
+Zone names are validated against the system tzdata (`/usr/share/zoneinfo`).
+
+---
+
 ## Programming Model
 
 ```text

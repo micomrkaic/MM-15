@@ -30,3 +30,5 @@ mm_*
 build/
 bin/
 *.patch
+.cache/
+compile_commands.json

@@ -331,6 +331,8 @@ void evaluate_one_token(Stack *stack, Token tok) {
     if (!strcmp("num2date",tok.text)) {make_date_string(stack); return; }
     if (!strcmp("ddays",tok.text)) { delta_days_strings(stack); return; }
     if (!strcmp("today",tok.text)) { push_today_date(stack); return; }
+    if (!strcmp("now",tok.text)) { push_now_time(stack); return; }
+    if (!strcmp("tz_offset",tok.text)) { tz_offset(stack); return; }
     if (!strcmp("dow",tok.text)) { push_weekday_name_from_date_string(stack); return; }
     if (!strcmp("dateplus",tok.text)) { date_plus_days(stack); return; }
     if (!strcmp("edmy",tok.text)) {  extract_day_month_year(stack); return; }

@@ -68,7 +68,7 @@ void help_menu(void) {
   subtitle("String functions");
   printf("    scon, substr, s2u, s2l, slen, srev, int2str, eval {evaluate string}\n");
   subtitle("Financial and date functions");
-  printf("    npv, irr, ddays, dateplus, today, days2eoy, dow, edmy, num2date \n");
+  printf("    npv, irr, ddays, dateplus, today, now, tz_offset, days2eoy, dow, edmy, num2date \n");
   subtitle("Output format options");
   printf("    setprec {set print precision}, sfs {fix<->sci}\n");
   subtitle("Help and utilities");
@@ -661,8 +661,16 @@ const HelpEntry help_table[] = {
       "\"2025-12-31\" \"2025-01-01\" ddays" },
 
     { "today",  "-- date",
-      "Push today's date as a string (YYYY-MM-DD).",
+      "Push today's date as a string (d.m.yyyy).",
       "today" },
+
+    { "now",    "-- \"HH:MM\"",
+      "Push the current local time as a string, same form as sunrise/sunset.",
+      "now" },
+
+    { "tz_offset", "date zone -- hours",
+      "UTC offset (hours) of an IANA zone on the given date, DST included.",
+      "\"1.12.2026\" \"America/New_York\" tz_offset" },
 
     { "dateplus","date n -- date2",
       "Add n days to a date.",
@@ -828,14 +836,25 @@ const HelpEntry help_table[] = {
       "Run stored macro/program by name.",
       "\"MYMAC\" run" },
 
-    /* --- Astronomy --- */
-    { "sunrise","date lat lon utc_offset -- time_str",
+    /* --- Astronomy ---
+     * The 4th argument is either a UTC offset in hours (real) or an IANA
+     * zone name (string); with a zone name the offset is resolved for the
+     * date on the stack, so DST is handled automatically. */
+    { "sunrise","date lat lon utc_offset|zone -- time_str",
       "Local sunrise time (HH:MM) for given date and location.",
-      "\"2025-06-21\" 38.9 -77.0 -4 sunrise" },
+      "\"21.6.2025\" 38.9 -77.0 \"America/New_York\" sunrise" },
 
-    { "sunset", "date lat lon utc_offset -- time_str",
+    { "sunset", "date lat lon utc_offset|zone -- time_str",
       "Local sunset time (HH:MM) for given date and location.",
-      "\"2025-06-21\" 38.9 -77.0 -4 sunset" },
+      "\"21.6.2025\" 38.9 -77.0 -4 sunset" },
+
+    { "dawn",   "date lat lon utc_offset|zone -- time_str",
+      "Civil dawn (sun at -6 deg) for given date and location.",
+      "today 38.9 -77.0 \"America/New_York\" dawn" },
+
+    { "dusk",   "date lat lon utc_offset|zone -- time_str",
+      "Civil dusk (sun at -6 deg) for given date and location.",
+      "today 100 dateplus 38.9 -77.0 \"America/New_York\" dusk" },
 
     /* Terminator */
     { NULL, NULL, NULL, NULL }
