@@ -43,50 +43,46 @@ int split_matrix(Stack *s) {
       mm_error("Error: null real matrix.\n");
       return -1;
     }
+    if (s->top + (long)(matrix->size1 * matrix->size2) >= STACK_SIZE) {
+      mm_error("split_mat: %zu elements would overflow the stack", matrix->size1 * matrix->size2);
+      return -1;
+    }
 
-    // Remove matrix from the stack
+    // Remove matrix from the stack (we own it now)
     s->top--;
 
     // Push all elements in row-major order
     for (size_t i = 0; i < matrix->size1; ++i) {
       for (size_t j = 0; j < matrix->size2; ++j) {
-        double val = gsl_matrix_get(matrix, i, j);
-
-        if (s->top >= STACK_SIZE - 1) {
-          mm_error("Error: stack overflow.\n");
-          return -1;
-        }
-
         s->top++;
         s->items[s->top].type = TYPE_REAL;
-        s->items[s->top].real = val;
+        s->items[s->top].real = gsl_matrix_get(matrix, i, j);
       }
     }
+    gsl_matrix_free(matrix);
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex *matrix = matrix_elem->matrix_complex;
     if (!matrix) {
       mm_error("Error: null complex matrix.\n");
       return -1;
     }
+    if (s->top + (long)(matrix->size1 * matrix->size2) >= STACK_SIZE) {
+      mm_error("split_mat: %zu elements would overflow the stack", matrix->size1 * matrix->size2);
+      return -1;
+    }
 
-    // Remove matrix from the stack
+    // Remove matrix from the stack (we own it now)
     s->top--;
 
     // Push all elements in row-major order
     for (size_t i = 0; i < matrix->size1; ++i) {
       for (size_t j = 0; j < matrix->size2; ++j) {
-        gsl_complex z = gsl_matrix_complex_get(matrix, i, j);
-
-        if (s->top >= STACK_SIZE - 1) {
-          mm_error("Error: stack overflow.\n");
-          return -1;
-        }
-
         s->top++;
         s->items[s->top].type = TYPE_COMPLEX;
-        s->items[s->top].complex_val = z;
+        s->items[s->top].complex_val = gsl_matrix_complex_get(matrix, i, j);
       }
     }
+    gsl_matrix_complex_free(matrix);
   } else {
     mm_error("Error: top of stack is not a matrix.\n");
     return -1;
@@ -101,15 +97,19 @@ int select_matrix_element(Stack *s) {
     return -1;  // Indicate error
   }
 
-  // Pop row and column indices
+  // Row and column indices, matrix below them
   stack_element *col_elem = &s->items[s->top];
   stack_element *row_elem = &s->items[s->top - 1];
-  s->top -= 2;
 
   if (row_elem->type != TYPE_REAL || col_elem->type != TYPE_REAL) {
     mm_error("Error: row and column must be real scalars.\n");
     return -1;  // Indicate error
   }
+  if (s->top < 2) {
+    mm_error("get_aij: need a matrix below the row and column");
+    return -1;
+  }
+  s->top -= 2;
 
   // Extract row and column numbers
   size_t row = (size_t)row_elem->real;
@@ -187,7 +187,6 @@ int set_matrix_element(Stack *s) {
       return -1;
     }
 
-    printf("rows %zu, cols %zu, element %g\n",row, col, val_elem->real);   
     gsl_matrix_set(matrix, row, col, val_elem->real);
 
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
@@ -218,13 +217,14 @@ int set_matrix_element(Stack *s) {
 
 int matrix_extract_diagonal(Stack* stack) {
   if (stack->top < 0) {
-    printf("No matrix on stack to extract diagonal from\n");
+    mm_error("No matrix on stack to extract diagonal from\n");
     return 1;
   }
 
-  stack_element m = pop(stack);
+  stack_element m = stack->items[stack->top];
 
   if (m.type == TYPE_MATRIX_REAL) {
+    stack->top--;
     size_t n =
       (m.matrix_real->size1 < m.matrix_real->size2) ? m.matrix_real->size1 : m.matrix_real->size2;
 
@@ -238,6 +238,7 @@ int matrix_extract_diagonal(Stack* stack) {
     push_matrix_real(stack, diag);
 
   } else if (m.type == TYPE_MATRIX_COMPLEX) {
+    stack->top--;
     size_t n =
       (m.matrix_complex->size1 < m.matrix_complex->size2) ? m.matrix_complex->size1 : m.matrix_complex->size2;
 
@@ -251,7 +252,7 @@ int matrix_extract_diagonal(Stack* stack) {
     push_matrix_complex(stack, diag);
 
   } else {
-    printf("Only real or complex matrices are supported for diagonal extraction\n");
+    mm_error("diag: argument must be a matrix");
     return 1;
   }
   return 0;
@@ -331,8 +332,8 @@ int make_matrix_of_ones(Stack* stack) {
     return 1;
   }
 
-  value_type rows_top_type=stack_top_type(stack);
-  value_type cols_top_type=stack_top_type(stack);
+  value_type cols_top_type = stack_top_type(stack);
+  value_type rows_top_type = stack_next2_top_type(stack);
     
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
     mm_error("Type error: top stack item must be a real number (dimension).\n");
@@ -349,7 +350,7 @@ int make_matrix_of_ones(Stack* stack) {
   }
 
   int m = (int)(cols.real);
-  if (n <= 0) {
+  if (m <= 0) {
     mm_error("Dimension must be positive, got %d.\n", m);
     return 1;
   }
@@ -373,8 +374,8 @@ int make_matrix_of_zeroes(Stack* stack) {
     return 1;
   }
 
-  value_type rows_top_type=stack_top_type(stack);
-  value_type cols_top_type=stack_top_type(stack);
+  value_type cols_top_type = stack_top_type(stack);
+  value_type rows_top_type = stack_next2_top_type(stack);
     
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
     mm_error("Type error: top stack item must be a real number (dimension).\n");
@@ -391,7 +392,7 @@ int make_matrix_of_zeroes(Stack* stack) {
   }
 
   int m = (int)(cols.real);
-  if (n <= 0) {
+  if (m <= 0) {
     mm_error("Dimension must be positive, got %d.\n", m);
     return 1;
   }
@@ -414,7 +415,7 @@ int make_random_matrix(Stack* stack) {
   }
 
   value_type cols_top_type = stack_top_type(stack);
-  value_type rows_top_type = stack_top_type(stack);
+  value_type rows_top_type = stack_next2_top_type(stack);
 
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
     mm_error("Type error: top stack items must be real numbers (dimensions).\n");
@@ -457,7 +458,7 @@ int make_gaussian_random_matrix(Stack* stack) {
   }
 
   value_type cols_top_type = stack_top_type(stack);
-  value_type rows_top_type = stack_top_type(stack);
+  value_type rows_top_type = stack_next2_top_type(stack);
 
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
     mm_error("Type error: top stack items must be real numbers (dimensions).\n");
@@ -706,6 +707,11 @@ int stack_join_matrix_vertical(Stack* stack) {
 
     stack_element* top = &stack->items[stack->top];
     stack_element* second = &stack->items[stack->top - 1];
+    if ((top->type != TYPE_MATRIX_REAL && top->type != TYPE_MATRIX_COMPLEX) ||
+        (second->type != TYPE_MATRIX_REAL && second->type != TYPE_MATRIX_COMPLEX)) {
+        mm_error("join_v: both arguments must be matrices");
+        return 1;
+    }
 
     // Determine types
     bool top_complex = (top->type == TYPE_MATRIX_COMPLEX);
@@ -767,8 +773,8 @@ int stack_join_matrix_vertical(Stack* stack) {
         gsl_matrix_complex_free(mc2);
 
         // Pop both, push result
-        pop(stack);
-        pop(stack);
+        pop_and_free(stack);
+        pop_and_free(stack);
         push_matrix_complex(stack, joined);
     } else {
         // Both real
@@ -789,8 +795,8 @@ int stack_join_matrix_vertical(Stack* stack) {
         gsl_matrix_memcpy(&bot_block.matrix, top->matrix_real);
 
         // Pop both, push result
-        pop(stack);
-        pop(stack);
+        pop_and_free(stack);
+        pop_and_free(stack);
         push_matrix_real(stack, joined);
     }
     return 0;
@@ -804,6 +810,11 @@ int stack_join_matrix_horizontal(Stack* stack) {
 
     stack_element* top = &stack->items[stack->top];
     stack_element* second = &stack->items[stack->top - 1];
+    if ((top->type != TYPE_MATRIX_REAL && top->type != TYPE_MATRIX_COMPLEX) ||
+        (second->type != TYPE_MATRIX_REAL && second->type != TYPE_MATRIX_COMPLEX)) {
+        mm_error("join_h: both arguments must be matrices");
+        return 1;
+    }
 
     bool top_complex = (top->type == TYPE_MATRIX_COMPLEX);
     bool second_complex = (second->type == TYPE_MATRIX_COMPLEX);
@@ -856,8 +867,8 @@ int stack_join_matrix_horizontal(Stack* stack) {
         gsl_matrix_complex_free(mc1);
         gsl_matrix_complex_free(mc2);
 
-        pop(stack);
-        pop(stack);
+        pop_and_free(stack);
+        pop_and_free(stack);
         push_matrix_complex(stack, joined);
     } else {
         // Both real
@@ -877,8 +888,8 @@ int stack_join_matrix_horizontal(Stack* stack) {
         gsl_matrix_memcpy(&left.matrix, second->matrix_real);
         gsl_matrix_memcpy(&right.matrix, top->matrix_real);
 
-        pop(stack);
-        pop(stack);
+        pop_and_free(stack);
+        pop_and_free(stack);
         push_matrix_real(stack, joined);
     }
     return 0;
@@ -904,7 +915,7 @@ int matrix_cumsum_rows(Stack* stack) {
             }
         }
 
-        pop(stack);
+        pop_and_free(stack);
         push_matrix_real(stack, result);
     }
     else if (top->type == TYPE_MATRIX_COMPLEX) {
@@ -920,7 +931,7 @@ int matrix_cumsum_rows(Stack* stack) {
             }
         }
 
-        pop(stack);
+        pop_and_free(stack);
         push_matrix_complex(stack, result);
     }
     else {
@@ -950,7 +961,7 @@ int matrix_cumsum_cols(Stack* stack) {
             }
         }
 
-        pop(stack);
+        pop_and_free(stack);
         push_matrix_real(stack, result);
     }
     else if (top->type == TYPE_MATRIX_COMPLEX) {
@@ -966,7 +977,7 @@ int matrix_cumsum_cols(Stack* stack) {
             }
         }
 
-        pop(stack);
+        pop_and_free(stack);
         push_matrix_complex(stack, result);
     }
     else {

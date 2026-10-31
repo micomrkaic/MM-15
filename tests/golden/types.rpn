@@ -1,0 +1,24 @@
+# Wrong argument types are errors that leave the stack untouched (and leak nothing).
+1 1 join_v
+1 pinv
+"ab" minv
+[1 3 $ 1 2 3] minv
+"ab" tran
+1 1 "ab" get_aij
+[2 2 $ 1 2 3 4] 1 1 get_aij
+1 1 [2 2 $ 1 2 3 4] eq
+"ab" 1 rand
+1 -1 ones
+"ab" setprec
+"ab" rcl
+"1.2.2020" dow
+1 "1.2.2020" dateplus
+"1.2.2020" 3 dateplus
+"1.1.2020" "1.3.2020" ddays
+"1.2.2020" edmy
+[1 3 $ 1 -3 2] 2 pval
+[3 1 $ 1 -3 2] 2 pval
+[1 3 $ 1 -3 2] roots pm
+[2 2 $ 1 2 3 4] split_mat
+"hello" 1 3 substr
+"hello" "x" 3 substr

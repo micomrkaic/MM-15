@@ -27,9 +27,20 @@ token
 
 # binaries from this project
 mm_*
+!mm_15.1
 # build outputs
 build/
 bin/
 *.patch
 .cache/
 compile_commands.json
+
+# LaTeX
+doc/*.aux
+doc/*.log
+doc/*.out
+doc/*.toc
+# editors
+.projectile
+.dir-locals.el
+.rpn_history

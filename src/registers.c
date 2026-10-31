@@ -124,14 +124,14 @@ void recall_from_register(Stack* stack) {
     return;
   }
 
-  stack_element reg_elem = stack->items[stack->top--];
+  const stack_element *reg_elem = &stack->items[stack->top];
 
-  if (reg_elem.type != TYPE_REAL) {
+  if (reg_elem->type != TYPE_REAL) {
     mm_error("Type error: register index must be a real number.\n");
     return;
   }
 
-  int reg_index = (int)reg_elem.real;
+  int reg_index = (int)reg_elem->real;
   if (reg_index < 0 || reg_index >= MAX_REG) {
     mm_error("Invalid register index: %d\n", reg_index);
     return;
@@ -142,13 +142,8 @@ void recall_from_register(Stack* stack) {
     return;
   }
 
+  stack->top--;                      /* the index is a real: nothing to free */
   stack_element copy = copy_element(&registers[reg_index].value);
-
-  if (stack->top + 1 >= STACK_SIZE) {
-    mm_error("Stack overflow.\n");
-    return;
-  }
-
   stack->items[++stack->top] = copy;
 }
 

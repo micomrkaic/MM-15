@@ -3,3 +3,5 @@
 "abcdef" 1 3 substr
 "a\"b\\c" slen
 "tab\there" slen
+: dec_hr dup 0 2 substr eval swap 3 5 substr eval 60 / + ;
+"12:45" dec_hr

@@ -42,10 +42,10 @@ void concatenate(Stack *stack)
         return;
     }
 
-    char *s1 = stack->items[stack->top - 1].string;
-    char *s2 = stack->items[stack->top].string;
-    if (!s1) s1 = (char *)"";
-    if (!s2) s2 = (char *)"";
+    const char *s1 = stack->items[stack->top - 1].string;
+    const char *s2 = stack->items[stack->top].string;
+    if (!s1) s1 = "";
+    if (!s2) s2 = "";
 
     size_t n1 = strlen(s1);
     size_t n2 = strlen(s2);
@@ -173,52 +173,46 @@ int my_substring(Stack* stack) {
     return 1;
   }
 
-  /* Pop in this order: end, start, then string */
-  stack_element e_str  = stack->items[stack->top--];
-  stack_element e_end  = stack->items[stack->top--];
-  stack_element e_start= stack->items[stack->top--];
-
-  /* Validate string type */
-  if (e_str.type != TYPE_STRING) {
-    mm_error("Error: substring requires a string as the first popped value\n");
+  /* s start end substr: the string is the deepest of the three (1.x had the
+     string on top, which contradicted its own help text) */
+  if (stack->items[stack->top - 2].type != TYPE_STRING) {
+    mm_error("substr: usage is \"string\" start end substr (0-based, end exclusive)");
     return 1;
   }
+  const stack_element *e_end   = &stack->items[stack->top];
+  const stack_element *e_start = &stack->items[stack->top - 1];
+  const stack_element *e_str   = &stack->items[stack->top - 2];
 
   /* Convert indices */
   int start, end;
-  if (!elem_to_index(&e_start, &start) || !elem_to_index(&e_end, &end)) {
+  if (!elem_to_index(e_start, &start) || !elem_to_index(e_end, &end)) {
     mm_error("Error: substring indices must be non-negative integers\n");
-    free(e_str.string); /* clean up since we popped it */
     return 1;
   }
 
-  const char* s = e_str.string;
+  const char* s = e_str->string;
   size_t len = strlen(s);
 
   /* Bounds: 0 <= start <= end <= len */
   if ((size_t)start > len || (size_t)end > len || start > end) {
     mm_error("Error: substring range [%d, %d) is out of bounds for length %zu\n",
             start, end, len);
-    free(e_str.string);
     return 1;
   }
 
   size_t sublen = (size_t)(end - start);
-
   char* out = (char*)malloc(sublen + 1);
   if (!out) {
     mm_error("Error: memory allocation failed\n");
-    free(e_str.string);
     return 1;
   }
-
   if (sublen) memcpy(out, s + start, sublen);
   out[sublen] = '\0';
 
-  /* We’re done with the original string */
-  free(e_str.string);
-
-  /* Push result. Assumes push_string copies the buffer. */
+  /* Replace the three arguments with the result */
+  pop_and_free(stack);
+  pop_and_free(stack);
+  pop_and_free(stack);
   push_string(stack, out);
   free(out);
 

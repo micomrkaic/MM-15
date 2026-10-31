@@ -36,31 +36,23 @@ int extract_day_month_year(Stack* stack) {
     return 1;
   }
 
-  stack_element date_elem = stack->items[stack->top--];
+  const stack_element *date_elem = &stack->items[stack->top];
 
-  if (date_elem.type != TYPE_STRING) {
+  if (date_elem->type != TYPE_STRING) {
     mm_error("Error: Expected string date in DD.MM.YYYY format\n");
     return 1;
   }
 
   int day, month, year;
-  if (sscanf(date_elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
+  if (sscanf(date_elem->string, "%d.%d.%d", &day, &month, &year) != 3) {
     mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
 
-  // Push year
-  stack_element y = { .type = TYPE_REAL, .real = year };
-  stack->items[++stack->top] = y;
-
-  // Push month
-  stack_element m = { .type = TYPE_REAL, .real = month };
-  stack->items[++stack->top] = m;
-
-  // Push day
-  stack_element d = { .type = TYPE_REAL, .real = day };
-  stack->items[++stack->top] = d;
-
+  pop_and_free(stack);
+  push_real(stack, year);
+  push_real(stack, month);
+  push_real(stack, day);
   return 0;
 }
 
@@ -70,17 +62,17 @@ int date_plus_days(Stack* stack) {
     return 1;
   }
 
-  stack_element days_elem = stack->items[stack->top--];
-  stack_element date_elem = stack->items[stack->top--];
+  const stack_element *days_elem = &stack->items[stack->top];
+  const stack_element *date_elem = &stack->items[stack->top - 1];
 
-  if (date_elem.type != TYPE_STRING || (days_elem.type != TYPE_REAL && days_elem.type != TYPE_COMPLEX))
+  if (date_elem->type != TYPE_STRING || days_elem->type != TYPE_REAL)
     {
       mm_error("Error: Expected a string and a number\n");
       return 1;
     }
 
   int day, month, year;
-  if (sscanf(date_elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
+  if (sscanf(date_elem->string, "%d.%d.%d", &day, &month, &year) != 3) {
     mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
@@ -97,7 +89,7 @@ int date_plus_days(Stack* stack) {
     return 1;
   }
 
-  int delta = (int)(days_elem.type == TYPE_COMPLEX ? GSL_REAL(days_elem.complex_val) : days_elem.real);
+  int delta = (int)days_elem->real;
   t += delta * 86400;  // seconds per day
 
   struct tm* new_date = localtime(&t);
@@ -112,23 +104,9 @@ int date_plus_days(Stack* stack) {
 	   new_date->tm_mon + 1,
 	   new_date->tm_year + 1900);
 
-  char* result = strdup(buffer);
-  if (!result) {
-    mm_error("Error: Memory allocation failed\n");
-    return 1;
-  }
-
-  stack_element out;
-  out.type = TYPE_STRING;
-  out.string = result;
-
-  if (stack->top >= STACK_SIZE - 1) {
-    mm_error("Error: Stack overflow\n");
-    free(result);
-    return 1;
-  }
-
-  stack->items[++stack->top] = out;
+  pop_and_free(stack);
+  pop_and_free(stack);
+  push_string(stack, buffer);
   return 0;
 }
 
@@ -139,15 +117,15 @@ int push_weekday_name_from_date_string(Stack* stack) {
     return 1;
   }
 
-  stack_element elem = stack->items[stack->top--];
+  const stack_element *elem = &stack->items[stack->top];
 
-  if (elem.type != TYPE_STRING) {
+  if (elem->type != TYPE_STRING) {
     mm_error("Error: Expected string date in DD.MM.YYYY format\n");
     return 1;
   }
 
   int day, month, year;
-  if (sscanf(elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
+  if (sscanf(elem->string, "%d.%d.%d", &day, &month, &year) != 3) {
     mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
@@ -173,24 +151,8 @@ int push_weekday_name_from_date_string(Stack* stack) {
     return 1;
   }
 
-  const char* weekday_name = weekdays[date.tm_wday];
-  char* result = strdup(weekday_name);
-  if (!result) {
-    mm_error("Error: Memory allocation failed\n");
-    return 1;
-  }
-
-  stack_element out;
-  out.type = TYPE_STRING;
-  out.string = result;
-
-  if (stack->top >= STACK_SIZE - 1) {
-    mm_error("Error: Stack overflow\n");
-    free(result);
-    return 1;
-  }
-
-  stack->items[++stack->top] = out;
+  pop_and_free(stack);
+  push_string(stack, weekdays[date.tm_wday]);
   return 0;
 }
 
@@ -297,18 +259,18 @@ int delta_days_strings(Stack* stack) {
         return 1;
     }
 
-    stack_element b = stack->items[stack->top--];
-    stack_element a = stack->items[stack->top--];
+    const stack_element *b = &stack->items[stack->top];
+    const stack_element *a = &stack->items[stack->top - 1];
 
-    if (a.type != TYPE_STRING || b.type != TYPE_STRING) {
+    if (a->type != TYPE_STRING || b->type != TYPE_STRING) {
         mm_error("Error: delta_days requires two strings\n");
         return 1;
     }
 
     int d1, m1, y1, d2, m2, y2;
     
-    if (!parse_date_relaxed(a.string, &d1, &m1, &y1) ||
-        !parse_date_relaxed(b.string, &d2, &m2, &y2)) {
+    if (!parse_date_relaxed(a->string, &d1, &m1, &y1) ||
+        !parse_date_relaxed(b->string, &d2, &m2, &y2)) {
         mm_error("Error: invalid date format. Use D.M.YYYY (e.g., 2.3.2025) with no trailing text.\n");
         return 1;
     }
@@ -336,6 +298,8 @@ int delta_days_strings(Stack* stack) {
     }
 
     int days = (int)(difftime(t2, t1) / (60 * 60 * 24));
+    pop_and_free(stack);
+    pop_and_free(stack);
     push_real(stack, (double)days);
 
     return 0;
@@ -499,12 +463,12 @@ int make_date_string(Stack *stack)
     GUARANTEE_STACK(stack, 3);
 
     /* Stack order expected: ... day month year (year on top) */
-    stack_element ey = pop(stack);
-    stack_element em = pop(stack);
-    stack_element ed = pop(stack);
+    const stack_element *ey = &stack->items[stack->top];
+    const stack_element *em = &stack->items[stack->top - 1];
+    const stack_element *ed = &stack->items[stack->top - 2];
 
     int d = 0, m = 0, y = 0;
-    if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) {
+    if (!elem_to_int(ed, &d) || !elem_to_int(em, &m) || !elem_to_int(ey, &y)) {
         mm_error("Error: make_date_string requires integer-like numbers (day, month, year)\n");
         return 0;
     }
@@ -540,6 +504,9 @@ int make_date_string(Stack *stack)
         return 0;
     }
 
+    pop_and_free(stack);
+    pop_and_free(stack);
+    pop_and_free(stack);
     push_string(stack, buf);
     return 1;
 }

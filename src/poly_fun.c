@@ -35,55 +35,49 @@ void poly_eval(Stack* stack) {
     return;
   }
 
-  stack_element x = stack->items[stack->top--];
-  stack_element coeffs = stack->items[stack->top--];
+  const stack_element *x = &stack->items[stack->top];
+  const stack_element *coeffs = &stack->items[stack->top - 1];
 
-  //    bool complex_x = (x.type == TYPE_COMPLEX);
-  bool complex_coeffs = (coeffs.type == TYPE_MATRIX_COMPLEX);
-
-  size_t len = 0;
-  if (coeffs.type == TYPE_MATRIX_REAL && coeffs.matrix_real) {
-    len = coeffs.matrix_real->size1 * coeffs.matrix_real->size2;
-  } else if (coeffs.type == TYPE_MATRIX_COMPLEX && coeffs.matrix_complex) {
-    len = coeffs.matrix_complex->size1 * coeffs.matrix_complex->size2;
-  } else {
-    mm_error("poly_eval: coefficients must be a matrix.\n");
+  if (x->type != TYPE_REAL && x->type != TYPE_COMPLEX) {
+    mm_error("pval: x must be a real or complex scalar");
     return;
   }
-  gsl_complex acc;
 
-  // Get first coefficient
-  if (complex_coeffs) {
-    acc = gsl_matrix_complex_get(coeffs.matrix_complex, 0, 0);
+  bool complex_coeffs = (coeffs->type == TYPE_MATRIX_COMPLEX);
+  size_t len = 0, cols = 1;
+  if (coeffs->type == TYPE_MATRIX_REAL && coeffs->matrix_real) {
+    len = coeffs->matrix_real->size1 * coeffs->matrix_real->size2;
+    cols = coeffs->matrix_real->size2;
+  } else if (coeffs->type == TYPE_MATRIX_COMPLEX && coeffs->matrix_complex) {
+    len = coeffs->matrix_complex->size1 * coeffs->matrix_complex->size2;
+    cols = coeffs->matrix_complex->size2;
   } else {
-    double r = gsl_matrix_get(coeffs.matrix_real, 0, 0);
-    acc = gsl_complex_rect(r, 0.0); // promote real to complex
+    mm_error("pval: coefficients must be a matrix (highest degree first)");
+    return;
+  }
+  if (len == 0) {
+    mm_error("pval: empty coefficient matrix");
+    return;
   }
 
-  gsl_complex z = (x.type == TYPE_COMPLEX) ? x.complex_val : gsl_complex_rect(x.real, 0.0);
+  /* Horner's rule over the elements in row-major order */
+  gsl_complex acc = complex_coeffs
+    ? gsl_matrix_complex_get(coeffs->matrix_complex, 0, 0)
+    : gsl_complex_rect(gsl_matrix_get(coeffs->matrix_real, 0, 0), 0.0);
+  gsl_complex z = (x->type == TYPE_COMPLEX) ? x->complex_val : gsl_complex_rect(x->real, 0.0);
 
   for (size_t i = 1; i < len; ++i) {
-    acc = gsl_complex_mul(acc, z);      
-    gsl_complex term;
-    if (complex_coeffs) {
-      term = gsl_matrix_complex_get(coeffs.matrix_complex, 0, i);
-    } else {
-      double r = gsl_matrix_get(coeffs.matrix_real, 0, i);
-      term = gsl_complex_rect(r, 0.0);
-    }      
-    acc = gsl_complex_add(acc, term);
+    size_t r = i / cols, c = i % cols;
+    gsl_complex term = complex_coeffs
+      ? gsl_matrix_complex_get(coeffs->matrix_complex, r, c)
+      : gsl_complex_rect(gsl_matrix_get(coeffs->matrix_real, r, c), 0.0);
+    acc = gsl_complex_add(gsl_complex_mul(acc, z), term);
   }
 
-  stack_element out;
-  if (GSL_IMAG(acc) == 0.0) {
-    out.type = TYPE_REAL;
-    out.real = GSL_REAL(acc);
-  } else {
-    out.type = TYPE_COMPLEX;
-    out.complex_val = acc;
-  }
-
-  stack->items[++stack->top] = out;
+  pop_and_free(stack);
+  pop_and_free(stack);
+  if (GSL_IMAG(acc) == 0.0) push_real(stack, GSL_REAL(acc));
+  else push_complex(stack, acc);
 }
 
 void poly_roots(Stack* stack) {
@@ -92,28 +86,49 @@ void poly_roots(Stack* stack) {
     return;
   }
 
-  stack_element coeffs = stack->items[stack->top--];
+  const stack_element *coeffs = &stack->items[stack->top];
 
-  if (coeffs.type != TYPE_MATRIX_REAL || !coeffs.matrix_real) {
-    mm_error("poly_roots: only real coefficient polynomials supported.\n");
+  if (coeffs->type != TYPE_MATRIX_REAL || !coeffs->matrix_real) {
+    mm_error("roots: only real coefficient polynomials are supported");
     return;
   }
 
-  gsl_matrix* mat = coeffs.matrix_real;
+  gsl_matrix* mat = coeffs->matrix_real;
   size_t n = mat->size1 * mat->size2;
   if (n < 2) {
-    mm_error("poly_roots: degree must be at least 1.\n");
+    mm_error("roots: degree must be at least 1");
+    return;
+  }
+  if (mat->size1 != 1 && mat->size2 != 1) {
+    mm_error("roots: coefficients must be a row or column vector");
     return;
   }
 
-  double* a = mat->data;
+  /* Coefficients are given highest degree first (as for pval); GSL wants
+     them in ascending order, so reverse into a contiguous buffer. */
+  double* a = malloc(n * sizeof(double));
   double* z = malloc(2 * (n - 1) * sizeof(double));
+  if (!a || !z) {
+    mm_error("roots: memory allocation failed");
+    free(a); free(z);
+    return;
+  }
+  for (size_t i = 0; i < n; ++i) {
+    size_t src = n - 1 - i;
+    a[i] = (mat->size1 == 1) ? gsl_matrix_get(mat, 0, src) : gsl_matrix_get(mat, src, 0);
+  }
+  if (a[n - 1] == 0.0) {
+    mm_error("roots: leading coefficient must be nonzero");
+    free(a); free(z);
+    return;
+  }
   gsl_poly_complex_workspace* w = gsl_poly_complex_workspace_alloc(n);
   int status = gsl_poly_complex_solve(a, n, w, z);
   gsl_poly_complex_workspace_free(w);
+  free(a);
 
   if (status != GSL_SUCCESS) {
-    mm_error("poly_roots: solver failed.\n");
+    mm_error("roots: solver failed");
     free(z);
     return;
   }
@@ -128,8 +143,6 @@ void poly_roots(Stack* stack) {
 
   free(z);
 
-  stack_element out;
-  out.type = TYPE_MATRIX_COMPLEX;
-  out.matrix_complex = result;
-  stack->items[++stack->top] = out;
+  pop_and_free(stack);
+  push_matrix_complex(stack, result);
 }

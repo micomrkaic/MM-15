@@ -1,6 +1,5 @@
 sq dup *
 qu sq sq
-sqrt 0.5 ^
 cube 3 ^
 cubrt 3 inv ^
 pctchg over - swap / 100 *

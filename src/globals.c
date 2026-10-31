@@ -76,24 +76,17 @@ int set_print_precision(Stack* stack) {
     return 1;
   }
 
-  stack_element elem = stack->items[stack->top--];
-  int precision;
-  if (elem.type == TYPE_REAL) {
-    precision = (int)elem.real;
-  } else if (elem.type == TYPE_COMPLEX) {
-    if (GSL_IMAG(elem.complex_val) != 0.0) {
-      mm_error("Error: Complex value must be real to set precision\n");
-      return 1;
-    }
-    precision = (int)GSL_REAL(elem.complex_val);
-  } else {
-    mm_error("Error: Expected number on stack to set print precision\n");
+  const stack_element *elem = &stack->items[stack->top];
+  if (elem->type != TYPE_REAL) {
+    mm_error("setprec: expected a real number");
     return 1;
   }
+  int precision = (int)elem->real;
   if (precision < 0 || precision > 20) {
     mm_error("Error: Precision value %d is out of valid range (0–20)\n", precision);
     return 1;
   }
+  stack->top--;                      /* a real: nothing to free */
   print_precision = precision;
   return 0;
 }

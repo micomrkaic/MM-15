@@ -8,6 +8,9 @@ MODE       ?= release
 # Default to user-local install to avoid sudo (/usr/local still available via install-system)
 PREFIX     ?= $(HOME)/.local
 BINDIR     ?= $(PREFIX)/bin
+MANDIR     ?= $(PREFIX)/share/man/man1
+DOCDIR     ?= $(PREFIX)/share/doc/mm_15
+DOCS        = README.md MANUAL.md COMMANDS.md CHANGES.md LICENSE
 
 # Respect XDG on Linux; fall back to ~/.config on macOS/Linux
 CONFIG_HOME  ?= $(if $(XDG_CONFIG_HOME),$(XDG_CONFIG_HOME),$(HOME)/.config)
@@ -128,7 +131,7 @@ golden: all
 	@sh tests/run_golden.sh $(TARGET)
 
 # -------- Rules --------
-.PHONY: all install install-system uninstall clean doc
+.PHONY: all install install-system uninstall clean doc docs
 
 # Regenerate git version header when HEAD or index changes
 # Rebuild when HEAD changes (new commit) or refs change (branch moves / packed-refs updates)
@@ -168,8 +171,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(GIT_HEADER)
 install: MODE=release
 install: $(TARGET)
 	@echo "Installing $(APP) ($(MODE)) binary to $(DESTDIR)$(BINDIR)"
-	$(INSTALL) -d "$(DESTDIR)$(BINDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(BINDIR)" "$(DESTDIR)$(MANDIR)" "$(DESTDIR)$(DOCDIR)"
 	$(INSTALL) -m 755 "$(TARGET)" "$(DESTDIR)$(BINDIR)/$(APP)"
+	$(INSTALL) -m 644 mm_15.1 "$(DESTDIR)$(MANDIR)/mm_15.1"
+	$(INSTALL) -m 644 $(DOCS) "$(DESTDIR)$(DOCDIR)/"
+	@case ":$$PATH:" in *":$(BINDIR):"*) ;; *) echo "note: $(BINDIR) is not in your PATH" ;; esac
 
 	@echo "Installing config to $(APP_CONF_DIR)"
 	$(INSTALL) -d "$(APP_CONF_DIR)"
@@ -189,9 +195,14 @@ install-system: BINDIR=$(PREFIX)/bin
 install-system: install
 
 uninstall:
-	@echo "Removing $(DESTDIR)$(BINDIR)/$(APP)"
-	@rm -f "$(DESTDIR)$(BINDIR)/$(APP)"
+	@echo "Removing $(DESTDIR)$(BINDIR)/$(APP), the man page and $(DESTDIR)$(DOCDIR)"
+	@rm -f "$(DESTDIR)$(BINDIR)/$(APP)" "$(DESTDIR)$(MANDIR)/mm_15.1"
+	@rm -rf "$(DESTDIR)$(DOCDIR)"
 	@echo "Left $(APP_CONF_DIR) in place (user data)."
+
+# Regenerate the command reference from the dispatch table.
+docs: $(TARGET)
+	./$(TARGET) --commands > COMMANDS.md
 
 clean:
 	rm -rf build bin

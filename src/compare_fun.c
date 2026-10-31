@@ -144,12 +144,9 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
     return;
   }
 
-  // Free old memory
-  if (a->type == TYPE_MATRIX_REAL && a->matrix_real)
-    gsl_matrix_free(a->matrix_real);
-  if (a->type == TYPE_MATRIX_COMPLEX && a->matrix_complex)
-    gsl_matrix_complex_free(a->matrix_complex);
-
+  // Replace both operands with the result
+  stack_element_free(a);
+  stack_element_free(b);
   *a = result;
   stack->top--;
 }

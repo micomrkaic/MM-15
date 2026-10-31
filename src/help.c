@@ -97,7 +97,7 @@ void usage(const char *name) {
 
     int idx = find_op(name);
     if (idx < 0) {
-        user_word *w = find_word((char *)name);
+        user_word *w = find_word(name);
         if (w) { printf(": %s %s ;\n", w->name, w->body); skip_stack_printing = true; return; }
         mm_error("No usage information available for \"%s\".\n", name);
         skip_stack_printing = true;

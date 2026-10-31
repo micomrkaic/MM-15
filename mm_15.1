@@ -1,0 +1,246 @@
+.TH MM_15 1 "October 2026" "MM-15 2.0" "User Commands"
+.SH NAME
+mm_15 \- programmable RPN calculator for real and complex scalars, strings and matrices
+.SH SYNOPSIS
+.B mm_15
+.RB [ \-n ]
+.RB [ \-e
+.IR EXPR ]...
+.RB [ \-f
+.IR FILE ]...
+.br
+.B mm_15
+.BR \-\-commands " | " \-\-version " | " \-h
+.SH DESCRIPTION
+.B mm_15
+is a stack-based reverse Polish notation calculator in the spirit of the
+HP-41C and FORTH. The stack holds real and complex scalars, strings, and
+real and complex matrices (GNU Scientific Library). It has 64 storage
+registers, user-defined words with conditionals and loops, numerical
+integration, root finding, minimisation and differentiation over those
+words, polynomial roots, dates and sunrise/sunset, and HP-41 style
+programs loaded from files.
+.PP
+With no arguments and a terminal on standard input it runs interactively
+with GNU readline editing, history and tab completion; the stack is
+printed after every line. Otherwise it runs in batch mode: the given
+expressions and files, or standard input, are evaluated, the final stack is
+printed, and the exit status is 1 if any error occurred.
+.SH OPTIONS
+.TP
+.BI \-e " EXPR"
+Evaluate
+.I EXPR
+as one line of input. May be repeated; expressions run in order.
+.TP
+.BI \-f " FILE"
+Run the lines of
+.IR FILE ;
+.B \-
+means standard input. May be repeated and mixed with
+.BR \-e .
+.TP
+.B \-n
+Do not load the saved macros, words and config at startup.
+.TP
+.B \-\-commands
+Print the complete command reference as Markdown (this is how COMMANDS.md
+is generated) and exit.
+.TP
+.B \-\-version
+Print the version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print usage and exit.
+.SH INPUT
+Input is whitespace-separated tokens. All input is case sensitive.
+.TP
+.B Numbers
+.BR 3 ", " \-1.2e\-4 ", " .5
+.TP
+.B Complex numbers
+.BR (1,2) ", " (\-1.2e\-4,0.7e2)
+.TP
+.B Strings
+.BR \(dqhello\(dq ,
+with the escapes \e\(dq \e\e \en \et.
+.TP
+.B Matrices
+.B [rows cols $ elements...]
+with real or complex elements, or
+.B [rows, cols, \(dqfile\(dq]
+to read one from a file.
+.TP
+.B Comments
+.B \e
+or
+.B #
+to the end of the line.
+.TP
+.B Execution tokens
+.B @name
+pushes a token for a command or word; the numerical methods and
+.B exec
+consume it.
+.SH ERRORS AND UNDO
+Each top-level token is atomic. If it fails, the stack is restored to its
+state before that token, the error is printed on standard error, and the
+rest of the line is skipped. A user word is one token for this purpose: a
+word that fails half-way leaves no trace. In the REPL,
+.B undo
+restores the stack as it was before the previous line.
+.PP
+Real functions whose result would not be real promote their argument to
+complex, consistently:
+.B \-1 sqrt
+is
+.BR (0,1) ,
+.B 2 asin
+is
+.BR (1.5708,1.3170) ,
+.B \-8 3 inv ^
+is
+.BR (1,1.7321) ,
+and a real matrix with one such entry becomes a complex matrix. Division by
+zero is an error.
+.SH COMMANDS
+The full list, with stack pictures, descriptions and examples, is printed
+by
+.B listfcns
+(grouped by category) and by
+.BR "mm_15 \-\-commands" ;
+.B \(dqname\(dq usage
+describes one command or shows a word's definition. The categories are
+Arithmetic, Exp/Log, Trigonometry, Complex, Special functions, Constants,
+Logic, Stack, Strings, Matrices, Polynomials, Numerics, Registers, Dates,
+Display, Words, Programs and Session.
+.SS Stack
+.B dup drop swap over nip tuck pick roll depth clst savestack loadstack.
+.B n pick
+copies the item at depth n (0 = top);
+.B n roll
+moves it to the top (1 roll = swap, 2 roll = rot).
+.SS Registers
+.B value n sto
+stores
+.I value
+in register
+.I n
+(0\-63), as on the HP;
+.B n rcl
+recalls a copy. Registers hold any type.
+.B pr
+shows which are in use;
+.B saveregs
+and
+.B loadregs
+persist them.
+.SS Words
+.nf
+: name body ;        \e" one line; redefinition replaces
+\(dqname\(dq usage        \e" show the definition
+listwords  n delword  clrwords  savewords  loadwords
+.fi
+A word is compiled when defined: unknown names are rejected at once, and
+control flow becomes branches. A word may call itself; nesting stops at
+256. Control words (inside definitions only):
+.nf
+flag if ... [else ...] then
+begin ... flag until
+begin ... flag while ... repeat
+limit start do ... i ... loop        \e" skipped when start = limit
+limit start do ... n +loop           \e" n < 0 counts down to limit inclusive
+.fi
+.B i
+is the innermost loop index,
+.B j
+the next outer one. Flags are real numbers; 0 is false.
+.PP
+.nf
+: fac  dup 1 gt if dup 1 \- fac * then ;
+: sum  0 swap 1 + 1 do i + loop ;
+.fi
+.SS Macros
+Words loaded from
+.I predefined_macros.txt
+at startup (NPV, IRR, cumprod, sto_add, location/zone macros, ...);
+.B listmacros
+lists them. They work exactly like words.
+.SS Numerical methods
+A function is any word or command mapping x on the stack to f(x).
+.nf
+a b @f integrate     integral over [a,b] (tanh-sinh, bisecting where needed)
+a b @f romberg       the same by Romberg extrapolation
+a b @f fzero         root in a bracket with a sign change (Brent)
+g   @f solve         root near one guess (bracket search, then Brent)
+a b @f minimize      argument of the minimum in [a,b] (Brent)
+x   @f deriv         f'(x) (Ridders' extrapolation)
+lo hi @f fsum        sum of f(i), i = lo..hi;  fprod: product
+@f exec              run f
+.fi
+.B x tol
+sets the tolerance (default 1e-10, relative to max(1,|result|));
+.B nevals
+and
+.B interr
+report the evaluations used and the error estimate of the last integral.
+The function must leave exactly one real; an error inside it aborts the
+call. An integrable endpoint singularity converges to full precision when
+that endpoint is 0.
+.SS Programs
+.B \(dqfile\(dq run
+loads and runs an HP-41 style program: one instruction per line, with
+.BR "LBL name" ", " "GOTO name" ", " "GOSUB name" ", " RTN ", " END
+and tests ending in
+.B ?
+that skip the next line when false.
+.B \(dqfile\(dq batch
+runs a file of ordinary lines;
+.B \(dqtext\(dq eval
+evaluates a string.
+.SS Shell
+A line starting with
+.B !
+runs the rest as a shell command and pushes its output as a string.
+.SH FILES
+All in
+.IR $XDG_CONFIG_HOME/mm_15/ ,
+which defaults to
+.IR ~/.config/mm_15/ :
+.TP
+.I config.txt
+print precision, fixed/scientific, tolerance; written at exit.
+.TP
+.I predefined_macros.txt
+macros, loaded at startup.
+.B make install
+seeds it from
+.I data/
+without overwriting.
+.TP
+.I user_words.txt
+words saved by
+.BR savewords ,
+loaded at startup.
+.TP
+.IR registers.txt ", " stack_backup.dat ", " .rpn_history
+registers, saved stack and readline history.
+.SH EXIT STATUS
+0 on success; in batch mode 1 if any error was reported, 2 for a usage
+error.
+.SH EXAMPLES
+.nf
+$ mm_15 \-e \(dq2 3 + 4 *\(dq
+[0] ℝ : 20.000000
+$ mm_15 \-n \-e \(dq[2 2 $ 4 7 2 6] minv pm\(dq
+$ mm_15 \-n \-e \(dq: f dup * 2 \- ;\(dq \-e \(dq0 3 @f fzero\(dq
+[0] ℝ : 1.414214
+$ echo \(dq(1,2) (3,4) *\(dq | mm_15 \-n
+.fi
+.SH SEE ALSO
+.BR readline (3),
+the GNU Scientific Library manual. COMMANDS.md, MANUAL.md and CHANGES.md
+are installed in
+.IR PREFIX/share/doc/mm_15 .
+.SH AUTHOR
+Mico Mrkaic. GPL-3.0-or-later.

@@ -1,0 +1,53 @@
+Error: join_v: both arguments must be matrices
+Error: pinv: argument must be a real matrix
+Error: Only real or complex matrix inversion is supported
+Error: Matrix is not square
+Error: Only real or complex matrices can be transposed
+Error: row and column must be real scalars.
+Error: Type error: top stack items must be real numbers (dimensions).
+Error: Dimension must be positive, got -1.
+Error: setprec: expected a real number
+Error: Type error: register index must be a real number.
+Error: Expected a string and a number
+|                 (1.0000,0.0000)                (2.0000,0.0000)|
+Error: substring indices must be non-negative integers
+
+[0] ℝ : 1.000000
+[1] ℝ : 1.000000
+[2] ℝ : 1.000000
+[3] 𝒮 : "ab"
+[4] Mℝ: 1 x 3 matrix
+[5] 𝒮 : "ab"
+[6] ℝ : 1.000000
+[7] ℝ : 1.000000
+[8] 𝒮 : "ab"
+[9] Mℝ: 2 x 2 matrix
+[10] ℝ : 4.000000
+[11] ℝ : 1.000000
+[12] Mℝ: 2 x 2 matrix
+[13] 𝒮 : "ab"
+[14] ℝ : 1.000000
+[15] ℝ : 1.000000
+[16] ℝ : -1.000000
+[17] 𝒮 : "ab"
+[18] 𝒮 : "ab"
+[19] 𝒮 : "Saturday"
+[20] ℝ : 1.000000
+[21] 𝒮 : "1.2.2020"
+[22] 𝒮 : "04.02.2020"
+[23] ℝ : 60.000000
+[24] ℝ : 2020.000000
+[25] ℝ : 2.000000
+[26] ℝ : 1.000000
+[27] ℝ : 0.000000
+[28] ℝ : 0.000000
+[29] Mℂ: 1 x 2 matrix
+[30] ℝ : 1.000000
+[31] ℝ : 2.000000
+[32] ℝ : 3.000000
+[33] ℝ : 4.000000
+[34] 𝒮 : "el"
+[35] 𝒮 : "hello"
+[36] 𝒮 : "x"
+[37] ℝ : 3.000000
+[exit 1]
