@@ -10,7 +10,7 @@ PREFIX     ?= $(HOME)/.local
 BINDIR     ?= $(PREFIX)/bin
 MANDIR     ?= $(PREFIX)/share/man/man1
 DOCDIR     ?= $(PREFIX)/share/doc/mm_15
-DOCS        = README.md MANUAL.md COMMANDS.md CHANGES.md LICENSE
+DOCS        = README.md MANUAL.md COMMANDS.md CHANGES.md LICENSE doc/mm_15-manual.pdf
 
 # Respect XDG on Linux; fall back to ~/.config on macOS/Linux
 CONFIG_HOME  ?= $(if $(XDG_CONFIG_HOME),$(XDG_CONFIG_HOME),$(HOME)/.config)
@@ -131,7 +131,7 @@ golden: all
 	@sh tests/run_golden.sh $(TARGET)
 
 # -------- Rules --------
-.PHONY: all install install-system uninstall clean doc docs
+.PHONY: all install install-system uninstall clean doc docs manual
 
 # Regenerate git version header when HEAD or index changes
 # Rebuild when HEAD changes (new commit) or refs change (branch moves / packed-refs updates)
@@ -203,6 +203,15 @@ uninstall:
 # Regenerate the command reference from the dispatch table.
 docs: $(TARGET)
 	./$(TARGET) --commands > COMMANDS.md
+	./$(TARGET) --commands-tex > doc/commands.tex
+
+# The user manual: doc/manual.tex + the generated command tables -> doc/mm_15-manual.pdf.
+# Needs LuaLaTeX (or XeLaTeX: LATEX=xelatex) with fontspec, booktabs, longtable, tcolorbox.
+LATEX ?= lualatex
+manual: docs
+	cd doc && latexmk -$(LATEX) -interaction=nonstopmode -halt-on-error manual.tex
+	cp doc/manual.pdf doc/mm_15-manual.pdf
+	cd doc && latexmk -c manual.tex >/dev/null 2>&1 || true
 
 clean:
 	rm -rf build bin

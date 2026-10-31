@@ -1,4 +1,4 @@
-.TH MM_15 1 "October 2026" "MM-15 2.0" "User Commands"
+.TH MM_15 1 "November 2026" "MM-15 2.1" "User Commands"
 .SH NAME
 mm_15 \- programmable RPN calculator for real and complex scalars, strings and matrices
 .SH SYNOPSIS
@@ -10,7 +10,7 @@ mm_15 \- programmable RPN calculator for real and complex scalars, strings and m
 .IR FILE ]...
 .br
 .B mm_15
-.BR \-\-commands " | " \-\-version " | " \-h
+.BR \-\-commands " | " \-\-commands\-tex " | " \-\-version " | " \-h
 .SH DESCRIPTION
 .B mm_15
 is a stack-based reverse Polish notation calculator in the spirit of the
@@ -47,6 +47,10 @@ Do not load the saved macros, words and config at startup.
 Print the complete command reference as Markdown (this is how COMMANDS.md
 is generated) and exit.
 .TP
+.B \-\-commands\-tex
+Print the command reference as LaTeX tables (used to build the manual) and
+exit.
+.TP
 .B \-\-version
 Print the version and exit.
 .TP
@@ -59,7 +63,8 @@ Input is whitespace-separated tokens. All input is case sensitive.
 .BR 3 ", " \-1.2e\-4 ", " .5
 .TP
 .B Complex numbers
-.BR (1,2) ", " (\-1.2e\-4,0.7e2)
+.BR (1,2) ", " "(\-1.2e\-4, 0.7e2)"
+(spaces inside the parentheses are allowed)
 .TP
 .B Strings
 .BR \(dqhello\(dq ,
@@ -69,7 +74,7 @@ with the escapes \e\(dq \e\e \en \et.
 .B [rows cols $ elements...]
 with real or complex elements, or
 .B [rows, cols, \(dqfile\(dq]
-to read one from a file.
+to read one from a whitespace-separated text file.
 .TP
 .B Comments
 .B \e
@@ -115,7 +120,7 @@ Arithmetic, Exp/Log, Trigonometry, Complex, Special functions, Constants,
 Logic, Stack, Strings, Matrices, Polynomials, Numerics, Registers, Dates,
 Display, Words, Programs and Session.
 .SS Stack
-.B dup drop swap over nip tuck pick roll depth clst savestack loadstack.
+.B dup drop swap over nip tuck pick roll depth clst print ps pm savestack loadstack.
 .B n pick
 copies the item at depth n (0 = top);
 .B n roll
@@ -238,9 +243,11 @@ $ mm_15 \-n \-e \(dq: f dup * 2 \- ;\(dq \-e \(dq0 3 @f fzero\(dq
 $ echo \(dq(1,2) (3,4) *\(dq | mm_15 \-n
 .fi
 .SH SEE ALSO
-.BR readline (3),
-the GNU Scientific Library manual. COMMANDS.md, MANUAL.md and CHANGES.md
-are installed in
+The user manual,
+.IR mm_15\-manual.pdf ,
+with COMMANDS.md, MANUAL.md and CHANGES.md, is installed in
 .IR PREFIX/share/doc/mm_15 .
+.BR readline (3),
+the GNU Scientific Library manual.
 .SH AUTHOR
 Mico Mrkaic. GPL-3.0-or-later.

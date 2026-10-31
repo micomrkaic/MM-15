@@ -1,5 +1,40 @@
 # MM-15 changes
 
+## 2.1
+
+- **User manual.** `doc/manual.tex` builds `doc/mm_15-manual.pdf` (`make
+  manual`, LuaLaTeX or XeLaTeX); the command reference appendix is generated
+  from the dispatch table by `mm_15 --commands-tex`. The PDF is in the
+  repository and is installed with the docs. README and MANUAL.md rewritten;
+  the help screen (`help`) rewritten; every command's help text revised so
+  that stack pictures and descriptions match what the command does.
+- **Argument orders and semantics made consistent** (each one was documented
+  one way and implemented another):
+  - `set_aij` takes `A i j x` (matrix deepest, like `get_aij`) and consumes
+    `i j x`; a complex `x` promotes a real matrix.
+  - `rrange` takes `start step end`; 1.x ignored two of its arguments.
+  - `days2eoy` takes the date on the stack; 1.x ignored it and used today.
+  - `eq`/`neq` compare strings.
+  - Column and row reductions (`csum`, `cmean`, `cvar`, `cmin`, `cmax` and the
+    `r` variants) consume the matrix; 1.x left it underneath. The `cond`,
+    `norm2`, `normfro` and `irr` macros no longer leave debris on the stack.
+  - `A x ^` with a non-integer `x` is an error; 1.x silently truncated the
+    exponent and returned the identity for `A 0.5 ^`.
+  - `intg`/`frac` documented as HP truncation toward zero (unchanged).
+  - `gravity` is 9.80665.
+- **Real and complex matrices mix** in `+ - * .* ./ .^` and with complex
+  scalars; the real operand is promoted.
+- `print` prints a matrix in full; complex literals may contain spaces,
+  `( 1 , 2 )`; `[2, 2, "file"]` may contain spaces and reports a missing file
+  instead of pushing a null matrix.
+- Programs: comment lines are skipped, the listing is printed only in verbose
+  mode, and the never-settable `ctr_*?` tests are gone.
+- Word definitions are not echoed in batch mode (unless `verbose_mode = 1`).
+- `npv` macro simplified to `cashflows rate npv`. Users with an existing
+  `~/.config/mm_15/predefined_macros.txt` should copy the new
+  `data/predefined_macros.txt` over it (`make install` does not overwrite it).
+- `errors.c` builds with gcc 14's `-Wformat-overflow`.
+
 ## 2.0
 
 Six commits on top of 1.1, each buildable and tested on its own.

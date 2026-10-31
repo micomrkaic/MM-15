@@ -28,6 +28,7 @@ token
 # binaries from this project
 mm_*
 !mm_15.1
+!doc/mm_15-manual.pdf
 # build outputs
 build/
 bin/

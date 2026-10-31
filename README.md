@@ -1,277 +1,123 @@
-# MM-15 — Mico’s RPN Calculator
+# MM-15 — Mico's RPN calculator
 
-**MM-15** is a programmable, stack-based Reverse Polish Notation (RPN) calculator written in C.
-
-It supports **real and complex scalars**, **strings**, and **real/complex matrices**, with a programming model inspired by **HP-41C**, **FORTH**, and numerical systems like **MATLAB / Octave** — but with instant startup and interactive control.
-
-MM-15 is built for users who:
-- think in stacks rather than syntax trees
-- want interactive numerical power without a full scripting language
-- value composability, transparency, and speed
-
----
-
-## Key Characteristics
-
-- Stack-based RPN evaluation; every token is atomic (an error rolls the stack back)
-- Real **and** complex arithmetic, with one promotion rule: `-1 sqrt` is `(0,1)`,
-  `2 asin`, `-8 3 inv ^` and `-100 log` promote the same way
-- Matrix and linear-algebra support (via GNU GSL)
-- User-defined words compiled at definition time, with `if`/`do`/`begin` control flow
-- Numerical integration, root finding, minimisation, derivatives and sums over
-  any word: `0 pi @sin integrate`
-- HP-41 style programs (labels, jumps, subroutines) loaded from files
-- A batch mode (`-e`, `-f`, stdin) with a meaningful exit status
-- Instant startup, REPL-centric workflow; one dispatch table drives help,
-  completion, `usage` and the generated [COMMANDS.md](COMMANDS.md)
-- Written in portable C17 with minimal POSIX extensions
-
----
-
-## 30-Second Demo
+MM-15 is a programmable, stack-based RPN calculator for the terminal, written in
+C17 on top of the GNU Scientific Library and GNU Readline. It handles **real and
+complex scalars, strings, and real and complex matrices**, and it is programmable
+in the spirit of the HP-41C and FORTH: user-defined words with conditionals and
+loops, numerical methods that take any word as the function, and HP-41 style
+programs with labels and jumps.
 
 ```text
 $ mm_15
-MM-15 2.0
-
-> 2 3 +
-5
-
-> (1,2) (3,-1) *
-(5,5)
-
-> : f dup * 2 - ;
-> 0 3 @f fzero
-1.414214
-
-$ mm_15 -e "[2 2 $ 4 7 2 6] det"
-[0] ℝ : 10.000000
+MM_RPN>> 2 3 + 4 *
+[0] ℝ : 20.000000
+MM_RPN>> (1,2) (3,-1) *
+[0] ℝ : 20.000000
+[1] ℂ : (5.000000, 5.000000i)
+MM_RPN>> [2 2 $ 4 7 2 6] det
+[2] ℝ : 10.000000
+MM_RPN>> : f dup * 2 - ;
+MM_RPN>> 0 3 @f fzero
+[3] ℝ : 1.414214
 ```
 
----
+The **[user manual](doc/mm_15-manual.pdf)** (PDF, 27 pages) covers everything
+below in detail, with a complete command reference. `man mm_15` and
+[COMMANDS.md](COMMANDS.md) are the short forms; inside the calculator,
+`help`, `listfcns` and `"name" usage`.
 
-## Input Rules (Quick Start)
+## What it does
 
-- Case-sensitive
-- Scalars: `3`, `-1.2e-4`
-- Complex numbers: `(re,im)`
-- Inline matrices: `[rows cols $ elements...]`
-- Matrix from file: `[rows cols "filename"]`
-- Command history via ↑ / ↓
-- TAB completion supported
+- **Atomic errors.** Every token either succeeds or leaves the stack exactly as
+  it was; the error is printed and the rest of the line is skipped. A user word
+  that fails half-way leaves no trace. `undo` restores the previous line's stack.
+- **One promotion rule.** `-1 sqrt` is `(0,1)`, `2 asin` is `(1.5708,1.3170)`,
+  `-8 3 inv ^` is `(1,1.7321)`; a real matrix with one such entry becomes a
+  complex matrix. Division by zero is an error, not `inf`.
+- **Matrices** via GSL: products, elementwise operators (`.* ./ .^`), inverse,
+  pseudoinverse, determinant, eigen-, Cholesky and singular value
+  decompositions, Kronecker product, reshaping and joining, column/row
+  statistics, polynomial roots and evaluation. Real and complex matrices mix.
+- **Words**, compiled at definition time, with `if/else/then`, `begin/until`,
+  `begin/while/repeat`, `do/loop/+loop` and `i`/`j`; recursion allowed.
+- **Numerical methods** over any word or command: `integrate` (tanh-sinh with
+  adaptive bisection), `romberg`, `fzero` and `solve` (Brent), `minimize`,
+  `deriv` (Ridders), `fsum`, `fprod`. Cross-checked against SciPy.
+- **Strings, registers, dates and the sun**: 64 registers of any type; date
+  arithmetic; sunrise, sunset and civil dawn/dusk for any location, with IANA
+  time zones resolved for the date in question.
+- **HP-41 style programs** from files (`LBL`, `GOTO`, `GOSUB`, `RTN`, tests that
+  skip the next line).
+- **Batch mode**: `-e EXPR`, `-f FILE`, or piped stdin; exit status 1 on any
+  error, so it works in shell scripts and in the project's own golden tests.
+- Instant startup; one dispatch table drives dispatch, help, completion, the man
+  page's command list and the manual's reference appendix.
 
----
-
-## Scalars & Complex Numbers
+## A taste
 
 ```text
-> 3 4 /
-0.75
+: fac dup 1 gt if dup 1 - fac * then ;
+10 fac                                   \ 3628800
+: sum 0 swap 1 + 1 do i + loop ;
+100 sum                                  \ 5050
 
-> (1,3) abs
-3.16228
+0 pi @sin integrate                      \ 2
+: rsqrt sqrt inv ;
+0 1 @rsqrt integrate                     \ 2   (endpoint singularity, exact)
+3 @sin solve                             \ 3.141592653590
+: par 3 - dup * 1 + ;
+0 5 @par minimize                        \ 3
 
-> 1 2 re2c
-(1,2)
+[2 2 $ 4 7 2 6] minv pm                  \ | 0.6 -0.7 | / | -0.2 0.4 |
+[1 3 $ 1 -3 2] roots pm                  \ | (1,0) (2,0) |
+[2 2 $ 1 2 3 4] [2 2 $ 1 (0,1) 0 1] +    \ complex matrix
 
-> (1,2) conj
-(1,-2)
+"1.1.2025" "31.12.2025" ddays            \ 364
+"21.6.2026" 46.24 14.36 "Europe/Ljubljana" sunset     \ "20:58"
+today 100 dateplus durham dawn           \ location macros carry their zone
 ```
 
----
-
-## Matrices & Linear Algebra
-
-```text
-> [2 2 $ 1 2 3 4]
-> [2 2 $ 1 2 3 4] [2 2 $ 5 6 7 8] *
-> [2 2 $ 4 7 2 6] dup det
-10
-> inv
+```sh
+mm_15 -e "2 10 ^"                        # batch: prints the final stack, exits 1 on error
+echo "[2 2 $ 1 2 3 4] det" | mm_15 -n    # -n: ignore saved words and config
 ```
 
----
+## Input in one paragraph
 
-## Statistics & Probability
-
-```text
-> 0 1 npdf
-0.398942
-
-> 0 1 ncdf
-0.5
-
-> 0 1 nquant 0.975
-1.95996
-```
-
----
-
-## Dates, Time & Sunrise
-
-Dates are strings in `d.m.yyyy` form. `today` and `now` read the clock.
-
-```text
-> today
-"25.09.2026"
-
-> now
-"14:07"
-
-> today 100 dateplus
-"03.01.2027"
-
-> "1.1.2025" "1.1.2026" ddays
-365
-```
-
-Sunrise, sunset, and civil dawn/dusk take a date, latitude, longitude, and
-a time zone. The zone can be a UTC offset in hours **or an IANA zone name**;
-with a zone name the offset is resolved *for the date on the stack*, so DST
-is never your problem:
-
-```text
-> "21.6.2026" 46.24 14.36 "Europe/Ljubljana" sunset
-"21:37"
-
-> "21.12.2026" 46.24 14.36 "Europe/Ljubljana" sunset
-"16:54"
-
-> "1.12.2026" "America/New_York" tz_offset
--5
-```
-
-The shipped `predefined_macros.txt` includes location macros that carry
-their zone, so planning a drive is one line:
-
-```text
-> today 100 dateplus durham dawn
-"06:58"
-```
-
-Zone names are validated against the system tzdata (`/usr/share/zoneinfo`).
-
----
-
-## Words and control flow
-
-```text
-> : fac dup 1 gt if dup 1 - fac * then ;
-> 10 fac
-3628800
-
-> : sum 0 swap 1 + 1 do i + loop ;
-> 100 sum
-5050
-```
-
-Words are compiled when defined, so a typo is reported immediately; a word
-may call itself (nesting stops at 256); redefining a word replaces it.
-Control words inside definitions: `if else then`, `begin until`,
-`begin while repeat`, `do loop +loop` with `i` and `j`. `"fac" usage` shows a
-definition; `savewords` keeps them between sessions.
-
-## Numerical methods
-
-```text
-> 0 1 @exp integrate            \ 1.718281828459
-> : rsqrt sqrt inv ;
-> 0 1 @rsqrt integrate          \ 2 — endpoint singularity, exact
-> 3 @sin solve                  \ 3.141592653590
-> : par 3 - dup * 1 + ;
-> 0 5 @par minimize             \ 3
-> 2 @exp deriv                  \ 7.389056098931
-> 1 1000 @rsqrt fsum
-```
-
-`@name` pushes an execution token for any word or command. `integrate` is
-tanh-sinh with adaptive bisection, `fzero`/`solve`/`minimize` are Brent's
-methods, `deriv` is Ridders' extrapolation. `1e-6 tol` sets the tolerance;
-`nevals` and `interr` tell you what the last call did.
-
-## HP-41 style programs
-
-A program is a file with one instruction per line:
-
-```text
-LBL loop
-dup 1 leq?
-GOTO end
-dup 1 - *
-GOTO loop
-LBL end
-END
-```
-
-```text
-> "fact.prg" run
-```
-
-`LBL`, `GOTO`, `GOSUB`, `RTN`, `END`; a test ending in `?` skips the next
-line when false. `"file" batch` runs a file of ordinary lines.
-
-## Batch mode
-
-```text
-$ mm_15 -e "2 10 ^"               # one line
-$ mm_15 -f script.rpn             # a file ('\' and '#' start comments)
-$ echo "1 3 /" | mm_15 -n         # stdin; -n skips your saved words/config
-```
-
-The final stack is printed; the exit status is 1 if any error occurred.
-This is what the golden-file tests use.
-
-## Errors
-
-Every top-level token is atomic. `[2 2 $ 1 2 2 4] minv` on a singular
-matrix reports the error and leaves the matrix on the stack; the rest of
-the line is skipped. A word that fails half-way leaves no trace. `undo`
-restores the stack as it was before the previous line.
-
----
-
-## Scripts & Batch Execution
-
-```text
-# example.mm
-2 3 +
-[2 2 $ 1 2 3 4] det
-```
-
-```text
-> batch "example.mm"
-```
-
----
+Tokens are separated by whitespace and all input is case sensitive. Numbers:
+`3`, `-1.2e-4`, `.5`. Complex: `(1,2)`. Strings: `"text"` with `\" \\ \n \t`.
+Matrices: `[rows cols $ elements...]`, or `[rows, cols, "file"]` to read one
+from a file. `\` and `#` start comments. `@name` pushes an execution token for
+the numerical methods. A line starting with `!` runs a shell command and pushes
+its output.
 
 ## Build, test, install
 
-```bash
+Requires a C17 compiler, GNU make, GNU Readline and GSL
+(`apt install build-essential libreadline-dev libgsl-dev`, or
+`brew install gsl readline`).
+
+```sh
 make                 # release build in bin/release/
 make test            # .t cases + golden files, under AddressSanitizer
-make install         # ~/.local: bin/mm_15, man page, docs, seed config
+make install         # ~/.local: bin/mm_15, man page, manual and docs; seeds ~/.config/mm_15
 make uninstall
-make docs            # regenerate COMMANDS.md from the dispatch table
 make MODE=asan       # or ubsan, harden
+make docs            # regenerate COMMANDS.md and doc/commands.tex from the dispatch table
+make manual          # rebuild doc/mm_15-manual.pdf (needs LuaLaTeX; LATEX=xelatex also works)
 ```
 
-`PREFIX=/usr/local make install` installs system-wide. After installing,
-`man mm_15`.
+`PREFIX=/usr/local make install` installs system-wide. Configuration, saved words,
+macros and registers live in `$XDG_CONFIG_HOME/mm_15` (default `~/.config/mm_15`).
 
----
+## Files
 
-## Requirements
+| | |
+|---|---|
+| `src/`, `include/` | the calculator; `src/ops.c` is the dispatch table |
+| `data/` | default `config.txt`, `predefined_macros.txt`, sample programs |
+| `doc/manual.tex` → `doc/mm_15-manual.pdf` | the user manual |
+| `mm_15.1`, `MANUAL.md`, `COMMANDS.md`, `CHANGES.md` | man page, quick reference, generated command list, changelog |
+| `tests/` | unit cases and golden files |
 
-- C compiler (gcc or clang, C17)
-- GNU make
-- GNU Readline
-- GNU Scientific Library (GSL)
-
----
-
-## Philosophy
-
-MM-15 favors:
-- transparency over abstraction
-- composability over syntax
-- interactivity over ceremony
+MM-15 is free software under the GNU GPL, version 3 or later.
