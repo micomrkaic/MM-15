@@ -4,6 +4,7 @@
 
 #include <stdio.h>        // for printf
 #include <time.h>         // for ctime, time, time_t
+#include "globals.h"      // for MM15_VERSION
 #include "splash.h"       // for splash_screen
 
 void splash_screen(void) {
@@ -14,7 +15,7 @@ void splash_screen(void) {
   printf("╔══════════════════════════════════════════════╗\n");
   printf("║                                              ║\n");
   printf("║     Mico's Matrix & Scalar RPN Calculator    ║\n");
-  printf("║             Version 2.0 (2026)               ║\n");
+  printf("║             Version %s (2026)               ║\n", MM15_VERSION);
   printf("║                                              ║\n");
   printf("║  > Enter RPN expressions                     ║\n");
   printf("║  > Type 'help' for commands                  ║\n");
