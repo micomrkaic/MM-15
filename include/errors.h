@@ -28,6 +28,7 @@
  * rest of the line is skipped. In batch mode a nonzero count at exit
  * gives exit status 1.
  *
+ * mm_error() returns -1 so "return mm_error(...)" works as an error return.
  * mm_warn() prints "Warning: ..." and does not count. */
 int  mm_error(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void mm_warn(const char *fmt, ...)  __attribute__((format(printf, 1, 2)));

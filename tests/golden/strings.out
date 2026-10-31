@@ -3,7 +3,9 @@ Error: substring requires a string as the first popped value
 [0] ℝ : 6.000000
 [1] 𝒮 : "FEDCBA"
 [2] ℝ : 3.000000
-[3] 𝒮 : "hello world"
+[3] 𝒮 : "abcdef"
 [4] ℝ : 1.000000
-[5] ℝ : 5.000000
+[5] ℝ : 3.000000
+[6] ℝ : 5.000000
+[7] ℝ : 8.000000
 [exit 1]

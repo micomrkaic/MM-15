@@ -2,4 +2,34 @@
 3 sq
 : cube dup sq * ;
 2 cube
+\ redefinition replaces; callers see the new definition
+: sq dup dup * * ;
+2 cube
+: fac dup 1 gt if dup 1 - fac * then ;
+10 fac
+: sum 0 swap 1 + 1 do i + loop ;
+100 sum
+: grid 3 0 do 2 0 do j 10 * i + loop loop ;
+grid
+: dbl 1 begin dup 100 lt while 2 * repeat ;
+dbl
+: cnt 0 begin 1 + dup 5 geq until ;
+cnt
+: sgn dup 0 gt if drop 1 else 0 lt if -1 else 0 then then ;
+-3 sgn 0 sgn 8 sgn
+: down 0 10 do i -3 +loop ;
+down
+: f f ;
+f
+: bad frobnicate ;
+: e1 if 1 ;
+: e2 1 then ;
+: e3 i ;
+: 42 1 ;
+: dup 1 ;
+: partial 7 0 / ;
+partial
 listwords
+3 delword
+listwords
+savewords

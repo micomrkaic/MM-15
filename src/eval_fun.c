@@ -52,10 +52,6 @@
 #include "my_astronomy.h"
 #include "ops.h"
 
-#define MAX_WORD_DEPTH 256
-static int  word_depth = 0;       /* current nesting of word/macro calls */
-static bool word_aborted = false; /* set when the depth limit is hit: unwind */
-
 // **************** The main loop in this file ****************
 /* Each top-level token is atomic: a snapshot of the stack is taken before
    it runs, and if the token reports an error the stack is restored and the
@@ -69,7 +65,6 @@ void evaluate_line(Stack *stack, char* line) {
 
   Stack before;
   init_stack(&before);
-  word_aborted = false;
   Lexer lexer = (Lexer){ .input = line, .pos = 0 };
   Token tok;
   do {
@@ -82,9 +77,8 @@ void evaluate_line(Stack *stack, char* line) {
       copy_stack(stack, &before);
       break;
     }
-  } while (!word_aborted);
+  } while (1);
   free_stack(&before);
-  word_aborted = false;
 }
 
 /* void evaluate_line(Stack *stack, char* line) { */
@@ -142,30 +136,9 @@ void evaluate_one_token(Stack *stack, Token tok) {
     mm_error("';' without a matching ':'");
     return;
   case TOK_IDENTIFIER: {
-    user_word *w = find_macro(tok.text);
-    if (w == NULL) w = find_word(tok.text);
-    if (w == NULL) {
-      mm_error("Unknown word: %s", tok.text);
-      return;
-    }
-    /* A word may call itself; a runaway recursion used to overflow the C
-       stack and crash. Nesting is counted across macros and words. */
-    if (word_depth >= MAX_WORD_DEPTH) {
-      mm_error("Error: word nesting deeper than %d (in '%s'); aborting.\n",
-              MAX_WORD_DEPTH, w->name);
-      word_aborted = true;
-      return;
-    }
-    char *sub_line = strdup(w->body);
-    Lexer sub_lexer = {sub_line, 0};
-    Token sub_tok;
-    word_depth++;
-    do {   // The lexer loop
-      sub_tok = next_token(&sub_lexer);
-      evaluate_one_token(stack, sub_tok);
-    } while (sub_tok.type != TOK_EOF && !word_aborted);
-    word_depth--;
-    free(sub_line);
+    user_word *w = find_word(tok.text);
+    if (!w) { mm_error("Unknown word: %s", tok.text); return; }
+    exec_word(stack, w);
     return;
   }
   case TOK_FUNCTION: {

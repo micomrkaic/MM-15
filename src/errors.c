@@ -33,7 +33,7 @@ int mm_error(const char *fmt, ...) {
   size_t n = strlen(fmt);
   if (n == 0 || fmt[n - 1] != '\n') fputc('\n', stderr);
   error_count++;
-  return 0;
+  return -1;
 }
 
 void mm_warn(const char *fmt, ...) {

@@ -29,10 +29,6 @@ char* function_name_generator(const char* text, int state) {
   static int index;
   static int len;
 
-  extern user_word words[];
-  extern int word_count;
-  extern user_word macros[];
-  extern int macro_count;
 
   if (!state) {
     phase = 0;

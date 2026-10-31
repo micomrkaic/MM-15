@@ -310,7 +310,6 @@ static int op_integrate(Stack *stack) { (void)stack; (void)(integrate(stack)); r
 static int op_fzero(Stack *stack) { (void)stack; (void)(find_zero(stack)); return 0; }
 static int op_set_intg_tol(Stack *stack) { (void)stack; (void)(set_integration_precision(stack)); return 0; }
 static int op_set_f0_tol(Stack *stack) { (void)stack; (void)(set_f0_precision(stack)); return 0; }
-static int op_selword(Stack *stack) { (void)stack; (void)(word_select(stack)); return 0; }
 static int op_sto(Stack *stack) { (void)stack; (void)(store_to_register(stack)); return 0; }
 static int op_rcl(Stack *stack) { (void)stack; (void)(recall_from_register(stack)); return 0; }
 static int op_ffr(Stack *stack) { (void)stack; (void)(find_first_free_register(stack)); return 0; }
@@ -486,7 +485,6 @@ const Op ops[] = {
   { "fzero", 2, op_fzero, "Numerics", "x0 f -- x*", "Find root of function f near initial guess x0.", "0 \\\"f\\\" fzero" },
   { "set_intg_tol", 1, op_set_intg_tol, "Numerics", "tol --", "Set tolerance for numerical integration.", "1e-8 set_intg_tol" },
   { "set_f0_tol", 1, op_set_f0_tol, "Numerics", "tol --", "Set tolerance for root finding.", "1e-8 set_f0_tol" },
-  { "selword", 1, op_selword, "Numerics", "name --", "Select and show definition of a user word.", "\\\"FOO\\\" selword" },
   /* ---- Registers ---- */
   { "sto", 2, op_sto, "Registers", "value n --", "Store value into register n.", "42 0 sto" },
   { "rcl", 1, op_rcl, "Registers", "n -- value", "Recall value from register n.", "0 rcl" },

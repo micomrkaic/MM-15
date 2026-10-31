@@ -1,8 +1,64 @@
 New word sq <- dup *
 New word cube <- dup sq *
- 0.               sq: dup *
+New word sq <- dup dup * *
+New word fac <- dup 1 gt if dup 1 - fac * then
+New word sum <- 0 swap 1 + 1 do i + loop
+New word grid <- 3 0 do 2 0 do j 10 * i + loop loop
+New word dbl <- 1 begin dup 100 lt while 2 * repeat
+New word cnt <- 0 begin 1 + dup 5 geq until
+New word sgn <- dup 0 gt if drop 1 else 0 lt if -1 else 0 then then
+New word down <- 0 10 do i -3 +loop
+New word f <- f
+Error: Runaway recursion: word nesting deeper than 256 (in 'f')
+  (in word 'f')
+Error: bad: undefined word 'frobnicate'
+Error: e1: unterminated 'if'
+Error: e2: 'then' without matching 'if'
+Error: e3: 'i' outside a do loop
+Error: Word name '42' cannot start with a digit
+Error: 'dup' is a built-in command
+New word partial <- 7 0 /
+Error: Division by zero
+  (in word 'partial')
+ 0.               sq: dup dup * *
  1.             cube: dup sq *
+ 2.              fac: dup 1 gt if dup 1 - fac * then
+ 3.              sum: 0 swap 1 + 1 do i + loop
+ 4.             grid: 3 0 do 2 0 do j 10 * i + loop loop
+ 5.              dbl: 1 begin dup 100 lt while 2 * repeat
+ 6.              cnt: 0 begin 1 + dup 5 geq until
+ 7.              sgn: dup 0 gt if drop 1 else 0 lt if -1 else 0 then then
+ 8.             down: 0 10 do i -3 +loop
+ 9.                f: f
+10.          partial: 7 0 /
+Deleted sum
+ 0.               sq: dup dup * *
+ 1.             cube: dup sq *
+ 2.              fac: dup 1 gt if dup 1 - fac * then
+ 3.             grid: 3 0 do 2 0 do j 10 * i + loop loop
+ 4.              dbl: 1 begin dup 100 lt while 2 * repeat
+ 5.              cnt: 0 begin 1 + dup 5 geq until
+ 6.              sgn: dup 0 gt if drop 1 else 0 lt if -1 else 0 then then
+ 7.             down: 0 10 do i -3 +loop
+ 8.                f: f
+ 9.          partial: 7 0 /
+10 words saved
 
 [0] ℝ : 9.000000
 [1] ℝ : 8.000000
-[exit 0]
+[2] ℝ : 16.000000
+[3] ℝ : 3628800.000000
+[4] ℝ : 5050.000000
+[5] ℝ : 0.000000
+[6] ℝ : 1.000000
+[7] ℝ : 10.000000
+[8] ℝ : 11.000000
+[9] ℝ : 20.000000
+[10] ℝ : 21.000000
+[11] ℝ : 128.000000
+[12] ℝ : 5.000000
+[13] ℝ : -1.000000
+[14] ℝ : 0.000000
+[15] ℝ : 1.000000
+[16] ℝ : 7.000000
+[exit 1]

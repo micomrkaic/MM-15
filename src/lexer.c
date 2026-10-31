@@ -317,6 +317,7 @@ Token next_token(Lexer* lexer) {
 
   char c = peek(lexer);
   if (c == '\0') return make_token(TOK_EOF, "<EOF>");
+  if (c == '\\' || c == '#') return make_token(TOK_EOF, "<EOF>");   /* comment to end of line */
 
   if (starts_number(lexer)) return lex_number(lexer);
   if (c == '(') return lex_complex(lexer);

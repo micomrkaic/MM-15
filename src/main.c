@@ -142,6 +142,7 @@ static void startup(Stack *stack, Stack *old_stack) {
   init_registers();
   if (autoload) {
     load_macros_from_file();
+    autoload_words();
     load_config(CONFIG_PATH);
   }
 }
@@ -151,6 +152,7 @@ static void shutdown(Stack *stack, Stack *old_stack) {
   free_stack(old_stack);
   free_stack(stack);
   free_all_registers();
+  free_words();
 }
 
 /* One line of input, shared by the REPL and batch mode. Returns false on "q". */
