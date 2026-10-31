@@ -20,7 +20,8 @@
 
 #include <readline/readline.h>  // for rl_completion_matches, rl_line_buffer
 #include <string.h>             // for strdup, strncmp, NULL, strlen
-#include "tab_completion.h"     // for function_name_completion, function_na...
+#include "ops.h"                // for ops, n_ops
+#include "tab_completion.h"     // for function_name_completion
 #include "words.h"              // for user_word
 
 char* function_name_generator(const char* text, int state) {
@@ -28,7 +29,6 @@ char* function_name_generator(const char* text, int state) {
   static int index;
   static int len;
 
-  extern const char* const function_names[];
   extern user_word words[];
   extern int word_count;
   extern user_word macros[];
@@ -46,8 +46,8 @@ char* function_name_generator(const char* text, int state) {
 
     switch (phase) {
     case 0:
-      while (function_names[index]) {
-	const char* fn = function_names[index++];
+      while (index < n_ops) {
+	const char* fn = ops[index++].name;
 	if (strncmp(fn, text, len) == 0) {
 	  return strdup(fn);
 	}

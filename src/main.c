@@ -40,6 +40,7 @@
 
 #include "errors.h"
 #include "eval_fun.h"          // for evaluate_line
+#include "ops.h"               // for print_ops_markdown
 #include "globals.h"           // for CONFIG_PATH, HISTORY_PATH, completed_...
 #include "print_fun.h"         // for print_stack
 #include "registers.h"         // for free_all_registers, init_registers
@@ -230,7 +231,7 @@ static int run_lines_from(Stack *stack, Stack *old_stack, FILE *f) {
 static void usage_text(FILE *f) {
   fprintf(f,
     "usage: mm_15 [-n] [-e EXPR]... [-f FILE]...\n"
-    "       mm_15 --version | -h\n"
+    "       mm_15 --commands | --version | -h\n"
     "\n"
     "  (no args)   interactive calculator (reads stdin when it is not a terminal)\n"
     "  -e EXPR     evaluate EXPR as one line; may be repeated\n"
@@ -249,6 +250,7 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++) {
     const char *a = argv[i];
     if (!strcmp(a, "-h") || !strcmp(a, "--help")) { usage_text(stdout); return 0; }
+    if (!strcmp(a, "--commands")) { print_ops_markdown(); return 0; }
     if (!strcmp(a, "--version")) { printf("MM-15 %s (%s)\n", MM15_VERSION, VERSION); return 0; }
     if (!strcmp(a, "-n")) { autoload = false; continue; }
     if ((!strcmp(a, "-e") || !strcmp(a, "-f")) && i + 1 < argc && njobs < MAXJOBS) {

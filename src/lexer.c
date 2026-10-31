@@ -22,7 +22,7 @@
 #include <stdio.h>          // for size_t, snprintf, fprintf, stderr
 #include <stdlib.h>         // for free, calloc, realloc
 #include <string.h>         // for strncpy, memcpy, strcmp
-#include "function_list.h"  // for function_names
+#include "ops.h"            // for find_op
 #include "lexer.h"          // for Token, MAX_TOKEN_LEN, TOK_UNKNOWN, Lexer
 
 #define TEMP_BUF_SIZE (MAX_TOKEN_LEN * 4 - 1)
@@ -99,10 +99,7 @@ Token make_token(token_type type, const char* text) {
 }
 
 bool is_function_name(const char* name) {
-  for (int i = 0; function_names[i]; i++) {
-    if (strcmp(name, function_names[i]) == 0) return true;
-  }
-  return false;
+  return find_op(name) >= 0;
 }
 
 Token lex_number(Lexer* lexer) {
