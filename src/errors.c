@@ -25,6 +25,7 @@ long error_count = 0;
 
 int mm_error(const char *fmt, ...) {
   va_list ap;
+  if (!fmt) fmt = "";          /* newer gcc otherwise warns "null format string" */
   fflush(stdout);
   if (strncmp(fmt, "Error", 5) != 0 && strncmp(fmt, "GSL", 3) != 0) fputs("Error: ", stderr);
   va_start(ap, fmt);
@@ -38,6 +39,7 @@ int mm_error(const char *fmt, ...) {
 
 void mm_warn(const char *fmt, ...) {
   va_list ap;
+  if (!fmt) fmt = "";
   fflush(stdout);
   if (strncmp(fmt, "Warning", 7) != 0) fputs("Warning: ", stderr);
   va_start(ap, fmt);
