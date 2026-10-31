@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,14 +31,14 @@
 void concatenate(Stack *stack)
 {
     if (!stack) {
-        fprintf(stderr, "concatenate: null stack\n");
+        mm_error("concatenate: null stack\n");
         return;
     }
 
     if (stack->top < 1 ||
         stack->items[stack->top - 1].type != TYPE_STRING ||
         stack->items[stack->top].type     != TYPE_STRING) {
-        fprintf(stderr, "Both top items must be strings\n");
+        mm_error("Both top items must be strings\n");
         return;
     }
 
@@ -51,13 +52,13 @@ void concatenate(Stack *stack)
 
     /* overflow guard (paranoid, but cheap) */
     if (n1 > SIZE_MAX - n2 - 1) {
-        fprintf(stderr, "String length overflow\n");
+        mm_error("String length overflow\n");
         return;
     }
 
     char *out = malloc(n1 + n2 + 1);
     if (!out) {
-        fprintf(stderr, "Memory allocation failed\n");
+        mm_error("Memory allocation failed\n");
         return;
     }
 
@@ -78,13 +79,13 @@ void concatenate(Stack *stack)
 
 void to_upper(Stack* stack) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_STRING) {
-    fprintf(stderr,"Top item must be a string\n");
+    mm_error("Top item must be a string\n");
     return;
   }
   char* orig = stack->items[stack->top].string;
   char* upper = strdup(orig);
   if (!upper) {
-    fprintf(stderr,"Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     return;
   }
   for (char* p = upper; *p; ++p) *p = toupper((unsigned char)*p);
@@ -94,13 +95,13 @@ void to_upper(Stack* stack) {
 
 void to_lower(Stack* stack) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_STRING) {
-    fprintf(stderr,"Top item must be a string\n");
+    mm_error("Top item must be a string\n");
     return;
   }
   char* orig = stack->items[stack->top].string;
   char* lower = strdup(orig);
   if (!lower) {
-    fprintf(stderr,"Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     return;
   }
   for (char* p = lower; *p; ++p) *p = tolower((unsigned char)*p);
@@ -110,7 +111,7 @@ void to_lower(Stack* stack) {
 
 void string_length(Stack* stack) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_STRING) {
-    fprintf(stderr,"Top item must be a string\n");
+    mm_error("Top item must be a string\n");
     return;
   }
   size_t len = strlen(stack->items[stack->top].string);
@@ -121,7 +122,7 @@ void string_length(Stack* stack) {
 
 void string_reverse(Stack* stack) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_STRING) {
-    fprintf(stderr,"Top item must be a string\n");
+    mm_error("Top item must be a string\n");
     return;
   }
   char* str = stack->items[stack->top].string;
@@ -135,14 +136,14 @@ void string_reverse(Stack* stack) {
 
 void top_to_string(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Error: stack is empty\n");
+    mm_error("Error: stack is empty\n");
     return;
   }
 
   stack_element* el = &stack->items[stack->top];
 
   if (el->type != TYPE_REAL) {
-    fprintf(stderr, "Error: top element is not a real number\n");
+    mm_error("Error: top element is not a real number\n");
     return;
   }
 
@@ -168,7 +169,7 @@ static int elem_to_index(const stack_element *e, int *out) {
 /* Pops: end_index, start_index, string. Pushes: substring string. */
 int my_substring(Stack* stack) {
   if (stack->top < 2) {
-    fprintf(stderr, "Error: substring requires end, start, and a string on the stack\n");
+    mm_error("Error: substring requires end, start, and a string on the stack\n");
     return 1;
   }
 
@@ -179,14 +180,14 @@ int my_substring(Stack* stack) {
 
   /* Validate string type */
   if (e_str.type != TYPE_STRING) {
-    fprintf(stderr, "Error: substring requires a string as the first popped value\n");
+    mm_error("Error: substring requires a string as the first popped value\n");
     return 1;
   }
 
   /* Convert indices */
   int start, end;
   if (!elem_to_index(&e_start, &start) || !elem_to_index(&e_end, &end)) {
-    fprintf(stderr, "Error: substring indices must be non-negative integers\n");
+    mm_error("Error: substring indices must be non-negative integers\n");
     free(e_str.string); /* clean up since we popped it */
     return 1;
   }
@@ -196,7 +197,7 @@ int my_substring(Stack* stack) {
 
   /* Bounds: 0 <= start <= end <= len */
   if ((size_t)start > len || (size_t)end > len || start > end) {
-    fprintf(stderr, "Error: substring range [%d, %d) is out of bounds for length %zu\n",
+    mm_error("Error: substring range [%d, %d) is out of bounds for length %zu\n",
             start, end, len);
     free(e_str.string);
     return 1;
@@ -206,7 +207,7 @@ int my_substring(Stack* stack) {
 
   char* out = (char*)malloc(sublen + 1);
   if (!out) {
-    fprintf(stderr, "Error: memory allocation failed\n");
+    mm_error("Error: memory allocation failed\n");
     free(e_str.string);
     return 1;
   }

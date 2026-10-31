@@ -1,0 +1,8 @@
+New word sq <- dup *
+New word cube <- dup sq *
+ 0.               sq: dup *
+ 1.             cube: dup sq *
+
+[0] ℝ : 9.000000
+[1] ℝ : 8.000000
+[exit 0]

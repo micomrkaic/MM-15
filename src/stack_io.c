@@ -18,6 +18,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "errors.h"
 #include "stack_io.h"
 #include <errno.h>                          // for EINVAL, errno
 #include <gsl/gsl_complex.h>                // for GSL_IMAG, GSL_REAL, gsl_c...
@@ -80,7 +81,7 @@ static uint8_t host_endian_tag(void) {
 static int write_exact(FILE *f, const void *buf, size_t n, const char *what) {
   if (n == 0) return 0;
   if (fwrite(buf, 1, n, f) != n) {
-    perror(what);
+    mm_perror(what);
     return -1;
   }
   return 0;
@@ -89,8 +90,8 @@ static int write_exact(FILE *f, const void *buf, size_t n, const char *what) {
 static int read_exact(FILE *f, void *buf, size_t n, const char *what) {
   if (n == 0) return 0;
   if (fread(buf, 1, n, f) != n) {
-    if (feof(f)) fprintf(stderr, "Unexpected EOF while reading %s\n", what);
-    else perror(what);
+    if (feof(f)) mm_error("Unexpected EOF while reading %s\n", what);
+    else mm_perror(what);
     return -1;
   }
   return 0;
@@ -128,7 +129,7 @@ static int open_atomic_tmp(const char *filename, char **tmp_path_out, FILE **fil
 
   char *tmp = (char *)malloc(n + m + 1);
   if (!tmp) {
-    perror("malloc tmp path");
+    mm_perror("malloc tmp path");
     return -1;
   }
 
@@ -137,14 +138,14 @@ static int open_atomic_tmp(const char *filename, char **tmp_path_out, FILE **fil
 
   int fd = mkstemp(tmp);
   if (fd < 0) {
-    perror("mkstemp");
+    mm_perror("mkstemp");
     free(tmp);
     return -1;
   }
 
   FILE *f = fdopen(fd, "wb");
   if (!f) {
-    perror("fdopen");
+    mm_perror("fdopen");
     close(fd);
     unlink(tmp);
     free(tmp);
@@ -202,7 +203,7 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
 
   /* Validate top before writing. Your convention might differ. */
   if (stack->top < -1 || stack->top >= STACK_SIZE) {
-    fprintf(stderr, "save_stack_to_file: invalid stack->top=%d\n", stack->top);
+    mm_error("save_stack_to_file: invalid stack->top=%d\n", stack->top);
     errno = EINVAL;
     return -1;
   }
@@ -252,12 +253,12 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
 
     case TYPE_STRING: {
       if (!elem->string) {
-	fprintf(stderr, "save_stack_to_file: NULL string at index %u\n", i);
+	mm_error("save_stack_to_file: NULL string at index %u\n", i);
 	goto done;
       }
       size_t len = strlen(elem->string);
       if (len > MM15_MAX_STRING_BYTES) {
-	fprintf(stderr, "save_stack_to_file: string too large (%zu bytes)\n", len);
+	mm_error("save_stack_to_file: string too large (%zu bytes)\n", len);
 	goto done;
       }
       if (write_u32(file, (uint32_t)len, "write string len") != 0) goto done;
@@ -267,14 +268,14 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
 
     case TYPE_MATRIX_REAL: {
       if (!elem->matrix_real) {
-	fprintf(stderr, "save_stack_to_file: NULL real matrix at index %u\n", i);
+	mm_error("save_stack_to_file: NULL real matrix at index %u\n", i);
 	goto done;
       }
       uint32_t rows = (uint32_t)elem->matrix_real->size1;
       uint32_t cols = (uint32_t)elem->matrix_real->size2;
 
       if (rows == 0 || cols == 0 || rows > MM15_MAX_MATRIX_DIM || cols > MM15_MAX_MATRIX_DIM) {
-	fprintf(stderr, "save_stack_to_file: insane matrix dims %u x %u\n", rows, cols);
+	mm_error("save_stack_to_file: insane matrix dims %u x %u\n", rows, cols);
 	goto done;
       }
 
@@ -293,7 +294,7 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
 
     case TYPE_MATRIX_COMPLEX: {
       if (!elem->matrix_complex) {
-	fprintf(stderr, "save_stack_to_file: NULL complex matrix at index %u\n", i);
+	mm_error("save_stack_to_file: NULL complex matrix at index %u\n", i);
 	goto done;
       }
 
@@ -301,7 +302,7 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
       uint32_t cols = (uint32_t)elem->matrix_complex->size2;
 
       if (rows == 0 || cols == 0 || rows > MM15_MAX_MATRIX_DIM || cols > MM15_MAX_MATRIX_DIM) {
-	fprintf(stderr, "save_stack_to_file: insane complex matrix dims %u x %u\n", rows, cols);
+	mm_error("save_stack_to_file: insane complex matrix dims %u x %u\n", rows, cols);
 	goto done;
       }
 
@@ -321,31 +322,31 @@ int save_stack_to_file(const Stack *stack, const char *filename) {
     }
 
     default:
-      fprintf(stderr, "save_stack_to_file: Unknown type: %u\n", type_u32);
+      mm_error("save_stack_to_file: Unknown type: %u\n", type_u32);
       goto done;
     }
   }
 
   if (fflush(file) != 0) {
-    perror("fflush");
+    mm_perror("fflush");
     goto done;
   }
 
   /* Try to make it durable; if you don’t care about power-loss safety, you can drop fsync. */
   if (fsync(fd) != 0) {
-    perror("fsync");
+    mm_perror("fsync");
     goto done;
   }
 
   if (fclose(file) != 0) {
-    perror("fclose");
+    mm_perror("fclose");
     file = NULL;
     goto done;
   }
   file = NULL;
 
   if (rename(tmp_path, filename) != 0) {
-    perror("rename");
+    mm_perror("rename");
     goto done;
   }
 
@@ -366,7 +367,7 @@ int load_stack_from_file(Stack *stack, const char *filename) {
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    perror("fopen");
+    mm_perror("fopen");
     return -1;
   }
 
@@ -376,21 +377,21 @@ int load_stack_from_file(Stack *stack, const char *filename) {
   unsigned char magic[MM15_STK_MAGIC_LEN];
   if (read_exact(file, magic, MM15_STK_MAGIC_LEN, "read magic") != 0) goto done;
   if (memcmp(magic, MM15_STK_MAGIC, MM15_STK_MAGIC_LEN) != 0) {
-    fprintf(stderr, "load_stack_from_file: not an MM-15 stack file (bad magic)\n");
+    mm_error("load_stack_from_file: not an MM-15 stack file (bad magic)\n");
     goto done;
   }
 
   uint32_t version = 0;
   if (read_u32(file, &version, "read version") != 0) goto done;
   if (version != MM15_STK_VERSION) {
-    fprintf(stderr, "load_stack_from_file: unsupported version %u\n", version);
+    mm_error("load_stack_from_file: unsupported version %u\n", version);
     goto done;
   }
 
   uint8_t endian = 0;
   if (read_u8(file, &endian, "read endian") != 0) goto done;
   if (endian != host_endian_tag()) {
-    fprintf(stderr, "load_stack_from_file: endian mismatch (file=%u host=%u)\n",
+    mm_error("load_stack_from_file: endian mismatch (file=%u host=%u)\n",
             (unsigned)endian, (unsigned)host_endian_tag());
     goto done;
   }
@@ -402,7 +403,7 @@ int load_stack_from_file(Stack *stack, const char *filename) {
   if (read_u32(file, &count, "read count") != 0) goto done;
 
   if (count > (uint32_t)STACK_SIZE) {
-    fprintf(stderr, "load_stack_from_file: file stack too large (%u > STACK_SIZE)\n", count);
+    mm_error("load_stack_from_file: file stack too large (%u > STACK_SIZE)\n", count);
     goto done;
   }
 
@@ -445,13 +446,13 @@ int load_stack_from_file(Stack *stack, const char *filename) {
       uint32_t len = 0;
       if (read_u32(file, &len, "read string len") != 0) goto done;
       if (len > MM15_MAX_STRING_BYTES) {
-	fprintf(stderr, "load_stack_from_file: string length too large (%u)\n", len);
+	mm_error("load_stack_from_file: string length too large (%u)\n", len);
 	goto done;
       }
 
       elem->string = (char *)malloc((size_t)len + 1);
       if (!elem->string) {
-	perror("malloc string");
+	mm_perror("malloc string");
 	goto done;
       }
       if (read_exact(file, elem->string, len, "read string bytes") != 0) goto done;
@@ -465,13 +466,13 @@ int load_stack_from_file(Stack *stack, const char *filename) {
       if (read_u32(file, &cols, "read mreal cols") != 0) goto done;
 
       if (rows == 0 || cols == 0 || rows > MM15_MAX_MATRIX_DIM || cols > MM15_MAX_MATRIX_DIM) {
-	fprintf(stderr, "load_stack_from_file: insane matrix dims %u x %u\n", rows, cols);
+	mm_error("load_stack_from_file: insane matrix dims %u x %u\n", rows, cols);
 	goto done;
       }
 
       elem->matrix_real = gsl_matrix_alloc(rows, cols);
       if (!elem->matrix_real) {
-	fprintf(stderr, "Failed to allocate matrix_real (%u x %u)\n", rows, cols);
+	mm_error("Failed to allocate matrix_real (%u x %u)\n", rows, cols);
 	goto done;
       }
 
@@ -491,13 +492,13 @@ int load_stack_from_file(Stack *stack, const char *filename) {
       if (read_u32(file, &cols, "read mcplx cols") != 0) goto done;
 
       if (rows == 0 || cols == 0 || rows > MM15_MAX_MATRIX_DIM || cols > MM15_MAX_MATRIX_DIM) {
-	fprintf(stderr, "load_stack_from_file: insane complex matrix dims %u x %u\n", rows, cols);
+	mm_error("load_stack_from_file: insane complex matrix dims %u x %u\n", rows, cols);
 	goto done;
       }
 
       elem->matrix_complex = gsl_matrix_complex_alloc(rows, cols);
       if (!elem->matrix_complex) {
-	fprintf(stderr, "Failed to allocate matrix_complex (%u x %u)\n", rows, cols);
+	mm_error("Failed to allocate matrix_complex (%u x %u)\n", rows, cols);
 	goto done;
       }
 
@@ -513,7 +514,7 @@ int load_stack_from_file(Stack *stack, const char *filename) {
     }
 
     default:
-      fprintf(stderr, "load_stack_from_file: Unknown type: %u\n", type_u32);
+      mm_error("load_stack_from_file: Unknown type: %u\n", type_u32);
       goto done;
     }
   }

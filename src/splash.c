@@ -14,7 +14,7 @@ void splash_screen(void) {
   printf("╔══════════════════════════════════════════════╗\n");
   printf("║                                              ║\n");
   printf("║     Mico's Matrix & Scalar RPN Calculator    ║\n");
-  printf("║             Version 1.1 (2026)               ║\n");
+  printf("║             Version 2.0 (2026)               ║\n");
   printf("║                                              ║\n");
   printf("║  > Enter RPN expressions                     ║\n");
   printf("║  > Type 'help' for commands                  ║\n");

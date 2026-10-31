@@ -16,6 +16,7 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "errors.h"
 #include "globals.h"
 
 bool fixed_point = true;
@@ -66,14 +67,14 @@ const char *app_path(const char *file) {
   }
   snprintf(dir, sizeof dir, "%.*s/mm_15", (int)(sizeof base - 1), base);
   if (mkdir_if_missing(base) != 0 || mkdir_if_missing(dir) != 0)
-    fprintf(stderr, "Warning: cannot create %s: %s\n", dir, strerror(errno));
+    mm_warn("Warning: cannot create %s: %s\n", dir, strerror(errno));
   snprintf(out, MAX_PATH, "%s/%.255s", dir, file);
   return out;
 }
 
 int set_print_precision(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Error: Stack underflow. Expected number for precision\n");
+    mm_error("Error: Stack underflow. Expected number for precision\n");
     return 1;
   }
 
@@ -83,16 +84,16 @@ int set_print_precision(Stack* stack) {
     precision = (int)elem.real;
   } else if (elem.type == TYPE_COMPLEX) {
     if (GSL_IMAG(elem.complex_val) != 0.0) {
-      fprintf(stderr, "Error: Complex value must be real to set precision\n");
+      mm_error("Error: Complex value must be real to set precision\n");
       return 1;
     }
     precision = (int)GSL_REAL(elem.complex_val);
   } else {
-    fprintf(stderr, "Error: Expected number on stack to set print precision\n");
+    mm_error("Error: Expected number on stack to set print precision\n");
     return 1;
   }
   if (precision < 0 || precision > 20) {
-    fprintf(stderr, "Error: Precision value %d is out of valid range (0–20)\n", precision);
+    mm_error("Error: Precision value %d is out of valid range (0–20)\n", precision);
     return 1;
   }
   print_precision = precision;
@@ -106,7 +107,7 @@ void swap_fixed_scientific(void) {
 void save_config(const char* filename) {
   FILE* f = fopen(filename, "w");
   if (!f) {
-    perror("Failed to open config file for writing");
+    mm_perror("Failed to open config file for writing");
     return;
   }
 
@@ -122,7 +123,7 @@ int load_config(const char* filename) {
   //  printf("Config file: %s\n", filename);
   FILE* f = fopen(filename, "r");
   if (!f) {
-    perror("Failed to open config file for reading");
+    if (errno != ENOENT) mm_perror(filename);      /* first run: no config yet */
     return 1;
   }
 

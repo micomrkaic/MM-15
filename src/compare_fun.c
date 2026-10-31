@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for gsl_complex
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_abs, gsl_comp...
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
@@ -47,7 +48,7 @@ static int cmp_complex(gsl_complex a, gsl_complex b, comparison_op op) {
 
 void dot_cmp_top_two(Stack* stack, comparison_op op) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in dot_cmp_top_two.\n");
+    mm_error("Stack underflow in dot_cmp_top_two.\n");
     return;
   }
 
@@ -109,7 +110,7 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
         a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_cmp_top_two (real).\n");
+      mm_error("Matrix size mismatch in dot_cmp_top_two (real).\n");
       return;
     }
     size_t rows = a->matrix_real->size1, cols = a->matrix_real->size2;
@@ -125,7 +126,7 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
         a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_cmp_top_two (complex).\n");
+      mm_error("Matrix size mismatch in dot_cmp_top_two (complex).\n");
       return;
     }
     size_t rows = a->matrix_complex->size1, cols = a->matrix_complex->size2;
@@ -139,7 +140,7 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
       }
   }
   else {
-    fprintf(stderr, "Unsupported types in dot_cmp_top_two.\n");
+    mm_error("Unsupported types in dot_cmp_top_two.\n");
     return;
   }
 

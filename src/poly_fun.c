@@ -16,6 +16,7 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
 #include <gsl/gsl_errno.h>                  // for GSL_SUCCESS
@@ -30,7 +31,7 @@
 
 void poly_eval(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need polynomial and x.\n");
+    mm_error("Stack underflow: need polynomial and x.\n");
     return;
   }
 
@@ -46,7 +47,7 @@ void poly_eval(Stack* stack) {
   } else if (coeffs.type == TYPE_MATRIX_COMPLEX && coeffs.matrix_complex) {
     len = coeffs.matrix_complex->size1 * coeffs.matrix_complex->size2;
   } else {
-    fprintf(stderr, "poly_eval: coefficients must be a matrix.\n");
+    mm_error("poly_eval: coefficients must be a matrix.\n");
     return;
   }
   gsl_complex acc;
@@ -87,21 +88,21 @@ void poly_eval(Stack* stack) {
 
 void poly_roots(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: no polynomial.\n");
+    mm_error("Stack underflow: no polynomial.\n");
     return;
   }
 
   stack_element coeffs = stack->items[stack->top--];
 
   if (coeffs.type != TYPE_MATRIX_REAL || !coeffs.matrix_real) {
-    fprintf(stderr, "poly_roots: only real coefficient polynomials supported.\n");
+    mm_error("poly_roots: only real coefficient polynomials supported.\n");
     return;
   }
 
   gsl_matrix* mat = coeffs.matrix_real;
   size_t n = mat->size1 * mat->size2;
   if (n < 2) {
-    fprintf(stderr, "poly_roots: degree must be at least 1.\n");
+    mm_error("poly_roots: degree must be at least 1.\n");
     return;
   }
 
@@ -112,7 +113,7 @@ void poly_roots(Stack* stack) {
   gsl_poly_complex_workspace_free(w);
 
   if (status != GSL_SUCCESS) {
-    fprintf(stderr, "poly_roots: solver failed.\n");
+    mm_error("poly_roots: solver failed.\n");
     free(z);
     return;
   }

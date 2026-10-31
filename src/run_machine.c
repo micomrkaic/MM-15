@@ -18,6 +18,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "errors.h"
 #include <stdbool.h>      // for false, bool, true
 #include <stdio.h>        // for fclose, fprintf, NULL, stderr, printf, fopen
 #include <stdlib.h>       // for free
@@ -173,7 +174,7 @@ bool is_ctr_compare(Stack* stack, const char* op) {
   if (strcmp(op, ">")  == 0) return value >  0.0;
   if (strcmp(op, ">=") == 0) return value >= 0.0;
 
-  fprintf(stderr, "Unknown operator: %s\n", op);
+  mm_error("Unknown operator: %s\n", op);
   return false;
 }
 
@@ -219,7 +220,7 @@ static compare_fn get_compare_fn(const char* name) {
 int run_batch(Stack *stack, char *fname) {
   FILE* f = fopen(fname, "r");
   if (!f) {
-    perror("Failed to open input file");
+    mm_perror("Failed to open input file");
     return 1;
   } else printf("Running batch: %s\n",fname);
 
@@ -243,7 +244,7 @@ static bool evaluate_test_condition(Stack* stack, const char* test_name) {
   if (fn) {
     result = fn(stack);
   } else {
-    fprintf(stderr, "Unknown condition: %s\n", test_name);
+    mm_error("Unknown condition: %s\n", test_name);
     result=false;
   }
   return result;
@@ -274,7 +275,7 @@ void list_program(const Program* prog) {
 
 bool load_program_from_file(const char *filename, Program *prog) {
   FILE *f = fopen(filename, "r");
-  if (!f) { perror("open program"); return false; }
+  if (!f) { mm_perror("open program"); return false; }
 
   char line[256];
 
@@ -290,7 +291,7 @@ bool load_program_from_file(const char *filename, Program *prog) {
     if (strncmp(line, "LBL ", 4) == 0) {
       /* ensure room for another label */
       if (prog->label_count >= MAX_LABELS) {
-        fprintf(stderr, "too many labels (max %d)\n", MAX_LABELS);
+        mm_error("too many labels (max %d)\n", MAX_LABELS);
         fclose(f);
         return false;
       }
@@ -300,7 +301,7 @@ bool load_program_from_file(const char *filename, Program *prog) {
       size_t cap = sizeof prog->labels[idx].label;   /* 32 in your struct */
       int wrote = snprintf(prog->labels[idx].label, cap, "%s", line + 4);
       if (wrote < 0 || (size_t)wrote >= cap) {
-        fprintf(stderr, "label name too long (max %zu)\n", cap - 1);
+        mm_error("label name too long (max %zu)\n", cap - 1);
         fclose(f);
         return false;
       }
@@ -338,7 +339,7 @@ bool load_program_from_file(const char *filename, Program *prog) {
 
     /* ensure room for another instruction */
     if (prog->count >= MAX_PROGRAM) {
-      fprintf(stderr, "program too long (max %d)\n", MAX_PROGRAM);
+      mm_error("program too long (max %d)\n", MAX_PROGRAM);
       if (instr.arg) free(instr.arg);  /* avoid leaking the just-created arg */
       fclose(f);
       return false;
@@ -381,7 +382,7 @@ void run_RPN_code(Stack* stack, Program* prog) {
       int target = find_label(prog, instr.arg);
       if (target >= 0) pc = target;
       else {
-	fprintf(stderr,"Invalid label: %s\n", instr.arg);
+	mm_error("Invalid label: %s\n", instr.arg);
 	return;
       }
       break;
@@ -392,7 +393,7 @@ void run_RPN_code(Stack* stack, Program* prog) {
 	call_stack[++call_top] = pc + 1;
 	pc = target;
       } else {
-	fprintf(stderr,"Invalid subroutine label: %s\n", instr.arg);
+	mm_error("Invalid subroutine label: %s\n", instr.arg);
 	return;
       }
       break;
@@ -401,7 +402,7 @@ void run_RPN_code(Stack* stack, Program* prog) {
       if (call_top >= 0)
 	pc = call_stack[call_top--];
       else {
-	fprintf(stderr,"Return stack underflow\n");
+	mm_error("Return stack underflow\n");
 	return;
       }
       break;

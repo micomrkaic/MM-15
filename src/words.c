@@ -16,6 +16,7 @@
  * along with MM-14 If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "errors.h"
 #include <ctype.h>    // for isspace, isalnum
 #include <math.h>     // for isfinite
 #include <stdbool.h>  // for false
@@ -37,13 +38,13 @@ void list_macros(void) {
     for(int i=0; i< macro_count; i++) {
       printf("%2d. %16s: %s\n",i,macros[i].name,macros[i].body);
     }
-  } else fprintf(stderr,"No macros are defined!\n");
+  } else mm_warn("No macros are defined!\n");
 }
 
 int load_macros_from_file(void) {
   FILE* f = fopen(MACROS_PATH, "r");
   if (!f) {
-    perror("Could not open file for reading");
+    if (errno != ENOENT) mm_perror(MACROS_PATH);   /* no file yet is normal */
     return -1;
   }
 
@@ -79,17 +80,17 @@ void list_words(void) {
     for(int i=0; i< word_count; i++) {
       printf("%2d. %16s: %s\n",i,words[i].name,words[i].body);
     }
-  } else fprintf(stderr,"No words are defined!\n");
+  } else mm_warn("No words are defined!\n");
 }
 
 void delete_word(Stack *stack) {
   stack_element a = pop(stack);
   if (a.type != TYPE_REAL) {
-    fprintf(stderr,"Invalid index type\n");
+    mm_error("Invalid index type\n");
     return;
   } else {
     if (!isfinite(a.real)) {
-      fprintf(stderr,"Invalid index value\n");
+      mm_error("Invalid index value\n");
       return;
     }
     int index = (int)a.real;
@@ -99,7 +100,7 @@ void delete_word(Stack *stack) {
 
 int delete_word_by_index(int index) {
   if (index < 0 || index >= word_count) {
-    fprintf(stderr,"Invalid word number\n");
+    mm_error("Invalid word number\n");
     return -1; // Invalid index
   }
 
@@ -114,16 +115,16 @@ int delete_word_by_index(int index) {
 void word_select(Stack * stack) {
   stack_element a = pop(stack);
   if (a.type != TYPE_REAL) {
-    fprintf(stderr,"Invalid index type\n");
+    mm_error("Invalid index type\n");
     return;
   } else {
     if (!isfinite(a.real)) {
-      fprintf(stderr,"Invalid index\n");
+      mm_error("Invalid index\n");
       return;
     }
     int index = (int)a.real;
     if (index < 0 || index >= word_count) {
-      fprintf(stderr,"Invalid index\n");
+      mm_error("Invalid index\n");
       return;
     }
     selected_function = index;
@@ -135,9 +136,9 @@ void clear_words(void) {
 }
 
 int save_words_to_file(void) {
-  FILE* f = fopen(WORDS_FILE , "w");
+  FILE* f = fopen(WORDS_PATH, "w");
   if (!f) {
-    perror("Could not open file for writing");
+    mm_perror("Could not open file for writing");
     return -1;
   }
 
@@ -150,9 +151,9 @@ int save_words_to_file(void) {
 }
 
 int load_words_from_file(void) {
-  FILE* f = fopen("user_words.txt", "r");
+  FILE* f = fopen(WORDS_PATH, "r");
   if (!f) {
-    perror("Could not open file for reading");
+    mm_perror(WORDS_PATH);
     return -1;
   }
 
@@ -228,18 +229,18 @@ int is_word_definition(const char *s) {
   if (body_len >= MAX_WORD_BODY) body_len = MAX_WORD_BODY - 1;
 
   if (word_count >= MAX_WORDS) {
-    fprintf(stderr, "Too many word definitions.\n");
+    mm_error("Too many word definitions.\n");
     return false;
   }
 
   // ---- FIX: reject redefinition ----
   if (find_word(name) != NULL) {
-    fprintf(stderr, "Word '%s' is already defined.\n", name);
+    mm_error("Word '%s' is already defined.\n", name);
     return -1;
   }
   // Optional: also prevent collisions with macros
   if (find_macro(name) != NULL) {
-    fprintf(stderr, "Name '%s' is already used as a macro.\n", name);
+    mm_error("Name '%s' is already used as a macro.\n", name);
     return -1;
   }
   // ----------------------------------

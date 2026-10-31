@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_cdf.h>                    // for gsl_cdf_ugaussian_P, gsl_...
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_REAL
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
@@ -47,7 +48,7 @@ double standard_normal_quantile(double p) {
 
 void matrix_column_means(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: need a matrix to compute column means.\n");
+    mm_error("Stack underflow: need a matrix to compute column means.\n");
     return;
   }
 
@@ -56,7 +57,7 @@ void matrix_column_means(Stack* stack) {
   if (top->type == TYPE_MATRIX_REAL) {
     gsl_matrix* mat = top->matrix_real;
     if (!mat) {
-      fprintf(stderr, "Null real matrix.\n");
+      mm_error("Null real matrix.\n");
       return;
     }
 
@@ -65,7 +66,7 @@ void matrix_column_means(Stack* stack) {
 
     gsl_matrix* mean = gsl_matrix_calloc(1, cols);
     if (!mean) {
-      fprintf(stderr, "Failed to allocate result matrix.\n");
+      mm_error("Failed to allocate result matrix.\n");
       return;
     }
 
@@ -81,7 +82,7 @@ void matrix_column_means(Stack* stack) {
     result.type = TYPE_MATRIX_REAL;
     result.matrix_real = mean;
     if (stack->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Stack overflow.\n");
+      mm_error("Stack overflow.\n");
       gsl_matrix_free(mean);
       return;
     }
@@ -90,7 +91,7 @@ void matrix_column_means(Stack* stack) {
   } else if (top->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex* mat = top->matrix_complex;
     if (!mat) {
-      fprintf(stderr, "Null complex matrix.\n");
+      mm_error("Null complex matrix.\n");
       return;
     }
 
@@ -99,7 +100,7 @@ void matrix_column_means(Stack* stack) {
 
     gsl_matrix_complex* mean = gsl_matrix_complex_calloc(1, cols);
     if (!mean) {
-      fprintf(stderr, "Failed to allocate complex result matrix.\n");
+      mm_error("Failed to allocate complex result matrix.\n");
       return;
     }
 
@@ -117,29 +118,29 @@ void matrix_column_means(Stack* stack) {
     result.type = TYPE_MATRIX_COMPLEX;
     result.matrix_complex = mean;
     if (stack->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Stack overflow.\n");
+      mm_error("Stack overflow.\n");
       gsl_matrix_complex_free(mean);
       return;
     }
     stack->items[++stack->top] = result;
 
   } else {
-    fprintf(stderr, "Type error: top stack item must be a matrix (real or complex).\n");
+    mm_error("Type error: top stack item must be a matrix (real or complex).\n");
   }
 }
 
 /* void matrix_reduce(Stack* stack, const char* axis, const char* op) { */
 /*   if (stack->top < 0) { */
-/*     fprintf(stderr, "Stack underflow: need a matrix to compute reduction.\n"); */
+/*     mm_error("Stack underflow: need a matrix to compute reduction.\n"); */
 /*     return; */
 /*   } */
 
 /*   if ((!axis) || (!(strcmp(axis, "row") == 0) && (!(strcmp(axis, "col") == 0)))) { */
-/*     fprintf(stderr, "Invalid axis: must be \"row\" or \"col\".\n"); */
+/*     mm_error("Invalid axis: must be \"row\" or \"col\".\n"); */
 /*     return; */
 /*   } */
 /*   if (!op || (strcmp(op, "sum") != 0 && strcmp(op, "mean") != 0 && strcmp(op, "var") != 0)) { */
-/*     fprintf(stderr, "Invalid operation: must be \"sum\", \"mean\", or \"var\".\n"); */
+/*     mm_error("Invalid operation: must be \"sum\", \"mean\", or \"var\".\n"); */
 /*     return; */
 /*   } */
 
@@ -154,7 +155,7 @@ void matrix_column_means(Stack* stack) {
 /*   if (top->type == TYPE_MATRIX_REAL) { */
 /*     gsl_matrix* mat = top->matrix_real; */
 /*     if (!mat) { */
-/*       fprintf(stderr, "Null real matrix.\n"); */
+/*       mm_error("Null real matrix.\n"); */
 /*       return; */
 /*     } */
 
@@ -166,7 +167,7 @@ void matrix_column_means(Stack* stack) {
 /*     if (compute_rows) { */
 /*       result = gsl_matrix_calloc(rows, 1); */
 /*       if (!result) { */
-/* 	fprintf(stderr, "Failed to allocate result matrix.\n"); */
+/* 	mm_error("Failed to allocate result matrix.\n"); */
 /* 	return; */
 /*       } */
 /*       for (size_t i = 0; i < rows; ++i) { */
@@ -191,7 +192,7 @@ void matrix_column_means(Stack* stack) {
 /*     } else if (compute_cols) { */
 /*       result = gsl_matrix_calloc(1, cols); */
 /*       if (!result) { */
-/* 	fprintf(stderr, "Failed to allocate result matrix.\n"); */
+/* 	mm_error("Failed to allocate result matrix.\n"); */
 /* 	return; */
 /*       } */
 /*       for (size_t j = 0; j < cols; ++j) { */
@@ -219,7 +220,7 @@ void matrix_column_means(Stack* stack) {
 /*     out.type = TYPE_MATRIX_REAL; */
 /*     out.matrix_real = result; */
 /*     if (stack->top + 1 >= STACK_SIZE) { */
-/*       fprintf(stderr, "Stack overflow.\n"); */
+/*       mm_error("Stack overflow.\n"); */
 /*       gsl_matrix_free(result); */
 /*       return; */
 /*     } */
@@ -228,7 +229,7 @@ void matrix_column_means(Stack* stack) {
 /*   } else if (top->type == TYPE_MATRIX_COMPLEX) { */
 /*     gsl_matrix_complex* mat = top->matrix_complex; */
 /*     if (!mat) { */
-/*       fprintf(stderr, "Null complex matrix.\n"); */
+/*       mm_error("Null complex matrix.\n"); */
 /*       return; */
 /*     } */
 
@@ -240,7 +241,7 @@ void matrix_column_means(Stack* stack) {
 /*     if (compute_rows) { */
 /*       result = gsl_matrix_complex_calloc(rows, 1); */
 /*       if (!result) { */
-/* 	fprintf(stderr, "Failed to allocate complex result matrix.\n"); */
+/* 	mm_error("Failed to allocate complex result matrix.\n"); */
 /* 	return; */
 /*       } */
 /*       for (size_t i = 0; i < rows; ++i) { */
@@ -267,7 +268,7 @@ void matrix_column_means(Stack* stack) {
 /*     } else if (compute_cols) { */
 /*       result = gsl_matrix_complex_calloc(1, cols); */
 /*       if (!result) { */
-/* 	fprintf(stderr, "Failed to allocate complex result matrix.\n"); */
+/* 	mm_error("Failed to allocate complex result matrix.\n"); */
 /* 	return; */
 /*       } */
 /*       for (size_t j = 0; j < cols; ++j) { */
@@ -297,26 +298,26 @@ void matrix_column_means(Stack* stack) {
 /*     out.type = TYPE_MATRIX_COMPLEX; */
 /*     out.matrix_complex = result; */
 /*     if (stack->top + 1 >= STACK_SIZE) { */
-/*       fprintf(stderr, "Stack overflow.\n"); */
+/*       mm_error("Stack overflow.\n"); */
 /*       gsl_matrix_complex_free(result); */
 /*       return; */
 /*     } */
 /*     stack->items[++stack->top] = out; */
 
 /*   } else { */
-/*     fprintf(stderr, "Type error: top stack item must be a matrix (real or complex).\n"); */
+/*     mm_error("Type error: top stack item must be a matrix (real or complex).\n"); */
 /*   } */
 /* } */
 
 
 void matrix_reduce(Stack* stack, const char* axis, const char* op) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: need a matrix to compute reduction.\n");
+    mm_error("Stack underflow: need a matrix to compute reduction.\n");
     return;
   }
 
   if ((!axis) || (!(strcmp(axis, "row") == 0) && (!(strcmp(axis, "col") == 0)))) {
-    fprintf(stderr, "Invalid axis: must be \"row\" or \"col\".\n");
+    mm_error("Invalid axis: must be \"row\" or \"col\".\n");
     return;
   }
 
@@ -326,7 +327,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       strcmp(op, "var") != 0 &&
       strcmp(op, "min") != 0 &&
       strcmp(op, "max") != 0)) {
-    fprintf(stderr, "Invalid operation: must be \"sum\", \"mean\", \"var\", \"min\", or \"max\".\n");
+    mm_error("Invalid operation: must be \"sum\", \"mean\", \"var\", \"min\", or \"max\".\n");
     return;
   }
 
@@ -342,7 +343,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
   if (top->type == TYPE_MATRIX_REAL) {
     gsl_matrix* mat = top->matrix_real;
     if (!mat) {
-      fprintf(stderr, "Null real matrix.\n");
+      mm_error("Null real matrix.\n");
       return;
     }
     size_t rows = mat->size1;
@@ -399,7 +400,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
 
     stack_element out = {.type = TYPE_MATRIX_REAL, .matrix_real = result};
     if (stack->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Stack overflow.\n");
+      mm_error("Stack overflow.\n");
       gsl_matrix_free(result);
       return;
     }
@@ -408,7 +409,7 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
   } else if (top->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex* mat = top->matrix_complex;
     if (!mat) {
-      fprintf(stderr, "Null complex matrix.\n");
+      mm_error("Null complex matrix.\n");
       return;
     }
     size_t rows = mat->size1;
@@ -479,13 +480,13 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
 
     stack_element out = {.type = TYPE_MATRIX_COMPLEX, .matrix_complex = result};
     if (stack->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Stack overflow.\n");
+      mm_error("Stack overflow.\n");
       gsl_matrix_complex_free(result);
       return;
     }
     stack->items[++stack->top] = out;
 
   } else {
-    fprintf(stderr, "Type error: top stack item must be a matrix (real or complex).\n");
+    mm_error("Type error: top stack item must be a matrix (real or complex).\n");
   }
 }

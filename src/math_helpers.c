@@ -16,6 +16,7 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "errors.h"
 #include <complex.h>                        // for complex, cimag, cacos
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
@@ -116,7 +117,7 @@ double one_over_real(double x) {
   if (x != 0.0) {
     return 1.0/x;
   } else {
-    fprintf(stderr,"Division by zero not allowed!\n");
+    mm_error("Division by zero not allowed!\n");
     return 0.0;
   }
 }
@@ -126,7 +127,7 @@ gsl_complex one_over_complex(gsl_complex x) {
   if (GSL_REAL(x) != 0.0 || GSL_IMAG(x) != 0.0) {
     return gsl_complex_inverse(x);
   } else {
-    fprintf(stderr,"Division by zero not allowed!\n");
+    mm_error("Division by zero not allowed!\n");
     return gsl_complex_rect(0.0, 0.0);
   }
 }
@@ -171,7 +172,7 @@ bool is_zero_complex(gsl_complex z) {
       apply_complex_matrix_unary_inplace(stack, complex_fn);	\
       return;							\
     default:							\
-      fprintf(stderr, "Unsupported type in %s\n", #name);	\
+      mm_error("Unsupported type in %s\n", #name);	\
       return;							\
     }								\
   }
@@ -228,7 +229,7 @@ DEFINE_UNARY_WRAPPER(logical_not, real_not, complex_not)
   else if (a == TYPE_MATRIX_COMPLEX)
     complex_matrix_imag_part(stack);
   else
-    fprintf(stderr,"im: unsupported type\n");
+    mm_error("im: unsupported type\n");
   return;
 }
 
@@ -244,7 +245,7 @@ void re_wrapper(Stack *stack) {
   } else if (a == TYPE_MATRIX_COMPLEX)
     complex_matrix_real_part(stack);
   else
-    fprintf(stderr,"re: unsupported type\n");
+    mm_error("re: unsupported type\n");
   return;
 }
 
@@ -264,7 +265,7 @@ void abs_wrapper(Stack *stack) {
     // to do complex abs element by element
     return;
   else
-    fprintf(stderr,"abs: unsupported type\n");
+    mm_error("abs: unsupported type\n");
   return;
 }
 
@@ -284,7 +285,7 @@ void arg_wrapper(Stack *stack) {
     // to do complex arg element by element
     return;
   else
-    fprintf(stderr,"arg: unsupported type\n");
+    mm_error("arg: unsupported type\n");
   return;
 }
 
@@ -358,7 +359,7 @@ void ln_wrapper(Stack *stack) {
     push_matrix_complex(stack, result);
   }
   else {
-    fprintf(stderr, "ln: unsupported type\n");
+    mm_error("ln: unsupported type\n");
   }
 }
 
@@ -441,7 +442,7 @@ void log_wrapper(Stack *stack) {
     push_matrix_complex(stack, result);
   }
   else {
-    fprintf(stderr, "log: unsupported type\n");
+    mm_error("log: unsupported type\n");
   }
 }
 
@@ -515,7 +516,7 @@ void sqrt_wrapper(Stack *stack) {
   }
 
   else {
-    fprintf(stderr, "sqrt: unsupported type\n");
+    mm_error("sqrt: unsupported type\n");
   }
 }
 
@@ -531,7 +532,7 @@ void npdf_wrapper(Stack *stack) {
     apply_real_matrix_unary_inplace(stack, standard_normal_pdf);
     return;
   } else if (a == TYPE_MATRIX_COMPLEX)
-    fprintf(stderr,"npdf: unsupported type\n");
+    mm_error("npdf: unsupported type\n");
   return;
 }
 
@@ -542,12 +543,12 @@ void ncdf_wrapper(Stack *stack) {
     push_real(stack, standard_normal_cdf(b.real));
     return;
   }  else if (a == TYPE_COMPLEX) {
-    fprintf(stderr,"ncdf: unsupported type\n");
+    mm_error("ncdf: unsupported type\n");
   } else if (a == TYPE_MATRIX_REAL) {
     apply_real_matrix_unary_inplace(stack, standard_normal_cdf);
     return;
   } else if (a == TYPE_MATRIX_COMPLEX)
-    fprintf(stderr,"ncdf: unsupported type\n");
+    mm_error("ncdf: unsupported type\n");
   return;
 }
 
@@ -558,12 +559,12 @@ void nquant_wrapper(Stack *stack) {
     push_real(stack, standard_normal_quantile(b.real));
     return;
   }  else if (a == TYPE_COMPLEX) {
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   } else if (a == TYPE_MATRIX_REAL) {
     apply_real_matrix_unary_inplace(stack, standard_normal_quantile);
     return;
   } else if (a == TYPE_MATRIX_COMPLEX)
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   return;
 }
 
@@ -574,12 +575,12 @@ void gamma_wrapper(Stack *stack) {
     push_real(stack, gamma_function(b.real));
     return;
   }  else if (a == TYPE_COMPLEX) {
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   } else if (a == TYPE_MATRIX_REAL) {
     apply_real_matrix_unary_inplace(stack, gamma_function);
     return;
   } else if (a == TYPE_MATRIX_COMPLEX)
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   return;
 }
 
@@ -590,18 +591,18 @@ void ln_gamma_wrapper(Stack *stack) {
     push_real(stack, ln_gamma_function(b.real));
     return;
   }  else if (a == TYPE_COMPLEX) {
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   } else if (a == TYPE_MATRIX_REAL) {
     apply_real_matrix_unary_inplace(stack, ln_gamma_function);
     return;
   } else if (a == TYPE_MATRIX_COMPLEX)
-    fprintf(stderr,"nquant: unsupported type\n");
+    mm_error("nquant: unsupported type\n");
   return;
 }
 
 void beta_wrapper(Stack *stack) {
   if (stack_size(stack) < 2) {
-    fprintf(stderr,"Not enough elements on the stack\n");
+    mm_error("Not enough elements on the stack\n");
     return;
   }
   value_type a = stack_top_type(stack);
@@ -612,14 +613,14 @@ void beta_wrapper(Stack *stack) {
     push_real(stack, beta_function(x.real,y.real));
     return;
   }  else {
-    fprintf(stderr,"beta: unsupported type\n");
+    mm_error("beta: unsupported type\n");
     return;
   }
 }
 
 void ln_beta_wrapper(Stack *stack) {
   if (stack_size(stack) < 2) {
-    fprintf(stderr,"Not enough elements on the stack\n");
+    mm_error("Not enough elements on the stack\n");
     return;
   }
   value_type a = stack_top_type(stack);
@@ -630,7 +631,7 @@ void ln_beta_wrapper(Stack *stack) {
     push_real(stack, ln_beta_function(x.real,y.real));
     return;
   }  else {
-    fprintf(stderr,"ln_beta: unsupported type\n");
+    mm_error("ln_beta: unsupported type\n");
     return;
   }
 }

@@ -16,6 +16,7 @@
  * along with Mico's MM-15 Calculator. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "errors.h"
 #include <ctype.h>          // for isdigit, isspace, isalnum, isalpha
 #include <stdbool.h>        // for true, bool, false
 #include <stdio.h>          // for size_t, snprintf, fprintf, stderr
@@ -267,7 +268,7 @@ static Token lex_matrix_inline_j(Lexer* lexer) {
 
     written = snprintf(temp, sizeof(temp), " %s", t.text);
     if (written < 0 || (size_t)written >= sizeof(temp)) {
-      fprintf(stderr, "token too long to format\n");
+      mm_error("token too long to format\n");
       continue;
     }
 

@@ -5,6 +5,7 @@
 #include <sys/sysctl.h>
 #endif
 
+#include "errors.h"
 #include <stdbool.h>        // for true
 #include <stdio.h>          // for printf, fprintf, NULL, stderr
 #include <stdlib.h>         // for free, malloc, qsort
@@ -110,7 +111,7 @@ void list_all_functions_sorted(void) {
   // Step 2: Copy to a temporary array
   const char** sorted = malloc(count * sizeof(char*));
   if (!sorted) {
-    fprintf(stderr, "Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     return;
   }
   for (int i = 0; i < count; ++i)
@@ -879,14 +880,14 @@ static const HelpEntry *find_help_entry(const char *name) {
 /* Public function: print "name" usage: ... */
 void usage(const char *name) {
     if (!name || !*name) {
-        fprintf(stderr, "usage: expected non-empty word name\n");
+        mm_error("usage: expected non-empty word name\n");
         skip_stack_printing = true;
         return;
     }
 
     const HelpEntry *e = find_help_entry(name);
     if (!e) {
-        fprintf(stderr, "No usage information available for \"%s\".\n", name);
+        mm_error("No usage information available for \"%s\".\n", name);
         skip_stack_printing = true;
         return;
     }
@@ -934,7 +935,7 @@ int op_usage(Stack *stack)
 
     if (e.type != TYPE_STRING) {
         /* Wrong type: restore element and complain */
-        fprintf(stderr, "usage: expected a string with a word name on the stack.\n");
+        mm_error("usage: expected a string with a word name on the stack.\n");
 
         /* Push it back based on its type so we don't silently lose data */
         switch (e.type) {
@@ -966,7 +967,7 @@ int op_usage(Stack *stack)
     const char *name = e.string ? e.string : "";
 
     if (name[0] == '\0') {
-        fprintf(stderr, "usage: empty string is not a valid word name.\n");
+        mm_error("usage: empty string is not a valid word name.\n");
         free(e.string);
         return 0;
     }

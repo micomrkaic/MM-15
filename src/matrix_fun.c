@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_SET_COMPLEX
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect, gsl_com...
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_free
@@ -30,7 +31,7 @@
 
 int split_matrix(Stack *s) {
   if (s->top < 0) {
-    fprintf(stderr, "Error: stack underflow — no matrix on stack.\n");
+    mm_error("Error: stack underflow — no matrix on stack.\n");
     return -1;
   }
 
@@ -39,7 +40,7 @@ int split_matrix(Stack *s) {
   if (matrix_elem->type == TYPE_MATRIX_REAL) {
     gsl_matrix *matrix = matrix_elem->matrix_real;
     if (!matrix) {
-      fprintf(stderr, "Error: null real matrix.\n");
+      mm_error("Error: null real matrix.\n");
       return -1;
     }
 
@@ -52,7 +53,7 @@ int split_matrix(Stack *s) {
         double val = gsl_matrix_get(matrix, i, j);
 
         if (s->top >= STACK_SIZE - 1) {
-          fprintf(stderr, "Error: stack overflow.\n");
+          mm_error("Error: stack overflow.\n");
           return -1;
         }
 
@@ -64,7 +65,7 @@ int split_matrix(Stack *s) {
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex *matrix = matrix_elem->matrix_complex;
     if (!matrix) {
-      fprintf(stderr, "Error: null complex matrix.\n");
+      mm_error("Error: null complex matrix.\n");
       return -1;
     }
 
@@ -77,7 +78,7 @@ int split_matrix(Stack *s) {
         gsl_complex z = gsl_matrix_complex_get(matrix, i, j);
 
         if (s->top >= STACK_SIZE - 1) {
-          fprintf(stderr, "Error: stack overflow.\n");
+          mm_error("Error: stack overflow.\n");
           return -1;
         }
 
@@ -87,7 +88,7 @@ int split_matrix(Stack *s) {
       }
     }
   } else {
-    fprintf(stderr, "Error: top of stack is not a matrix.\n");
+    mm_error("Error: top of stack is not a matrix.\n");
     return -1;
   }
 
@@ -96,7 +97,7 @@ int split_matrix(Stack *s) {
 
 int select_matrix_element(Stack *s) {
   if (s->top < 1) {
-    fprintf(stderr, "Error: insufficient elements on stack (need at least two: row, col).\n");
+    mm_error("Error: insufficient elements on stack (need at least two: row, col).\n");
     return -1;  // Indicate error
   }
 
@@ -106,7 +107,7 @@ int select_matrix_element(Stack *s) {
   s->top -= 2;
 
   if (row_elem->type != TYPE_REAL || col_elem->type != TYPE_REAL) {
-    fprintf(stderr, "Error: row and column must be real scalars.\n");
+    mm_error("Error: row and column must be real scalars.\n");
     return -1;  // Indicate error
   }
 
@@ -119,7 +120,7 @@ int select_matrix_element(Stack *s) {
   if (matrix_elem->type == TYPE_MATRIX_REAL) {
     gsl_matrix *matrix = matrix_elem->matrix_real;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      fprintf(stderr, "Error: invalid row or column index.\n");
+      mm_error("Error: invalid row or column index.\n");
       return -1;  // Indicate error
     }
 
@@ -134,7 +135,7 @@ int select_matrix_element(Stack *s) {
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex *matrix = matrix_elem->matrix_complex;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      fprintf(stderr, "Error: invalid row or column index.\n");
+      mm_error("Error: invalid row or column index.\n");
       return -1;  // Indicate error
     }
 
@@ -147,7 +148,7 @@ int select_matrix_element(Stack *s) {
     result_elem->type = TYPE_COMPLEX;
     result_elem->complex_val = value;
   } else {
-    fprintf(stderr, "Error: top element is not a matrix.\n");
+    mm_error("Error: top element is not a matrix.\n");
     return -1;  // Indicate error
   }
 
@@ -156,7 +157,7 @@ int select_matrix_element(Stack *s) {
 
 int set_matrix_element(Stack *s) {
   if (s->top < 3) {
-    fprintf(stderr, "Error: insufficient elements on stack (need value, row, col, and matrix).\n");
+    mm_error("Error: insufficient elements on stack (need value, row, col, and matrix).\n");
     return -1;
   }
 
@@ -167,7 +168,7 @@ int set_matrix_element(Stack *s) {
   stack_element *matrix_elem = &s->items[s->top];    // [top - 0] -> matrix (real or complex)
 
   if (row_elem->type != TYPE_REAL || col_elem->type != TYPE_REAL) {
-    fprintf(stderr, "Error: row and column must be real scalars.\n");
+    mm_error("Error: row and column must be real scalars.\n");
     return -1;
   }
 
@@ -177,12 +178,12 @@ int set_matrix_element(Stack *s) {
   if (matrix_elem->type == TYPE_MATRIX_REAL) {
     gsl_matrix *matrix = matrix_elem->matrix_real;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      fprintf(stderr, "Error: invalid row or column index for real matrix.\n");
+      mm_error("Error: invalid row or column index for real matrix.\n");
       return -1;
     }
 
     if (val_elem->type != TYPE_REAL) {
-      fprintf(stderr, "Error: cannot set real matrix with non-real value.\n");
+      mm_error("Error: cannot set real matrix with non-real value.\n");
       return -1;
     }
 
@@ -192,7 +193,7 @@ int set_matrix_element(Stack *s) {
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex *matrix = matrix_elem->matrix_complex;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      fprintf(stderr, "Error: invalid row or column index for complex matrix.\n");
+      mm_error("Error: invalid row or column index for complex matrix.\n");
       return -1;
     }
 
@@ -202,14 +203,14 @@ int set_matrix_element(Stack *s) {
     } else if (val_elem->type == TYPE_REAL) {
       GSL_SET_COMPLEX(&value, val_elem->real, 0.0);
     } else {
-      fprintf(stderr, "Error: invalid value type for complex matrix.\n");
+      mm_error("Error: invalid value type for complex matrix.\n");
       return -1;
     }
 
     gsl_matrix_complex_set(matrix, row, col, value);
 
   } else {
-    fprintf(stderr, "Error: top-3 element is not a matrix.\n");
+    mm_error("Error: top-3 element is not a matrix.\n");
     return -1;
   }
   return 0;
@@ -258,14 +259,14 @@ int matrix_extract_diagonal(Stack* stack) {
 
 int make_unit_matrix(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: no dimension to create unit matrix.\n");
+    mm_error("Stack underflow: no dimension to create unit matrix.\n");
     return 1;
   }
 
   value_type top_type=stack_top_type(stack);
 
   if (top_type != TYPE_REAL) {
-    fprintf(stderr, "Type error: top stack item must be a real number (dimension).\n");
+    mm_error("Type error: top stack item must be a real number (dimension).\n");
     return 1;
   }
 
@@ -273,13 +274,13 @@ int make_unit_matrix(Stack* stack) {
 
   int n = (int)(dim_item.real);
   if (n <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", n);
+    mm_error("Dimension must be positive, got %d.\n", n);
     return 1;
   }
 
   gsl_matrix* m = gsl_matrix_calloc(n, n); // allocates and zeroes the matrix
   if (!m) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
 
@@ -293,27 +294,27 @@ int make_unit_matrix(Stack* stack) {
 
 int make_row_range(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: you need one dimension to create the row matrix.\n");
+    mm_error("Stack underflow: you need one dimension to create the row matrix.\n");
     return 1;
   }
 
   value_type cols_top_type=stack_top_type(stack);
     
   if (cols_top_type != TYPE_REAL) {
-    fprintf(stderr, "Type error: top stack item must be a real number (dimension).\n");
+    mm_error("Type error: top stack item must be a real number (dimension).\n");
     return 1;
   }
 
   stack_element cols = pop(stack);
   int num_cols = (int)(cols.real);
   if (num_cols <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", num_cols);
+    mm_error("Dimension must be positive, got %d.\n", num_cols);
     return 1;
   }
 
   gsl_matrix* mat = gsl_matrix_calloc(1, num_cols); // allocates and zeroes the matrix
   if (!mat) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
   for(int i=0; i < num_cols; i++)
@@ -326,7 +327,7 @@ int make_row_range(Stack* stack) {
 
 int make_matrix_of_ones(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need two dimensions to create the matrix.\n");
+    mm_error("Stack underflow: need two dimensions to create the matrix.\n");
     return 1;
   }
 
@@ -334,7 +335,7 @@ int make_matrix_of_ones(Stack* stack) {
   value_type cols_top_type=stack_top_type(stack);
     
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
-    fprintf(stderr, "Type error: top stack item must be a real number (dimension).\n");
+    mm_error("Type error: top stack item must be a real number (dimension).\n");
     return 1;
   }
 
@@ -343,19 +344,19 @@ int make_matrix_of_ones(Stack* stack) {
     
   int n = (int)(rows.real);
   if (n <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", n);
+    mm_error("Dimension must be positive, got %d.\n", n);
     return 1;
   }
 
   int m = (int)(cols.real);
   if (n <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", m);
+    mm_error("Dimension must be positive, got %d.\n", m);
     return 1;
   }
 
   gsl_matrix* mat = gsl_matrix_calloc(n, m); // allocates and zeroes the matrix
   if (!mat) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
 
@@ -368,7 +369,7 @@ int make_matrix_of_ones(Stack* stack) {
 
 int make_matrix_of_zeroes(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need two dimensions to create the matrix.\n");
+    mm_error("Stack underflow: need two dimensions to create the matrix.\n");
     return 1;
   }
 
@@ -376,7 +377,7 @@ int make_matrix_of_zeroes(Stack* stack) {
   value_type cols_top_type=stack_top_type(stack);
     
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
-    fprintf(stderr, "Type error: top stack item must be a real number (dimension).\n");
+    mm_error("Type error: top stack item must be a real number (dimension).\n");
     return 1;
   }
 
@@ -385,19 +386,19 @@ int make_matrix_of_zeroes(Stack* stack) {
     
   int n = (int)(rows.real);
   if (n <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", n);
+    mm_error("Dimension must be positive, got %d.\n", n);
     return 1;
   }
 
   int m = (int)(cols.real);
   if (n <= 0) {
-    fprintf(stderr, "Dimension must be positive, got %d.\n", m);
+    mm_error("Dimension must be positive, got %d.\n", m);
     return 1;
   }
 
   gsl_matrix* mat = gsl_matrix_calloc(n, m); // allocates and zeroes the matrix
   if (!mat) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
   push_matrix_real(stack, mat);
@@ -408,7 +409,7 @@ extern gsl_rng* global_rng;  // Assume you initialize this elsewhere
 
 int make_random_matrix(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need two dimensions to create the matrix.\n");
+    mm_error("Stack underflow: need two dimensions to create the matrix.\n");
     return 1;
   }
 
@@ -416,7 +417,7 @@ int make_random_matrix(Stack* stack) {
   value_type rows_top_type = stack_top_type(stack);
 
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
-    fprintf(stderr, "Type error: top stack items must be real numbers (dimensions).\n");
+    mm_error("Type error: top stack items must be real numbers (dimensions).\n");
     return 1;
   }
 
@@ -427,7 +428,7 @@ int make_random_matrix(Stack* stack) {
   int m = (int)(cols.real);
 
   if (n <= 0 || m <= 0) {
-    fprintf(stderr, "Dimensions must be positive, got %d x %d.\n", n, m);
+    mm_error("Dimensions must be positive, got %d x %d.\n", n, m);
     return 1;
   }
 
@@ -435,7 +436,7 @@ int make_random_matrix(Stack* stack) {
     
   gsl_matrix* mat = gsl_matrix_alloc(n, m);  // Allocate uninitialized matrix
   if (!mat) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
 
@@ -451,7 +452,7 @@ int make_random_matrix(Stack* stack) {
 
 int make_gaussian_random_matrix(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need two dimensions to create the matrix.\n");
+    mm_error("Stack underflow: need two dimensions to create the matrix.\n");
     return 1;
   }
 
@@ -459,7 +460,7 @@ int make_gaussian_random_matrix(Stack* stack) {
   value_type rows_top_type = stack_top_type(stack);
 
   if ((rows_top_type != TYPE_REAL) || (cols_top_type != TYPE_REAL)) {
-    fprintf(stderr, "Type error: top stack items must be real numbers (dimensions).\n");
+    mm_error("Type error: top stack items must be real numbers (dimensions).\n");
     return 1;
   }
 
@@ -470,12 +471,12 @@ int make_gaussian_random_matrix(Stack* stack) {
   int m = (int)(cols.real);
 
   if (n <= 0 || m <= 0) {
-    fprintf(stderr, "Dimensions must be positive, got %d x %d.\n", n, m);
+    mm_error("Dimensions must be positive, got %d x %d.\n", n, m);
     return 1;
   }
   gsl_matrix* mat = gsl_matrix_alloc(n, m);  // Allocate uninitialized matrix
   if (!mat) {
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return 1;
   }
 
@@ -491,7 +492,7 @@ int make_gaussian_random_matrix(Stack* stack) {
 
 int matrix_dimensions(Stack* stack) {
     if (stack->top < 0) {
-        fprintf(stderr, "Stack underflow: need a matrix to get dimensions.\n");
+        mm_error("Stack underflow: need a matrix to get dimensions.\n");
         return 1;
     }
 
@@ -502,20 +503,20 @@ int matrix_dimensions(Stack* stack) {
 
     if (top_elem->type == TYPE_MATRIX_REAL) {
         if (!top_elem->matrix_real) {
-            fprintf(stderr, "Real matrix pointer is NULL.\n");
+            mm_error("Real matrix pointer is NULL.\n");
             return 1;
         }
         rows = top_elem->matrix_real->size1;
         cols = top_elem->matrix_real->size2;
     } else if (top_elem->type == TYPE_MATRIX_COMPLEX) {
         if (!top_elem->matrix_complex) {
-            fprintf(stderr, "Complex matrix pointer is NULL.\n");
+            mm_error("Complex matrix pointer is NULL.\n");
             return 1;
         }
         rows = top_elem->matrix_complex->size1;
         cols = top_elem->matrix_complex->size2;
     } else {
-        fprintf(stderr, "Type error: top stack item is not a matrix.\n");
+        mm_error("Type error: top stack item is not a matrix.\n");
         return 1;
     }
 
@@ -526,7 +527,7 @@ int matrix_dimensions(Stack* stack) {
 
 int reshape_matrix(Stack* stack) {
     if (stack->top < 2) {
-        fprintf(stderr, "Stack underflow: need matrix and two dimensions.\n");
+        mm_error("Stack underflow: need matrix and two dimensions.\n");
         return 1;
     }
 
@@ -535,7 +536,7 @@ int reshape_matrix(Stack* stack) {
     stack_element rows_elem = stack->items[stack->top--];
 
     if (cols_elem.type != TYPE_REAL || rows_elem.type != TYPE_REAL) {
-        fprintf(stderr, "Type error: expected real numbers for new dimensions.\n");
+        mm_error("Type error: expected real numbers for new dimensions.\n");
         stack->top += 2; // Restore stack
         return 1;
     }
@@ -544,7 +545,7 @@ int reshape_matrix(Stack* stack) {
     int new_cols = (int)cols_elem.real;
 
     if (new_rows <= 0 || new_cols <= 0) {
-        fprintf(stderr, "Invalid reshape dimensions: must be positive integers.\n");
+        mm_error("Invalid reshape dimensions: must be positive integers.\n");
         return 1;
     }
 
@@ -553,20 +554,20 @@ int reshape_matrix(Stack* stack) {
     if (mat_elem->type == TYPE_MATRIX_REAL) {
         gsl_matrix* original = mat_elem->matrix_real;
         if (!original) {
-            fprintf(stderr, "Null real matrix.\n");
+            mm_error("Null real matrix.\n");
             return 1;
         }
 
         size_t original_elements = original->size1 * original->size2;
         if ((size_t)(new_rows * new_cols) != original_elements) {
-            fprintf(stderr, "Reshape error: size mismatch (%zu != %d).\n",
+            mm_error("Reshape error: size mismatch (%zu != %d).\n",
                     original_elements, new_rows * new_cols);
             return 1;
         }
 
         gsl_matrix* reshaped = gsl_matrix_alloc(new_rows, new_cols);
         if (!reshaped) {
-            fprintf(stderr, "Allocation failed for reshaped matrix.\n");
+            mm_error("Allocation failed for reshaped matrix.\n");
             return 1;
         }
 
@@ -588,20 +589,20 @@ int reshape_matrix(Stack* stack) {
     } else if (mat_elem->type == TYPE_MATRIX_COMPLEX) {
         gsl_matrix_complex* original = mat_elem->matrix_complex;
         if (!original) {
-            fprintf(stderr, "Null complex matrix.\n");
+            mm_error("Null complex matrix.\n");
             return 1;
         }
 
         size_t original_elements = original->size1 * original->size2;
         if ((size_t)(new_rows * new_cols) != original_elements) {
-            fprintf(stderr, "Reshape error: size mismatch (%zu != %d).\n",
+            mm_error("Reshape error: size mismatch (%zu != %d).\n",
                     original_elements, new_rows * new_cols);
             return 1;
         }
 
         gsl_matrix_complex* reshaped = gsl_matrix_complex_alloc(new_rows, new_cols);
         if (!reshaped) {
-            fprintf(stderr, "Allocation failed for reshaped complex matrix.\n");
+            mm_error("Allocation failed for reshaped complex matrix.\n");
             return 1;
         }
 
@@ -619,7 +620,7 @@ int reshape_matrix(Stack* stack) {
         mat_elem->matrix_complex = reshaped;
 
     } else {
-        fprintf(stderr, "Type error: expected a real or complex matrix below dimensions.\n");
+        mm_error("Type error: expected a real or complex matrix below dimensions.\n");
         stack->top += 2; // Restore top
         return 1;
     }
@@ -629,7 +630,7 @@ int reshape_matrix(Stack* stack) {
 
 int make_diag_matrix(Stack *stack) {
     if (stack->top < 0) {
-        fprintf(stderr, "Error: stack underflow.\n");
+        mm_error("Error: stack underflow.\n");
         return -1;
     }
 
@@ -645,7 +646,7 @@ int make_diag_matrix(Stack *stack) {
         } else if (vec->size2 == 1) {
             len = vec->size1;
         } else {
-            fprintf(stderr, "Error: not a row or column vector.\n");
+            mm_error("Error: not a row or column vector.\n");
             return -1;
         }
 
@@ -672,7 +673,7 @@ int make_diag_matrix(Stack *stack) {
         } else if (vec->size2 == 1) {
             len = vec->size1;
         } else {
-            fprintf(stderr, "Error: not a row or column vector.\n");
+            mm_error("Error: not a row or column vector.\n");
             return -1;
         }
 
@@ -690,7 +691,7 @@ int make_diag_matrix(Stack *stack) {
         gsl_matrix_complex_free(vec);
     }
     else {
-        fprintf(stderr, "Error: top of stack is not a matrix.\n");
+        mm_error("Error: top of stack is not a matrix.\n");
         return -1;
     }
 
@@ -699,7 +700,7 @@ int make_diag_matrix(Stack *stack) {
 
 int stack_join_matrix_vertical(Stack* stack) {
     if (stack->top < 1) {
-        fprintf(stderr, "Need at least two matrices on the stack.\n");
+        mm_error("Need at least two matrices on the stack.\n");
         return 1;
     }
 
@@ -745,7 +746,7 @@ int stack_join_matrix_vertical(Stack* stack) {
 
         // Check column compatibility
         if (mc1->size2 != mc2->size2) {
-            fprintf(stderr, "Column sizes must match to join matrices.\n");
+            mm_error("Column sizes must match to join matrices.\n");
             gsl_matrix_complex_free(mc1);
             gsl_matrix_complex_free(mc2);
             return 1;
@@ -772,7 +773,7 @@ int stack_join_matrix_vertical(Stack* stack) {
     } else {
         // Both real
         if (second->matrix_real->size2 != top->matrix_real->size2) {
-            fprintf(stderr, "Column sizes must match to join matrices.\n");
+            mm_error("Column sizes must match to join matrices.\n");
             return 1;
         }
 
@@ -797,7 +798,7 @@ int stack_join_matrix_vertical(Stack* stack) {
 
 int stack_join_matrix_horizontal(Stack* stack) {
     if (stack->top < 1) {
-        fprintf(stderr, "Need at least two matrices on the stack.\n");
+        mm_error("Need at least two matrices on the stack.\n");
         return 1;
     }
 
@@ -837,7 +838,7 @@ int stack_join_matrix_horizontal(Stack* stack) {
 
         // Check row compatibility
         if (mc1->size1 != mc2->size1) {
-            fprintf(stderr, "Row sizes must match to join matrices horizontally.\n");
+            mm_error("Row sizes must match to join matrices horizontally.\n");
             gsl_matrix_complex_free(mc1);
             gsl_matrix_complex_free(mc2);
             return 1;
@@ -861,7 +862,7 @@ int stack_join_matrix_horizontal(Stack* stack) {
     } else {
         // Both real
         if (second->matrix_real->size1 != top->matrix_real->size1) {
-            fprintf(stderr, "Row sizes must match to join matrices horizontally.\n");
+            mm_error("Row sizes must match to join matrices horizontally.\n");
             return 1;
         }
 
@@ -885,7 +886,7 @@ int stack_join_matrix_horizontal(Stack* stack) {
 
 int matrix_cumsum_rows(Stack* stack) {
     if (stack->top < 0) {
-        fprintf(stderr, "Stack underflow: expected a matrix.\n");
+        mm_error("Stack underflow: expected a matrix.\n");
         return 1;
     }
 
@@ -923,7 +924,7 @@ int matrix_cumsum_rows(Stack* stack) {
         push_matrix_complex(stack, result);
     }
     else {
-        fprintf(stderr, "Top of stack is not a real or complex matrix.\n");
+        mm_error("Top of stack is not a real or complex matrix.\n");
 	return 1;
     }
     return 0;
@@ -931,7 +932,7 @@ int matrix_cumsum_rows(Stack* stack) {
 
 int matrix_cumsum_cols(Stack* stack) {
     if (stack->top < 0) {
-        fprintf(stderr, "Stack underflow: expected a matrix.\n");
+        mm_error("Stack underflow: expected a matrix.\n");
         return 1;
     }
 
@@ -969,7 +970,7 @@ int matrix_cumsum_cols(Stack* stack) {
         push_matrix_complex(stack, result);
     }
     else {
-        fprintf(stderr, "Top of stack is not a real or complex matrix.\n");
+        mm_error("Top of stack is not a real or complex matrix.\n");
 	return 1;
     }
     return 0;

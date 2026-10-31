@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for GSL_IMAG, GSL_REAL, gsl_c...
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_alloc
@@ -93,7 +94,7 @@ void free_element(stack_element* el) {
 
 void store_to_register(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow: need value and register index.\n");
+    mm_error("Stack underflow: need value and register index.\n");
     return;
   }
 
@@ -101,13 +102,13 @@ void store_to_register(Stack* stack) {
   stack_element* value_elem = &stack->items[stack->top];
 
   if (reg_elem.type != TYPE_REAL) {
-    fprintf(stderr, "Type error: register index must be a real number.\n");
+    mm_error("Type error: register index must be a real number.\n");
     return;
   }
 
   int reg_index = (int)reg_elem.real;
   if (reg_index < 0 || reg_index >= MAX_REG) {
-    fprintf(stderr, "Invalid register index: %d\n", reg_index);
+    mm_error("Invalid register index: %d\n", reg_index);
     return;
   }
 
@@ -124,32 +125,32 @@ void store_to_register(Stack* stack) {
 
 void recall_from_register(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack underflow: need register index.\n");
+    mm_error("Stack underflow: need register index.\n");
     return;
   }
 
   stack_element reg_elem = stack->items[stack->top--];
 
   if (reg_elem.type != TYPE_REAL) {
-    fprintf(stderr, "Type error: register index must be a real number.\n");
+    mm_error("Type error: register index must be a real number.\n");
     return;
   }
 
   int reg_index = (int)reg_elem.real;
   if (reg_index < 0 || reg_index >= MAX_REG) {
-    fprintf(stderr, "Invalid register index: %d\n", reg_index);
+    mm_error("Invalid register index: %d\n", reg_index);
     return;
   }
 
   if (!registers[reg_index].occupied) {
-    fprintf(stderr, "Register %d is empty.\n", reg_index);
+    mm_error("Register %d is empty.\n", reg_index);
     return;
   }
 
   stack_element copy = copy_element(&registers[reg_index].value);
 
   if (stack->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "Stack overflow.\n");
+    mm_error("Stack overflow.\n");
     return;
   }
 
@@ -187,7 +188,7 @@ void free_all_registers(void) {
 void save_registers_to_file(const char* filename) {
   FILE* f = fopen(filename, "w");
   if (!f) {
-    perror("fopen");
+    mm_perror("fopen");
     return;
   }
 
@@ -235,7 +236,7 @@ void save_registers_to_file(const char* filename) {
 void load_registers_from_file(const char* filename) {
   FILE* f = fopen(filename, "r");
   if (!f) {
-    perror("fopen");
+    mm_perror("fopen");
     return;
   }
 

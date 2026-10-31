@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <ctype.h>                          // for isspace, isdigit
 #include <gsl/gsl_complex.h>                // for gsl_complex
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect
@@ -44,7 +45,7 @@ void read_matrix_from_file(Stack *stack, char *input) {
     printf("cols = %d\n", cols);
     printf("filename = %s\n", filename);
   } else {
-    fprintf(stderr, "Failed to parse input string\n");
+    mm_error("Failed to parse input string\n");
   }
   push_matrix_real(stack,load_matrix_from_file(rows, cols, filename));
 }
@@ -57,7 +58,7 @@ gsl_matrix* parse_matrix_literal(const char* input) {
   char* endptr;
   size_t rows = strtoul(p, &endptr, 10);
   if (p == endptr) {
-    fprintf(stderr, "Expected number of rows\n");
+    mm_error("Expected number of rows\n");
     return NULL;
   }
   p = endptr;
@@ -66,7 +67,7 @@ gsl_matrix* parse_matrix_literal(const char* input) {
 
   size_t cols = strtoul(p, &endptr, 10);
   if (p == endptr) {
-    fprintf(stderr, "Expected number of columns\n");
+    mm_error("Expected number of columns\n");
     return NULL;
   }
   p = endptr;
@@ -74,14 +75,14 @@ gsl_matrix* parse_matrix_literal(const char* input) {
   while (isspace(*p)) p++;
 
   if (*p != '$') {
-    fprintf(stderr, "Expected '$' after rows and columns\n");
+    mm_error("Expected '$' after rows and columns\n");
     return NULL;
   }
   p++; // skip '$'
 
   double* data = malloc(rows * cols * sizeof(double));
   if (!data) {
-    fprintf(stderr, "Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     return NULL;
   }
 
@@ -91,7 +92,7 @@ gsl_matrix* parse_matrix_literal(const char* input) {
 
     double val = strtod(p, &endptr);
     if (p == endptr) {
-      fprintf(stderr, "Invalid real number at entry %zu\n", count);
+      mm_error("Invalid real number at entry %zu\n", count);
       free(data);
       return NULL;
     }
@@ -100,14 +101,14 @@ gsl_matrix* parse_matrix_literal(const char* input) {
   }
 
   if (count != rows * cols) {
-    fprintf(stderr, "Matrix element count mismatch: expected %zu, got %zu\n", rows * cols, count);
+    mm_error("Matrix element count mismatch: expected %zu, got %zu\n", rows * cols, count);
     free(data);
     return NULL;
   }
 
   gsl_matrix* m = gsl_matrix_alloc(rows, cols);
   if (!m) {
-    fprintf(stderr, "Matrix allocation failed\n");
+    mm_error("Matrix allocation failed\n");
     free(data);
     return NULL;
   }
@@ -130,7 +131,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
   char* endptr;
   size_t rows = strtoul(p, &endptr, 10);
   if (p == endptr) {
-    fprintf(stderr, "Expected number of rows\n");
+    mm_error("Expected number of rows\n");
     return NULL;
   }
   p = endptr;
@@ -139,7 +140,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
 
   size_t cols = strtoul(p, &endptr, 10);
   if (p == endptr) {
-    fprintf(stderr, "Expected number of columns\n");
+    mm_error("Expected number of columns\n");
     return NULL;
   }
   p = endptr;
@@ -147,14 +148,14 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
   while (isspace(*p)) p++;
 
   if (*p != '$') {
-    fprintf(stderr, "Expected '$' after rows and columns\n");
+    mm_error("Expected '$' after rows and columns\n");
     return NULL;
   }
   p++; // skip '$'
 
   gsl_complex* data = malloc(rows * cols * sizeof(gsl_complex));
   if (!data) {
-    fprintf(stderr, "Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     return NULL;
   }
 
@@ -166,7 +167,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
       p++; // skip '('
       double real = strtod(p, &endptr);
       if (p == endptr) {
-	fprintf(stderr, "Invalid real part at entry %zu\n", count);
+	mm_error("Invalid real part at entry %zu\n", count);
 	free(data);
 	return NULL;
       }
@@ -175,7 +176,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
       while (isspace(*p)) p++;
 
       if (*p != ',') {
-	fprintf(stderr, "Expected ',' between real and imaginary at entry %zu\n", count);
+	mm_error("Expected ',' between real and imaginary at entry %zu\n", count);
 	free(data);
 	return NULL;
       }
@@ -183,7 +184,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
 
       double imag = strtod(p, &endptr);
       if (p == endptr) {
-	fprintf(stderr, "Invalid imaginary part at entry %zu\n", count);
+	mm_error("Invalid imaginary part at entry %zu\n", count);
 	free(data);
 	return NULL;
       }
@@ -192,7 +193,7 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
       while (isspace(*p)) p++;
 
       if (*p != ')') {
-	fprintf(stderr, "Expected ')' after complex number at entry %zu\n", count);
+	mm_error("Expected ')' after complex number at entry %zu\n", count);
 	free(data);
 	return NULL;
       }
@@ -202,28 +203,28 @@ gsl_matrix_complex* parse_complex_matrix_literal(const char* input) {
     } else if (isdigit(*p) || (*p == '-' && isdigit(*(p + 1)))) {
       double real = strtod(p, &endptr);
       if (p == endptr) {
-	fprintf(stderr, "Invalid real number at entry %zu\n", count);
+	mm_error("Invalid real number at entry %zu\n", count);
 	free(data);
 	return NULL;
       }
       p = endptr;
       data[count++] = gsl_complex_rect(real, 0.0);
     } else {
-      fprintf(stderr, "Unexpected character at entry %zu: '%c'\n", count, *p);
+      mm_error("Unexpected character at entry %zu: '%c'\n", count, *p);
       free(data);
       return NULL;
     }
   }
 
   if (count != rows * cols) {
-    fprintf(stderr, "Matrix element count mismatch: expected %zu, got %zu\n", rows * cols, count);
+    mm_error("Matrix element count mismatch: expected %zu, got %zu\n", rows * cols, count);
     free(data);
     return NULL;
   }
 
   gsl_matrix_complex* m = gsl_matrix_complex_alloc(rows, cols);
   if (!m) {
-    fprintf(stderr, "Matrix allocation failed\n");
+    mm_error("Matrix allocation failed\n");
     free(data);
     return NULL;
   }

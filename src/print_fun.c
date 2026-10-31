@@ -20,6 +20,7 @@
 // Mico Mrkaic, mrkaic.mico@gmail.com
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for GSL_IMAG, GSL_REAL, gsl_c...
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
 #include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matrix
@@ -117,7 +118,7 @@ void print_real_matrix(const gsl_matrix* m) {
 
   int *col_width = calloc(cols, sizeof(*col_width));
   if (!col_width) {
-    fprintf(stderr, "print_real_matrix: out of memory\n");
+    mm_error("print_real_matrix: out of memory\n");
     return;
   }
 
@@ -159,7 +160,7 @@ void print_complex_matrix(const gsl_matrix_complex* m) {
 
   int *col_width = calloc(cols, sizeof(*col_width));
   if (!col_width) {
-    fprintf(stderr, "print_real_matrix: out of memory\n");
+    mm_error("print_real_matrix: out of memory\n");
     return;
   }
 

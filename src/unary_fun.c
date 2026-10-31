@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <complex.h>                        // for cabs
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_rect
@@ -30,7 +31,7 @@
 // === Unary math functions for real and complex ===
 void apply_real_unary(Stack* stack, double (*func)(double)) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_REAL) {
-    fprintf(stderr,"Expected real number\n");
+    mm_error("Expected real number\n");
     return;
   }
   stack->items[stack->top].real = func(stack->items[stack->top].real);
@@ -38,7 +39,7 @@ void apply_real_unary(Stack* stack, double (*func)(double)) {
 
 void apply_complex_unary(Stack* stack, gsl_complex (*func)(gsl_complex)) {
   if (stack->top < 0 || stack->items[stack->top].type != TYPE_COMPLEX) {
-    fprintf(stderr,"Expected complex number\n");
+    mm_error("Expected complex number\n");
     return;
   }
   stack->items[stack->top].complex_val = func(stack->items[stack->top].complex_val);
@@ -46,13 +47,13 @@ void apply_complex_unary(Stack* stack, gsl_complex (*func)(gsl_complex)) {
 
 void apply_complex_matrix_unary_inplace(Stack* stack, gsl_complex (*func)(gsl_complex)) {
   if (stack->top < 0) {
-    fprintf(stderr,"Stack is empty!\n");
+    mm_error("Stack is empty!\n");
     return;
   }
 
   stack_element* top = &stack->items[stack->top];
   if (top->type != TYPE_MATRIX_COMPLEX) {
-    fprintf(stderr,"Top of stack is not a complex matrix!\n");
+    mm_error("Top of stack is not a complex matrix!\n");
     return;
   }
 
@@ -70,13 +71,13 @@ void apply_complex_matrix_unary_inplace(Stack* stack, gsl_complex (*func)(gsl_co
 
 void apply_real_matrix_unary_inplace(Stack* stack, double (*func)(double)) {
   if (stack->top < 0) {
-    fprintf(stderr,"Stack is empty!\n");
+    mm_error("Stack is empty!\n");
     return;
   }
 
   stack_element* top = &stack->items[stack->top];
   if (top->type != TYPE_MATRIX_REAL) {
-    fprintf(stderr,"Top of stack is not a real matrix!\n");
+    mm_error("Top of stack is not a real matrix!\n");
     return;
   }
 
@@ -94,7 +95,7 @@ void apply_real_matrix_unary_inplace(Stack* stack, double (*func)(double)) {
 
 void complex_matrix_real_part(Stack *s) {
   if (s->top < 0 || s->items[s->top].type != TYPE_MATRIX_COMPLEX) {
-    fprintf(stderr, "Error: top of stack must be a complex matrix.\n");
+    mm_error("Error: top of stack must be a complex matrix.\n");
     return;
   }
 
@@ -102,7 +103,7 @@ void complex_matrix_real_part(Stack *s) {
 
   gsl_matrix_complex *matrix = src->matrix_complex;
   if (!matrix) {
-    fprintf(stderr, "Error: complex matrix is NULL.\n");
+    mm_error("Error: complex matrix is NULL.\n");
     return;
   }
 
@@ -111,7 +112,7 @@ void complex_matrix_real_part(Stack *s) {
 
   gsl_matrix *result = gsl_matrix_alloc(rows, cols);
   if (!result) {
-    fprintf(stderr, "Error: failed to allocate result matrix.\n");
+    mm_error("Error: failed to allocate result matrix.\n");
     return;
   }
 
@@ -133,7 +134,7 @@ void complex_matrix_real_part(Stack *s) {
 
   // Inline stackl_push_rmatrix:
   if (s->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "Error: stack overflow when pushing result matrix.\n");
+    mm_error("Error: stack overflow when pushing result matrix.\n");
     gsl_matrix_free(result);
     return;
   }
@@ -145,7 +146,7 @@ void complex_matrix_real_part(Stack *s) {
 
 void complex_matrix_imag_part(Stack *s) {
   if (s->top < 0 || s->items[s->top].type != TYPE_MATRIX_COMPLEX) {
-    fprintf(stderr, "Error: top of stack must be a complex matrix.\n");
+    mm_error("Error: top of stack must be a complex matrix.\n");
     return;
   }
 
@@ -153,7 +154,7 @@ void complex_matrix_imag_part(Stack *s) {
 
   gsl_matrix_complex *matrix = src->matrix_complex;
   if (!matrix) {
-    fprintf(stderr, "Error: complex matrix is NULL.\n");
+    mm_error("Error: complex matrix is NULL.\n");
     return;
   }
 
@@ -162,7 +163,7 @@ void complex_matrix_imag_part(Stack *s) {
 
   gsl_matrix *result = gsl_matrix_alloc(rows, cols);
   if (!result) {
-    fprintf(stderr, "Error: failed to allocate result matrix.\n");
+    mm_error("Error: failed to allocate result matrix.\n");
     return;
   }
 
@@ -183,7 +184,7 @@ void complex_matrix_imag_part(Stack *s) {
 
   // Inline stackl_push_rmatrix:
   if (s->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "Error: stack overflow when pushing result matrix.\n");
+    mm_error("Error: stack overflow when pushing result matrix.\n");
     gsl_matrix_free(result);
     return;
   }
@@ -195,7 +196,7 @@ void complex_matrix_imag_part(Stack *s) {
 
 void complex_matrix_abs_by_element(Stack *s) {
   if (s->top < 0 || s->items[s->top].type != TYPE_MATRIX_COMPLEX) {
-    fprintf(stderr, "Error: top of stack must be a complex matrix.\n");
+    mm_error("Error: top of stack must be a complex matrix.\n");
     return;
   }
 
@@ -203,7 +204,7 @@ void complex_matrix_abs_by_element(Stack *s) {
 
   gsl_matrix_complex *matrix = src->matrix_complex;
   if (!matrix) {
-    fprintf(stderr, "Error: complex matrix is NULL.\n");
+    mm_error("Error: complex matrix is NULL.\n");
     return;
   }
 
@@ -212,7 +213,7 @@ void complex_matrix_abs_by_element(Stack *s) {
 
   gsl_matrix *result = gsl_matrix_alloc(rows, cols);
   if (!result) {
-    fprintf(stderr, "Error: failed to allocate result matrix.\n");
+    mm_error("Error: failed to allocate result matrix.\n");
     return;
   }
 
@@ -233,7 +234,7 @@ void complex_matrix_abs_by_element(Stack *s) {
 
   // Inline stackl_push_rmatrix:
   if (s->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "Error: stack overflow when pushing result matrix.\n");
+    mm_error("Error: stack overflow when pushing result matrix.\n");
     gsl_matrix_free(result);
     return;
   }
@@ -245,7 +246,7 @@ void complex_matrix_abs_by_element(Stack *s) {
 
 void real2complex(Stack *s) {
   if (s->top < 0) {
-    fprintf(stderr, "Error: stack is empty.\n");
+    mm_error("Error: stack is empty.\n");
     return;
   }
 
@@ -262,7 +263,7 @@ void real2complex(Stack *s) {
   case TYPE_MATRIX_REAL: {
     gsl_matrix *real_mat = src->matrix_real;
     if (!real_mat) {
-      fprintf(stderr, "Error: real matrix is NULL.\n");
+      mm_error("Error: real matrix is NULL.\n");
       return;
     }
 
@@ -271,7 +272,7 @@ void real2complex(Stack *s) {
 
     gsl_matrix_complex *complex_mat = gsl_matrix_complex_alloc(rows, cols);
     if (!complex_mat) {
-      fprintf(stderr, "Error: failed to allocate complex matrix.\n");
+      mm_error("Error: failed to allocate complex matrix.\n");
       return;
     }
 
@@ -298,14 +299,14 @@ void real2complex(Stack *s) {
     break;
 
   default:
-    fprintf(stderr, "Error: r2c expects a real scalar, real matrix, or complex.\n");
+    mm_error("Error: r2c expects a real scalar, real matrix, or complex.\n");
     return;
   }
 }
 
 void split_complex(Stack *s) {
   if (s->top < 0) {
-    fprintf(stderr, "Error: stack is empty.\n");
+    mm_error("Error: stack is empty.\n");
     return;
   }
 
@@ -319,7 +320,7 @@ void split_complex(Stack *s) {
 
     // Check space for two pushes
     if (s->top + 2 >= STACK_SIZE) {
-      fprintf(stderr, "Error: not enough space on stack to split scalar.\n");
+      mm_error("Error: not enough space on stack to split scalar.\n");
       return;
     }
 
@@ -344,7 +345,7 @@ void split_complex(Stack *s) {
   case TYPE_MATRIX_COMPLEX: {
     gsl_matrix_complex *matrix = src->matrix_complex;
     if (!matrix) {
-      fprintf(stderr, "Error: complex matrix is NULL.\n");
+      mm_error("Error: complex matrix is NULL.\n");
       return;
     }
 
@@ -354,7 +355,7 @@ void split_complex(Stack *s) {
     gsl_matrix *real_mat = gsl_matrix_alloc(rows, cols);
     gsl_matrix *imag_mat = gsl_matrix_alloc(rows, cols);
     if (!real_mat || !imag_mat) {
-      fprintf(stderr, "Error: failed to allocate real/imag matrices.\n");
+      mm_error("Error: failed to allocate real/imag matrices.\n");
       gsl_matrix_free(real_mat);
       gsl_matrix_free(imag_mat);
       return;
@@ -370,7 +371,7 @@ void split_complex(Stack *s) {
 
     // Check space for two pushes
     if (s->top + 2 >= STACK_SIZE) {
-      fprintf(stderr, "Error: not enough space on stack to split matrix.\n");
+      mm_error("Error: not enough space on stack to split matrix.\n");
       gsl_matrix_free(real_mat);
       gsl_matrix_free(imag_mat);
       return;
@@ -396,7 +397,7 @@ void split_complex(Stack *s) {
   }
 
   default:
-    fprintf(stderr, "Error: split_complex expects a complex scalar or complex matrix.\n");
+    mm_error("Error: split_complex expects a complex scalar or complex matrix.\n");
     return;
   }
 }

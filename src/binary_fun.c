@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_blas.h>                   // for gsl_blas_dgemm, gsl_blas_...
 #include <gsl/gsl_cblas.h>                  // for CBLAS_TRANSPOSE
 #include <gsl/gsl_complex.h>                // for gsl_complex, GSL_IMAG
@@ -33,7 +34,7 @@
 
 void add_top_two_scalars(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements to add\n");
+    mm_error("Not enough elements to add\n");
     return;
   }
   stack_element a = pop(stack);
@@ -47,13 +48,13 @@ void add_top_two_scalars(Stack* stack) {
     gsl_complex cb = (b.type == TYPE_COMPLEX) ? b.complex_val : gsl_complex_rect(b.real, 0.0);
     push_complex(stack, gsl_complex_add(ca, cb));
   } else {
-    fprintf(stderr,"Unsupported types for addition\n");
+    mm_error("Unsupported types for addition\n");
   }
 }
 
 void add_top_two_matrices(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough matrices to add\n");
+    mm_error("Not enough matrices to add\n");
     return;
   }
   stack_element a = pop(stack);
@@ -62,7 +63,7 @@ void add_top_two_matrices(Stack* stack) {
   if (a.type == TYPE_MATRIX_REAL && b.type == TYPE_MATRIX_REAL) {
     if (a.matrix_real->size1 != b.matrix_real->size1
 	|| a.matrix_real->size2 != b.matrix_real->size2) {
-      fprintf(stderr,"Matrix dimensions must match\n");
+      mm_error("Matrix dimensions must match\n");
       gsl_matrix_free(a.matrix_real);
       gsl_matrix_free(b.matrix_real);
       return;
@@ -76,7 +77,7 @@ void add_top_two_matrices(Stack* stack) {
   } else if (a.type == TYPE_MATRIX_COMPLEX && b.type == TYPE_MATRIX_COMPLEX) {
     if (a.matrix_complex->size1 != b.matrix_complex->size1
 	|| a.matrix_complex->size2 != b.matrix_complex->size2) {
-      fprintf(stderr,"Matrix dimensions must match\n");
+      mm_error("Matrix dimensions must match\n");
       gsl_matrix_complex_free(a.matrix_complex);
       gsl_matrix_complex_free(b.matrix_complex);
       return;
@@ -89,13 +90,13 @@ void add_top_two_matrices(Stack* stack) {
     gsl_matrix_complex_free(b.matrix_complex);
     push_matrix_complex(stack, result);
   } else {
-    fprintf(stderr,"Unsupported matrix types for addition\n");
+    mm_error("Unsupported matrix types for addition\n");
   }
 }
 
 void multiply_top_two_scalars(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements to add\n");
+    mm_error("Not enough elements to add\n");
     return;
   }
   stack_element a = pop(stack);
@@ -109,13 +110,13 @@ void multiply_top_two_scalars(Stack* stack) {
     gsl_complex cb = (b.type == TYPE_COMPLEX) ? b.complex_val : gsl_complex_rect(b.real, 0.0);
     push_complex(stack, gsl_complex_mul(ca, cb));
   } else {
-    fprintf(stderr,"Unsupported types for multiplication\n");
+    mm_error("Unsupported types for multiplication\n");
   }
 }
 
 void subtract_top_two_scalars(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements to add\n");
+    mm_error("Not enough elements to add\n");
     return;
   }
   stack_element b = pop(stack);
@@ -129,13 +130,13 @@ void subtract_top_two_scalars(Stack* stack) {
     gsl_complex cb = (b.type == TYPE_COMPLEX) ? b.complex_val : gsl_complex_rect(b.real, 0.0);
     push_complex(stack, gsl_complex_sub(ca, cb));
   } else {
-    fprintf(stderr,"Unsupported types for subtraction\n");
+    mm_error("Unsupported types for subtraction\n");
   }
 }
 
 void divide_top_two_scalars(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements to divide\n");
+    mm_error("Not enough elements to divide\n");
     return;
   }
   stack_element b = pop(stack);
@@ -157,13 +158,13 @@ void divide_top_two_scalars(Stack* stack) {
     gsl_complex cb = (b.type == TYPE_COMPLEX) ? b.complex_val : gsl_complex_rect(b.real, 0.0);
     push_complex(stack, gsl_complex_div(ca,cb));
   } else {
-    fprintf(stderr,"Unsupported types for division\n");
+    mm_error("Unsupported types for division\n");
   }
 }
 
 void subtract_top_two_matrices(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements for matrix subtraction\n");
+    mm_error("Not enough elements for matrix subtraction\n");
     return;
   }
   stack_element b = pop(stack);
@@ -172,7 +173,7 @@ void subtract_top_two_matrices(Stack* stack) {
   if (a.type == TYPE_MATRIX_REAL && b.type == TYPE_MATRIX_REAL) {
     if (a.matrix_real->size1 != b.matrix_real->size1
 	|| a.matrix_real->size2 != b.matrix_real->size2) {
-      fprintf(stderr,"Matrix size mismatch\n");
+      mm_error("Matrix size mismatch\n");
       return;
     }
     gsl_matrix* result = gsl_matrix_alloc(a.matrix_real->size1, a.matrix_real->size2);
@@ -182,7 +183,7 @@ void subtract_top_two_matrices(Stack* stack) {
   } else if (a.type == TYPE_MATRIX_COMPLEX && b.type == TYPE_MATRIX_COMPLEX) {
     if (a.matrix_complex->size1 != b.matrix_complex->size1
 	|| a.matrix_complex->size2 != b.matrix_complex->size2) {
-      fprintf(stderr,"Matrix size mismatch\n");
+      mm_error("Matrix size mismatch\n");
       return;
     }
     gsl_matrix_complex* result =
@@ -191,13 +192,13 @@ void subtract_top_two_matrices(Stack* stack) {
     gsl_matrix_complex_sub(result, b.matrix_complex);
     push_matrix_complex(stack, result);
   } else {
-    fprintf(stderr,"Unsupported matrix types for subtraction\n");
+    mm_error("Unsupported matrix types for subtraction\n");
   }
 }
 
 void multiply_top_two_matrices(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Not enough elements for matrix multiplication\n");
+    mm_error("Not enough elements for matrix multiplication\n");
     return;
   }
   stack_element b = pop(stack);
@@ -205,7 +206,7 @@ void multiply_top_two_matrices(Stack* stack) {
 
   if (a.type == TYPE_MATRIX_REAL && b.type == TYPE_MATRIX_REAL) {
     if (a.matrix_real->size2 != b.matrix_real->size1) {
-      fprintf(stderr,"Matrix dimensions do not allow multiplication\n");
+      mm_error("Matrix dimensions do not allow multiplication\n");
       return;
     }
     gsl_matrix* result =
@@ -214,7 +215,7 @@ void multiply_top_two_matrices(Stack* stack) {
     push_matrix_real(stack, result);
   } else if (a.type == TYPE_MATRIX_COMPLEX && b.type == TYPE_MATRIX_COMPLEX) {
     if (a.matrix_complex->size2 != b.matrix_complex->size1) {
-      fprintf(stderr,"Matrix dimensions do not allow multiplication\n");
+      mm_error("Matrix dimensions do not allow multiplication\n");
       return;
     }
     gsl_matrix_complex* result =
@@ -224,13 +225,13 @@ void multiply_top_two_matrices(Stack* stack) {
 		   GSL_COMPLEX_ZERO, result);
     push_matrix_complex(stack, result);
   } else {
-    fprintf(stderr,"Unsupported matrix types for multiplication\n");
+    mm_error("Unsupported matrix types for multiplication\n");
   }
 }
 
 void add_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in add_top_two.\n");
+    mm_error("Stack underflow in add_top_two.\n");
     return;
   }
 
@@ -319,7 +320,7 @@ void add_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
 	a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch.\n");
+      mm_error("Matrix size mismatch.\n");
       return;
     }
     result.type = TYPE_MATRIX_REAL;
@@ -330,7 +331,7 @@ void add_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
 	a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch.\n");
+      mm_error("Matrix size mismatch.\n");
       return;
     }
     result.type = TYPE_MATRIX_COMPLEX;
@@ -340,7 +341,7 @@ void add_top_two(Stack* stack) {
     gsl_matrix_complex_add(result.matrix_complex, b->matrix_complex);
   }
   else {
-    fprintf(stderr, "Unsupported operand types in add_top_two.\n");
+    mm_error("Unsupported operand types in add_top_two.\n");
     return;
   }
 
@@ -357,7 +358,7 @@ void add_top_two(Stack* stack) {
 
 void sub_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in sub_top_two.\n");
+    mm_error("Stack underflow in sub_top_two.\n");
     return;
   }
 
@@ -485,7 +486,7 @@ void sub_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
 	a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch in sub_top_two (real matrices).\n");
+      mm_error("Matrix size mismatch in sub_top_two (real matrices).\n");
       return;
     }
     result.type = TYPE_MATRIX_REAL;
@@ -496,7 +497,7 @@ void sub_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
 	a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch in sub_top_two (complex matrices).\n");
+      mm_error("Matrix size mismatch in sub_top_two (complex matrices).\n");
       return;
     }
     result.type = TYPE_MATRIX_COMPLEX;
@@ -506,7 +507,7 @@ void sub_top_two(Stack* stack) {
     gsl_matrix_complex_sub(result.matrix_complex, b->matrix_complex);
   }
   else {
-    fprintf(stderr, "Unsupported operand types in sub_top_two.\n");
+    mm_error("Unsupported operand types in sub_top_two.\n");
     return;
   }
 
@@ -524,7 +525,7 @@ void sub_top_two(Stack* stack) {
 
 void mul_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in mul_top_two.\n");
+    mm_error("Stack underflow in mul_top_two.\n");
     return;
   }
 
@@ -617,7 +618,7 @@ void mul_top_two(Stack* stack) {
   // Real matrix * Real matrix
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size2 != b->matrix_real->size1) {
-      fprintf(stderr, "Dimension mismatch for real matrix multiplication.\n");
+      mm_error("Dimension mismatch for real matrix multiplication.\n");
       return;
     }
 
@@ -631,7 +632,7 @@ void mul_top_two(Stack* stack) {
   // Complex matrix * Complex matrix
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size2 != b->matrix_complex->size1) {
-      fprintf(stderr, "Dimension mismatch for complex matrix multiplication.\n");
+      mm_error("Dimension mismatch for complex matrix multiplication.\n");
       return;
     }
 
@@ -644,7 +645,7 @@ void mul_top_two(Stack* stack) {
   }
 
   else {
-    fprintf(stderr, "Unsupported operand types in mul_top_two.\n");
+    mm_error("Unsupported operand types in mul_top_two.\n");
     return;
   }
 
@@ -662,7 +663,7 @@ void mul_top_two(Stack* stack) {
 
 void div_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in div_top_two.\n");
+    mm_error("Stack underflow in div_top_two.\n");
     return;
   }
 
@@ -783,7 +784,7 @@ void div_top_two(Stack* stack) {
 
     if ((b->type == TYPE_MATRIX_REAL && b->matrix_real->size1 != b->matrix_real->size2) ||
 	(b->type == TYPE_MATRIX_COMPLEX && b->matrix_complex->size1 != b->matrix_complex->size2)) {
-      fprintf(stderr, "Matrix divisor must be square for inversion.\n");
+      mm_error("Matrix divisor must be square for inversion.\n");
       return;
     }
 
@@ -828,7 +829,7 @@ void div_top_two(Stack* stack) {
   }
 
   else {
-    fprintf(stderr, "Unsupported operand types in div_top_two.\n");
+    mm_error("Unsupported operand types in div_top_two.\n");
     return;
   }
 
@@ -844,7 +845,7 @@ void div_top_two(Stack* stack) {
 
 void pow_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in pow_top_two.\n");
+    mm_error("Stack underflow in pow_top_two.\n");
     return;
   }
 
@@ -872,7 +873,7 @@ void pow_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_REAL) {
     int n = (int)b->real;
     if (n < 0 || a->matrix_real->size1 != a->matrix_real->size2) {
-      fprintf(stderr, "Matrix exponent must be non-negative and square.\n");
+      mm_error("Matrix exponent must be non-negative and square.\n");
       return;
     }
     gsl_matrix* res = gsl_matrix_alloc(a->matrix_real->size1, a->matrix_real->size2);
@@ -896,7 +897,7 @@ void pow_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_REAL) {
     int n = (int)b->real;
     if (n < 0 || a->matrix_complex->size1 != a->matrix_complex->size2) {
-      fprintf(stderr, "Matrix exponent must be non-negative and square.\n");
+      mm_error("Matrix exponent must be non-negative and square.\n");
       return;
     }
     gsl_matrix_complex* res =
@@ -922,7 +923,7 @@ void pow_top_two(Stack* stack) {
 
   // ---- Unsupported case ----
   else {
-    fprintf(stderr, "Unsupported types in pow_top_two.\n");
+    mm_error("Unsupported types in pow_top_two.\n");
     return;
   }
 
@@ -939,7 +940,7 @@ void pow_top_two(Stack* stack) {
 
 void join_2_reals(Stack *s) {
   if (s->top < 1) {
-    fprintf(stderr, "Error: need at least two elements to join.\n");
+    mm_error("Error: need at least two elements to join.\n");
     return;
   }
 
@@ -956,7 +957,7 @@ void join_2_reals(Stack *s) {
 
     // Push complex scalar
     if (s->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Error: stack overflow when pushing complex scalar.\n");
+      mm_error("Error: stack overflow when pushing complex scalar.\n");
       return;
     }
 
@@ -973,12 +974,12 @@ void join_2_reals(Stack *s) {
     gsl_matrix *imag_mat = imag_elem->matrix_real;
 
     if (!real_mat || !imag_mat) {
-      fprintf(stderr, "Error: one of the matrices is NULL.\n");
+      mm_error("Error: one of the matrices is NULL.\n");
       return;
     }
 
     if (real_mat->size1 != imag_mat->size1 || real_mat->size2 != imag_mat->size2) {
-      fprintf(stderr, "Error: matrices must have the same dimensions to join.\n");
+      mm_error("Error: matrices must have the same dimensions to join.\n");
       return;
     }
 
@@ -987,7 +988,7 @@ void join_2_reals(Stack *s) {
 
     gsl_matrix_complex *complex_mat = gsl_matrix_complex_alloc(rows, cols);
     if (!complex_mat) {
-      fprintf(stderr, "Error: failed to allocate complex matrix.\n");
+      mm_error("Error: failed to allocate complex matrix.\n");
       return;
     }
 
@@ -1009,7 +1010,7 @@ void join_2_reals(Stack *s) {
 
     // Push complex matrix
     if (s->top + 1 >= STACK_SIZE) {
-      fprintf(stderr, "Error: stack overflow when pushing complex matrix.\n");
+      mm_error("Error: stack overflow when pushing complex matrix.\n");
       gsl_matrix_complex_free(complex_mat);
       return;
     }
@@ -1023,13 +1024,13 @@ void join_2_reals(Stack *s) {
   }
 
   // If types don't match
-  fprintf(stderr, "Error: join_real expects two real scalars or two real matrices.\n");
+  mm_error("Error: join_real expects two real scalars or two real matrices.\n");
 }
 
 
 int kronecker_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in kronecker_top_two.\n");
+    mm_error("Stack underflow in kronecker_top_two.\n");
     return 1;
   }
 
@@ -1141,7 +1142,7 @@ int kronecker_top_two(Stack* stack) {
   }
 
   else {
-    fprintf(stderr, "Unsupported operand types for kronecker product.\n");
+    mm_error("Unsupported operand types for kronecker product.\n");
     return 1;
   }
 
@@ -1158,7 +1159,7 @@ int kronecker_top_two(Stack* stack) {
 
 void dot_div_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in dot_div_top_two.\n");
+    mm_error("Stack underflow in dot_div_top_two.\n");
     return;
   }
 
@@ -1246,7 +1247,7 @@ void dot_div_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
         a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_div_top_two (real).\n");
+      mm_error("Matrix size mismatch in dot_div_top_two (real).\n");
       return;
     }
     result.type = TYPE_MATRIX_REAL;
@@ -1261,7 +1262,7 @@ void dot_div_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
         a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_div_top_two (complex).\n");
+      mm_error("Matrix size mismatch in dot_div_top_two (complex).\n");
       return;
     }
     result.type = TYPE_MATRIX_COMPLEX;
@@ -1275,7 +1276,7 @@ void dot_div_top_two(Stack* stack) {
       }
   }
   else {
-    fprintf(stderr, "Unsupported operand types in dot_div_top_two.\n");
+    mm_error("Unsupported operand types in dot_div_top_two.\n");
     return;
   }
 
@@ -1292,7 +1293,7 @@ void dot_div_top_two(Stack* stack) {
 
 void dot_mult_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in dot_mult_top_two.\n");
+    mm_error("Stack underflow in dot_mult_top_two.\n");
     return;
   }
 
@@ -1379,7 +1380,7 @@ void dot_mult_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
         a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_mult_top_two (real).\n");
+      mm_error("Matrix size mismatch in dot_mult_top_two (real).\n");
       return;
     }
     result.type = TYPE_MATRIX_REAL;
@@ -1394,7 +1395,7 @@ void dot_mult_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
         a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_mult_top_two (complex).\n");
+      mm_error("Matrix size mismatch in dot_mult_top_two (complex).\n");
       return;
     }
     result.type = TYPE_MATRIX_COMPLEX;
@@ -1408,7 +1409,7 @@ void dot_mult_top_two(Stack* stack) {
       }
   }
   else {
-    fprintf(stderr, "Unsupported operand types in dot_mult_top_two.\n");
+    mm_error("Unsupported operand types in dot_mult_top_two.\n");
     return;
   }
 
@@ -1425,7 +1426,7 @@ void dot_mult_top_two(Stack* stack) {
 
 void dot_pow_top_two(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack underflow in dot_pow_top_two.\n");
+    mm_error("Stack underflow in dot_pow_top_two.\n");
     return;
   }
 
@@ -1495,7 +1496,7 @@ void dot_pow_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_MATRIX_REAL) {
     if (a->matrix_real->size1 != b->matrix_real->size1 ||
         a->matrix_real->size2 != b->matrix_real->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_pow_top_two (real).\n");
+      mm_error("Matrix size mismatch in dot_pow_top_two (real).\n");
       return;
     }
     result.type = TYPE_MATRIX_REAL;
@@ -1511,7 +1512,7 @@ void dot_pow_top_two(Stack* stack) {
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_MATRIX_COMPLEX) {
     if (a->matrix_complex->size1 != b->matrix_complex->size1 ||
         a->matrix_complex->size2 != b->matrix_complex->size2) {
-      fprintf(stderr, "Matrix size mismatch in dot_pow_top_two (complex).\n");
+      mm_error("Matrix size mismatch in dot_pow_top_two (complex).\n");
       return;
     }
     result.type = TYPE_MATRIX_COMPLEX;
@@ -1525,7 +1526,7 @@ void dot_pow_top_two(Stack* stack) {
       }
   }
   else {
-    fprintf(stderr, "Unsupported operand types in dot_pow_top_two.\n");
+    mm_error("Unsupported operand types in dot_pow_top_two.\n");
     return;
   }
 

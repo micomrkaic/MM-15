@@ -21,6 +21,7 @@
 // Mico Mrkaic, mrkaic.mico@gmail.com
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <gsl/gsl_complex.h>                // for gsl_complex
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_alloc
 #include <gsl/gsl_matrix_double.h>          // for gsl_matrix_alloc, gsl_mat...
@@ -90,7 +91,7 @@ int stack_size(const Stack* stack) {
 
 void push_real(Stack* stack, double value) {
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr,"Stack overflow\n");
+    mm_error("Stack overflow\n");
     return;
   }
   stack->top++;
@@ -100,7 +101,7 @@ void push_real(Stack* stack, double value) {
 
 void push_complex(Stack* stack, gsl_complex value) {
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr,"Stack overflow\n");
+    mm_error("Stack overflow\n");
     return;
   }
   stack->top++;
@@ -110,25 +111,25 @@ void push_complex(Stack* stack, gsl_complex value) {
 
 void push_string(Stack* stack, const char* str) {
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr,"Stack overflow\n");
+    mm_error("Stack overflow\n");
     return;
   }
   stack->top++;
   stack->items[stack->top].type = TYPE_STRING;
   stack->items[stack->top].string = strdup(str);
   if (!stack->items[stack->top].string) {
-    fprintf(stderr,"Memory allocation failed\n");
+    mm_error("Memory allocation failed\n");
     stack->top--;
   }
 }
 
 void push_matrix_real(Stack* stack, gsl_matrix* matrix) {
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr,"Stack overflow\n");
+    mm_error("Stack overflow\n");
     return;
   }
   if (NULL == matrix) {
-    fprintf(stderr,"NULL pointer to matrix, exiting!\n");
+    mm_error("NULL pointer to matrix, exiting!\n");
     return;
   }
   stack->top++;
@@ -138,7 +139,7 @@ void push_matrix_real(Stack* stack, gsl_matrix* matrix) {
 
 void push_matrix_complex(Stack* stack, gsl_matrix_complex* matrix) {
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr,"Stack overflow\n");
+    mm_error("Stack overflow\n");
     return;
   }
   stack->top++;
@@ -149,7 +150,7 @@ void push_matrix_complex(Stack* stack, gsl_matrix_complex* matrix) {
 stack_element pop(Stack* stack) {
   stack_element popped;
   if (stack->top < 0) {
-    printf("Stack underflow\n");
+    mm_error("Stack underflow");
     popped.type = TYPE_REAL;
     popped.real = 0.0;
     return popped;
@@ -161,7 +162,7 @@ stack_element pop(Stack* stack) {
 
 void swap(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Too few elements on stack!\n");
+    mm_error("Too few elements on stack!\n");
   } else {
     stack_element temp_top = stack->items[stack->top];
     stack_element temp_second = stack->items[stack->top-1];
@@ -172,16 +173,16 @@ void swap(Stack* stack) {
 
 int stack_dup(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"Stack is empty! Cannot duplicate.\n");
+    mm_error("Stack is empty! Cannot duplicate.\n");
     return -1; // Error
   }
   if (stack->top + 1 >= STACK_SIZE) {
-    fprintf(stderr,"Stack overflow! Cannot duplicate.\n");
+    mm_error("Stack overflow! Cannot duplicate.\n");
     return -1; // Error
   }
   if (stack_element_clone(&stack->items[stack->top + 1],
 		    &stack->items[stack->top]) != 0) {
-    fprintf(stderr, "dup: failed to duplicate element\n");
+    mm_error("dup: failed to duplicate element\n");
     return -1;
   }
   stack->top++;
@@ -191,7 +192,7 @@ int stack_dup(Stack* stack) {
 stack_element check_top(Stack* stack) {
   stack_element top;
   if (stack->top < 0) {
-    printf("Stack underflow\n");
+    mm_error("Stack underflow");
     top.type = TYPE_REAL;
     top.real = 0.0;
     return top;
@@ -205,7 +206,7 @@ stack_element pop_and_free(Stack* stack) {
   popped.type = TYPE_REAL;
   popped.real = 0.0;
   if (stack->top < 0) {
-    printf("Stack underflow\n");
+    mm_error("Stack underflow");
     return popped;
   }
   stack_element_free(&stack->items[stack->top]);
@@ -215,7 +216,7 @@ stack_element pop_and_free(Stack* stack) {
 
 stack_element* view_top(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"Stack is empty\n");
+    mm_error("Stack is empty\n");
     return NULL;
   }
   return &stack->items[stack->top];
@@ -231,14 +232,14 @@ void free_stack(Stack* stack) {
 gsl_matrix* load_matrix_from_file(int rows, int cols, const char* filename) {
   FILE* f = fopen(filename, "r");
   if (!f) {
-    perror("Failed to open matrix file");
+    mm_perror("Failed to open matrix file");
     return NULL;
   }
 
   gsl_matrix* m = gsl_matrix_alloc(rows, cols);
   if (!m) {
     fclose(f);
-    fprintf(stderr, "Failed to allocate matrix.\n");
+    mm_error("Failed to allocate matrix.\n");
     return NULL;
   }
 
@@ -246,7 +247,7 @@ gsl_matrix* load_matrix_from_file(int rows, int cols, const char* filename) {
     for (int j = 0; j < cols; ++j) {
       double val;
       if (fscanf(f, "%lf", &val) != 1) {
-	fprintf(stderr, "Failed to read value at [%d, %d] from file '%s'\n", i, j, filename);
+	mm_error("Failed to read value at [%d, %d] from file '%s'\n", i, j, filename);
 	gsl_matrix_free(m);
 	fclose(f);
 	return NULL;
@@ -261,7 +262,7 @@ gsl_matrix* load_matrix_from_file(int rows, int cols, const char* filename) {
 
 value_type stack_top_type(const Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Stack is empty\n");
+    mm_error("Stack is empty\n");
     return -1;  // Or some sentinel value you define
   }
   return stack->items[stack->top].type;
@@ -269,7 +270,7 @@ value_type stack_top_type(const Stack* stack) {
 
 value_type stack_next2_top_type(const Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Stack has fewer than 2 elements\n");
+    mm_error("Stack has fewer than 2 elements\n");
     return -1;  // Or some sentinel value you define
   }
   return stack->items[stack->top-1].type;
@@ -286,7 +287,7 @@ int copy_stack(Stack* dest, const Stack* src) {
       for (int j = 0; j < i; ++j)
         stack_element_free(&dest->items[j]);
       dest->top = -1;
-      fprintf(stderr, "Error: failed to copy stack element %d.\n", i);
+      mm_error("Error: failed to copy stack element %d.\n", i);
       return 0;
     }
   }
@@ -297,7 +298,7 @@ int copy_stack(Stack* dest, const Stack* src) {
 
 void stack_nip(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "nip: stack underflow\n");
+    mm_error("nip: stack underflow\n");
     return;
   }
   // Free the element being discarded, then move the top down into its slot.
@@ -309,7 +310,7 @@ void stack_nip(Stack* stack) {
 
 void stack_tuck(Stack* stack) {
   if (stack->top < 1 || stack->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "tuck: stack underflow or overflow\n");
+    mm_error("tuck: stack underflow or overflow\n");
     return;
   }
 
@@ -319,14 +320,14 @@ void stack_tuck(Stack* stack) {
 
 void stack_over(Stack* stack) {
   if (stack->top < 1 || stack->top + 1 >= STACK_SIZE) {
-    fprintf(stderr, "over: stack underflow or overflow\n");
+    mm_error("over: stack underflow or overflow\n");
     return;
   }
   // Deep copy: a shallow struct copy would alias the matrix/string pointer
   // into two slots and double-free at cleanup.
   if (stack_element_clone(&stack->items[stack->top + 1],
 		    &stack->items[stack->top - 1]) != 0) {
-    fprintf(stderr, "over: failed to copy element\n");
+    mm_error("over: failed to copy element\n");
     return;
   }
   stack->top++;
@@ -334,7 +335,7 @@ void stack_over(Stack* stack) {
 
 void stack_roll(Stack* stack, int n) {
   if (n < 0 || stack->top - n < 0) {
-    fprintf(stderr, "roll: invalid depth %d\n", n);
+    mm_error("roll: invalid depth %d\n", n);
     return;
   }
   stack_element temp = stack->items[stack->top - n];

@@ -18,6 +18,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "errors.h"
 #include <gsl/gsl_complex.h>  // for GSL_REAL
 #include <limits.h>           // for INT_MAX, INT_MIN
 #include <math.h>             // for floor, isfinite
@@ -31,20 +32,20 @@
 
 int extract_day_month_year(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Error: Stack underflow\n");
+    mm_error("Error: Stack underflow\n");
     return 1;
   }
 
   stack_element date_elem = stack->items[stack->top--];
 
   if (date_elem.type != TYPE_STRING) {
-    fprintf(stderr, "Error: Expected string date in DD.MM.YYYY format\n");
+    mm_error("Error: Expected string date in DD.MM.YYYY format\n");
     return 1;
   }
 
   int day, month, year;
   if (sscanf(date_elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
-    fprintf(stderr, "Error: Invalid date format. Expected DD.MM.YYYY\n");
+    mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
 
@@ -65,7 +66,7 @@ int extract_day_month_year(Stack* stack) {
 
 int date_plus_days(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Error: Need a date string and number of days on stack\n");
+    mm_error("Error: Need a date string and number of days on stack\n");
     return 1;
   }
 
@@ -74,13 +75,13 @@ int date_plus_days(Stack* stack) {
 
   if (date_elem.type != TYPE_STRING || (days_elem.type != TYPE_REAL && days_elem.type != TYPE_COMPLEX))
     {
-      fprintf(stderr, "Error: Expected a string and a number\n");
+      mm_error("Error: Expected a string and a number\n");
       return 1;
     }
 
   int day, month, year;
   if (sscanf(date_elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
-    fprintf(stderr, "Error: Invalid date format. Expected DD.MM.YYYY\n");
+    mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
 
@@ -92,7 +93,7 @@ int date_plus_days(Stack* stack) {
 
   time_t t = mktime(&date);
   if (t == (time_t)(-1)) {
-    fprintf(stderr, "Error: mktime failed\n");
+    mm_error("Error: mktime failed\n");
     return 1;
   }
 
@@ -101,7 +102,7 @@ int date_plus_days(Stack* stack) {
 
   struct tm* new_date = localtime(&t);
   if (!new_date) {
-    fprintf(stderr, "Error: localtime failed\n");
+    mm_error("Error: localtime failed\n");
     return 1;
   }
 
@@ -113,7 +114,7 @@ int date_plus_days(Stack* stack) {
 
   char* result = strdup(buffer);
   if (!result) {
-    fprintf(stderr, "Error: Memory allocation failed\n");
+    mm_error("Error: Memory allocation failed\n");
     return 1;
   }
 
@@ -122,7 +123,7 @@ int date_plus_days(Stack* stack) {
   out.string = result;
 
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr, "Error: Stack overflow\n");
+    mm_error("Error: Stack overflow\n");
     free(result);
     return 1;
   }
@@ -134,20 +135,20 @@ int date_plus_days(Stack* stack) {
 
 int push_weekday_name_from_date_string(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr, "Error: Stack underflow\n");
+    mm_error("Error: Stack underflow\n");
     return 1;
   }
 
   stack_element elem = stack->items[stack->top--];
 
   if (elem.type != TYPE_STRING) {
-    fprintf(stderr, "Error: Expected string date in DD.MM.YYYY format\n");
+    mm_error("Error: Expected string date in DD.MM.YYYY format\n");
     return 1;
   }
 
   int day, month, year;
   if (sscanf(elem.string, "%d.%d.%d", &day, &month, &year) != 3) {
-    fprintf(stderr, "Error: Invalid date format. Expected DD.MM.YYYY\n");
+    mm_error("Error: Invalid date format. Expected DD.MM.YYYY\n");
     return 1;
   }
 
@@ -158,7 +159,7 @@ int push_weekday_name_from_date_string(Stack* stack) {
   date.tm_hour = 12;             // avoid DST ambiguity
 
   if (mktime(&date) == (time_t)(-1)) {
-    fprintf(stderr, "Error: mktime failed\n");
+    mm_error("Error: mktime failed\n");
     return 1;
   }
 
@@ -168,14 +169,14 @@ int push_weekday_name_from_date_string(Stack* stack) {
   };
 
   if (date.tm_wday < 0 || date.tm_wday > 6) {
-    fprintf(stderr, "Error: Invalid weekday\n");
+    mm_error("Error: Invalid weekday\n");
     return 1;
   }
 
   const char* weekday_name = weekdays[date.tm_wday];
   char* result = strdup(weekday_name);
   if (!result) {
-    fprintf(stderr, "Error: Memory allocation failed\n");
+    mm_error("Error: Memory allocation failed\n");
     return 1;
   }
 
@@ -184,7 +185,7 @@ int push_weekday_name_from_date_string(Stack* stack) {
   out.string = result;
 
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr, "Error: Stack overflow\n");
+    mm_error("Error: Stack overflow\n");
     free(result);
     return 1;
   }
@@ -198,13 +199,13 @@ int push_weekday_name_from_date_string(Stack* stack) {
 int push_today_date(Stack* stack) {
   time_t now = time(NULL);
   if (now == (time_t)(-1)) {
-    fprintf(stderr, "Error: could not get current time\n");
+    mm_error("Error: could not get current time\n");
     return 1;
   }
 
   struct tm* tm_now = localtime(&now);
   if (!tm_now) {
-    fprintf(stderr, "Error: could not convert time to local time\n");
+    mm_error("Error: could not convert time to local time\n");
     return 1;
   }
 
@@ -217,7 +218,7 @@ int push_today_date(Stack* stack) {
   // Duplicate the string before pushing
   char* date_str = strdup(buffer);
   if (!date_str) {
-    fprintf(stderr, "Error: memory allocation failed\n");
+    mm_error("Error: memory allocation failed\n");
     return 1;
   }
 
@@ -226,7 +227,7 @@ int push_today_date(Stack* stack) {
   elem.string = date_str;
 
   if (stack->top >= STACK_SIZE - 1) {
-    fprintf(stderr, "Error: stack overflow\n");
+    mm_error("Error: stack overflow\n");
     free(date_str);
     return 1;
   }
@@ -292,7 +293,7 @@ int parse_date_relaxed(const char *s, int *d, int *m, int *y) {
 
 int delta_days_strings(Stack* stack) {
     if (stack->top < 1) {
-        fprintf(stderr, "Error: delta_days requires two values on the stack\n");
+        mm_error("Error: delta_days requires two values on the stack\n");
         return 1;
     }
 
@@ -300,7 +301,7 @@ int delta_days_strings(Stack* stack) {
     stack_element a = stack->items[stack->top--];
 
     if (a.type != TYPE_STRING || b.type != TYPE_STRING) {
-        fprintf(stderr, "Error: delta_days requires two strings\n");
+        mm_error("Error: delta_days requires two strings\n");
         return 1;
     }
 
@@ -308,7 +309,7 @@ int delta_days_strings(Stack* stack) {
     
     if (!parse_date_relaxed(a.string, &d1, &m1, &y1) ||
         !parse_date_relaxed(b.string, &d2, &m2, &y2)) {
-        fprintf(stderr, "Error: invalid date format. Use D.M.YYYY (e.g., 2.3.2025) with no trailing text.\n");
+        mm_error("Error: invalid date format. Use D.M.YYYY (e.g., 2.3.2025) with no trailing text.\n");
         return 1;
     }
 
@@ -330,7 +331,7 @@ int delta_days_strings(Stack* stack) {
     time_t t2 = mktime(&tm2);
 
     if (t1 == (time_t)-1 || t2 == (time_t)-1) {
-        fprintf(stderr, "Error: failed to convert date to time_t\n");
+        mm_error("Error: failed to convert date to time_t\n");
         return 1;
     }
 
@@ -375,7 +376,7 @@ int delta_days_strings(Stack* stack) {
 
 /* int delta_days_strings(Stack* stack) { */
 /*   if (stack->top < 1) { */
-/*     fprintf(stderr, "Error: delta_days requires two values on the stack\n"); */
+/*     mm_error("Error: delta_days requires two values on the stack\n"); */
 /*     return 1; */
 /*   } */
 
@@ -383,14 +384,14 @@ int delta_days_strings(Stack* stack) {
 /*   stack_element a = stack->items[stack->top--]; */
 
 /*   if (a.type != TYPE_STRING || b.type != TYPE_STRING) { */
-/*     fprintf(stderr, "Error: delta_days requires two strings in DD.MM.YYYY format\n"); */
+/*     mm_error("Error: delta_days requires two strings in DD.MM.YYYY format\n"); */
 /*     return 1; */
 /*   } */
 
 /*   int d1, m1, y1, d2, m2, y2; */
 /*   if (!parse_date_strict(a.string, &d1, &m1, &y1) || */
 /*       !parse_date_strict(b.string, &d2, &m2, &y2)) { */
-/*     fprintf(stderr, "Error: invalid date. Use DD.MM.YYYY and a real calendar date\n"); */
+/*     mm_error("Error: invalid date. Use DD.MM.YYYY and a real calendar date\n"); */
 /*     return 1; */
 /*   } */
 
@@ -411,7 +412,7 @@ int delta_days_strings(Stack* stack) {
 /*   time_t t2 = mktime(&tm2); */
 
 /*   if (t1 == (time_t)-1 || t2 == (time_t)-1) { */
-/*     fprintf(stderr, "Error: failed to convert date to time_t\n"); */
+/*     mm_error("Error: failed to convert date to time_t\n"); */
 /*     return 1; */
 /*   } */
 
@@ -438,7 +439,7 @@ static int elem_to_int(const stack_element *e, int *out) {
 
 /* int make_date_string(Stack* stack) { */
 /*   if (stack->top < 2) { */
-/*     fprintf(stderr, "Error: make_date_string requires three numeric values (day, month, year)\n"); */
+/*     mm_error("Error: make_date_string requires three numeric values (day, month, year)\n"); */
 /*     return 1; */
 /*   } */
 
@@ -449,18 +450,18 @@ static int elem_to_int(const stack_element *e, int *out) {
 
 /*   int d, m, y; */
 /*   if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) { */
-/*     fprintf(stderr, "Error: make_date_string requires integer-like numbers (day, month, year)\n"); */
+/*     mm_error("Error: make_date_string requires integer-like numbers (day, month, year)\n"); */
 /*     return 1; */
 /*   } */
 
 /*   /\* Basic sanity checks (tweak year bounds as you like) *\/ */
 /*   if (m < 1 || m > 12) { */
-/*     fprintf(stderr, "Error: invalid month: %d (must be 1..12)\n", m); */
+/*     mm_error("Error: invalid month: %d (must be 1..12)\n", m); */
 /*     return 1; */
 /*   } */
 /*   int dim = days_in_month(y, m); */
 /*   if (d < 1 || d > dim) { */
-/*     fprintf(stderr, "Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim); */
+/*     mm_error("Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim); */
 /*     return 1; */
 /*   } */
 
@@ -474,7 +475,7 @@ static int elem_to_int(const stack_element *e, int *out) {
 /*   tmv.tm_isdst = -1; */
 
 /*   if (mktime(&tmv) == (time_t)-1) { */
-/*     fprintf(stderr, "Error: failed to normalize date\n"); */
+/*     mm_error("Error: failed to normalize date\n"); */
 /*     return 1; */
 /*   } */
 
@@ -491,7 +492,7 @@ static int elem_to_int(const stack_element *e, int *out) {
 int make_date_string(Stack *stack)
 {
     if (!stack) {
-        fprintf(stderr, "Error: make_date_string: null stack\n");
+        mm_error("Error: make_date_string: null stack\n");
         return 0;
     }
 
@@ -504,18 +505,18 @@ int make_date_string(Stack *stack)
 
     int d = 0, m = 0, y = 0;
     if (!elem_to_int(&ed, &d) || !elem_to_int(&em, &m) || !elem_to_int(&ey, &y)) {
-        fprintf(stderr, "Error: make_date_string requires integer-like numbers (day, month, year)\n");
+        mm_error("Error: make_date_string requires integer-like numbers (day, month, year)\n");
         return 0;
     }
 
     if (m < 1 || m > 12) {
-        fprintf(stderr, "Error: invalid month: %d (must be 1..12)\n", m);
+        mm_error("Error: invalid month: %d (must be 1..12)\n", m);
         return 0;
     }
 
     int dim = days_in_month(y, m);
     if (d < 1 || d > dim) {
-        fprintf(stderr, "Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim);
+        mm_error("Error: invalid day %d for %02d.%04d (max %d)\n", d, m, y, dim);
         return 0;
     }
 
@@ -528,14 +529,14 @@ int make_date_string(Stack *stack)
     tmv.tm_isdst = -1;
 
     if (mktime(&tmv) == (time_t)-1) {
-        fprintf(stderr, "Error: failed to normalize date\n");
+        mm_error("Error: failed to normalize date\n");
         return 0;
     }
 
     char buf[11]; /* "DD.MM.YYYY" + '\0' */
     int n = snprintf(buf, sizeof(buf), "%02d.%02d.%04d", d, m, y);
     if (n < 0 || (size_t)n >= sizeof(buf)) {
-        fprintf(stderr, "Error: date formatting failed\n");
+        mm_error("Error: date formatting failed\n");
         return 0;
     }
 
@@ -548,20 +549,20 @@ int make_date_string(Stack *stack)
 int days_to_end_of_year(Stack* stack) {
   time_t now = time(NULL);
   if (now == (time_t)-1) {
-    fprintf(stderr, "Error: failed to get current time\n");
+    mm_error("Error: failed to get current time\n");
     return 1;
   }
 
   struct tm lt;
 #if defined(_POSIX_THREAD_SAFE_FUNCTIONS)
   if (!localtime_r(&now, &lt)) {
-    fprintf(stderr, "Error: localtime_r failed\n");
+    mm_error("Error: localtime_r failed\n");
     return 1;
   }
 #else
   struct tm *ptm = localtime(&now);
   if (!ptm) {
-    fprintf(stderr, "Error: localtime failed\n");
+    mm_error("Error: localtime failed\n");
     return 1;
   }
   lt = *ptm;
@@ -588,12 +589,12 @@ int days_to_end_of_year(Stack* stack) {
 int push_now_time(Stack* stack) {
   time_t now = time(NULL);
   if (now == (time_t)(-1)) {
-    fprintf(stderr, "Error: could not get current time\n");
+    mm_error("Error: could not get current time\n");
     return 1;
   }
   struct tm tm_now;
   if (!localtime_r(&now, &tm_now)) {
-    fprintf(stderr, "Error: could not convert time to local time\n");
+    mm_error("Error: could not convert time to local time\n");
     return 1;
   }
   char buffer[8]; /* "HH:MM" + NUL */
@@ -626,13 +627,13 @@ int zone_offset_hours(const char *zone, int d, int m, int y, double *hours_out) 
    * zoneinfo directory ourselves.  Also refuse anything that could walk
    * out of that directory. */
   if (zone[0] == '/' || strstr(zone, "..") != NULL || strchr(zone, ':') != NULL) {
-    fprintf(stderr, "Error: invalid time zone name \"%s\"\n", zone);
+    mm_error("Error: invalid time zone name \"%s\"\n", zone);
     return 0;
   }
   char path[512];
   int n = snprintf(path, sizeof path, "/usr/share/zoneinfo/%s", zone);
   if (n < 0 || (size_t)n >= sizeof path) {
-    fprintf(stderr, "Error: time zone name too long\n");
+    mm_error("Error: time zone name too long\n");
     return 0;
   }
   struct stat st;
@@ -649,7 +650,7 @@ int zone_offset_hours(const char *zone, int d, int m, int y, double *hours_out) 
   if (old_tz) {
     saved_tz = strdup(old_tz);
     if (!saved_tz) {
-      fprintf(stderr, "Error: memory allocation failed\n");
+      mm_error("Error: memory allocation failed\n");
       return 0;
     }
   }
@@ -696,7 +697,7 @@ int zone_offset_hours(const char *zone, int d, int m, int y, double *hours_out) 
   tzset();
 
   if (!ok) {
-    fprintf(stderr, "Error: could not compute the offset for \"%s\" on %d.%d.%d\n",
+    mm_error("Error: could not compute the offset for \"%s\" on %d.%d.%d\n",
             zone, d, m, y);
     return 0;
   }
@@ -710,20 +711,20 @@ int zone_offset_hours(const char *zone, int d, int m, int y, double *hours_out) 
  * ------------------------------------------------------------------- */
 int tz_offset(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Error: tz_offset needs a date string and a zone name on the stack\n");
+    mm_error("Error: tz_offset needs a date string and a zone name on the stack\n");
     return 1;
   }
   const stack_element *zone_e = &stack->items[stack->top];
   const stack_element *date_e = &stack->items[stack->top - 1];
 
   if (zone_e->type != TYPE_STRING || date_e->type != TYPE_STRING) {
-    fprintf(stderr, "Error: tz_offset expects \"d.m.y\" \"Area/City\" (two strings)\n");
+    mm_error("Error: tz_offset expects \"d.m.y\" \"Area/City\" (two strings)\n");
     return 1;
   }
 
   int d, m, y;
   if (!parse_date_relaxed(date_e->string, &d, &m, &y)) {
-    fprintf(stderr, "Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\")\n",
+    mm_error("Error: invalid date \"%s\" (expected \"d.m.y\", e.g. \"3.4.2025\")\n",
             date_e->string);
     return 1;
   }

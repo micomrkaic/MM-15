@@ -17,6 +17,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L
+#include "errors.h"
 #include <float.h>                          // for DBL_EPSILON
 #include <gsl/gsl_blas.h>                   // for gsl_blas_dgemm
 #include <gsl/gsl_cblas.h>                  // for CBLAS_TRANSPOSE
@@ -36,7 +37,7 @@
 
 int matrix_inverse(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix to invert\n");
+    mm_error("No matrix to invert\n");
     return 1;
   }
 
@@ -45,7 +46,7 @@ int matrix_inverse(Stack* stack) {
   if (m.type == TYPE_MATRIX_REAL) {
     size_t n = m.matrix_real->size1;
     if (n != m.matrix_real->size2) {
-      fprintf(stderr,"Matrix is not square\n");
+      mm_error("Matrix is not square\n");
       return 1;
     }
 
@@ -58,7 +59,7 @@ int matrix_inverse(Stack* stack) {
     // LU decomposition
     int status = gsl_linalg_LU_decomp(tmp, p, &signum);
     if (status != GSL_SUCCESS) {
-      fprintf(stderr, "LU decomposition failed\n");
+      mm_error("LU decomposition failed\n");
       gsl_matrix_free(inv);
       gsl_matrix_free(tmp);
       gsl_permutation_free(p);
@@ -69,7 +70,7 @@ int matrix_inverse(Stack* stack) {
     // Check determinant
     double det = gsl_linalg_LU_det(tmp, signum);
     if ((det == 0.0) || (isnan(det))) {
-      fprintf(stderr,"Matrix is singular, cannot invert\n");
+      mm_error("Matrix is singular, cannot invert\n");
       gsl_matrix_free(inv);
       gsl_matrix_free(tmp);
       gsl_permutation_free(p);
@@ -79,7 +80,7 @@ int matrix_inverse(Stack* stack) {
 
     // Now safe to invert
     if (gsl_linalg_LU_invert(tmp, p, inv) != 0) {
-      fprintf(stderr,"Matrix inversion failed\n");
+      mm_error("Matrix inversion failed\n");
       gsl_matrix_free(inv);
       gsl_matrix_free(tmp);
       gsl_permutation_free(p);
@@ -95,7 +96,7 @@ int matrix_inverse(Stack* stack) {
   } else if (m.type == TYPE_MATRIX_COMPLEX) {
     size_t n = m.matrix_complex->size1;
     if (n != m.matrix_complex->size2) {
-      fprintf(stderr,"Complex matrix is not square\n");
+      mm_error("Complex matrix is not square\n");
       return 1;
     }
 
@@ -111,7 +112,7 @@ int matrix_inverse(Stack* stack) {
     // Check complex determinant
     gsl_complex det = gsl_linalg_complex_LU_det(tmp, signum);
     if (GSL_REAL(det) == 0.0 && GSL_IMAG(det) == 0.0) {
-      fprintf(stderr,"Complex matrix is singular, cannot invert\n");
+      mm_error("Complex matrix is singular, cannot invert\n");
       gsl_matrix_complex_free(inv);
       gsl_matrix_complex_free(tmp);
       gsl_permutation_free(p);
@@ -121,7 +122,7 @@ int matrix_inverse(Stack* stack) {
 
     // Safe to invert
     if (gsl_linalg_complex_LU_invert(tmp, p, inv) != 0) {
-      fprintf(stderr,"Complex matrix inversion failed\n");
+      mm_error("Complex matrix inversion failed\n");
       gsl_matrix_complex_free(inv);
       gsl_matrix_complex_free(tmp);
       gsl_permutation_free(p);
@@ -135,7 +136,7 @@ int matrix_inverse(Stack* stack) {
     return 0;
 
   } else {
-    fprintf(stderr,"Only real or complex matrix inversion is supported\n");
+    mm_error("Only real or complex matrix inversion is supported\n");
     return 1;
   }
 }
@@ -143,7 +144,7 @@ int matrix_inverse(Stack* stack) {
 int matrix_determinant(Stack* stack) {
 
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix to compute determinant\n");
+    mm_error("No matrix to compute determinant\n");
     return 1;
   }
 
@@ -151,7 +152,7 @@ int matrix_determinant(Stack* stack) {
   if (m.type == TYPE_MATRIX_REAL) {
     size_t n = m.matrix_real->size1;
     if (n != m.matrix_real->size2) {
-      fprintf(stderr,"Matrix is not square\n");
+      mm_error("Matrix is not square\n");
       return 1;
     }
 
@@ -161,7 +162,7 @@ int matrix_determinant(Stack* stack) {
     int signum;
 
     if (gsl_linalg_LU_decomp(tmp, p, &signum) != 0) {
-      fprintf(stderr,"Matrix decomposition failed\n");
+      mm_error("Matrix decomposition failed\n");
       gsl_matrix_free(tmp);
       gsl_permutation_free(p);
       return 1;
@@ -175,7 +176,7 @@ int matrix_determinant(Stack* stack) {
   } else if (m.type == TYPE_MATRIX_COMPLEX) {
     size_t n = m.matrix_complex->size1;
     if (n != m.matrix_complex->size2) {
-      fprintf(stderr,"Complex matrix is not square\n");
+      mm_error("Complex matrix is not square\n");
       return 1;
     }
 
@@ -185,7 +186,7 @@ int matrix_determinant(Stack* stack) {
     int signum;
 
     if (gsl_linalg_complex_LU_decomp(tmp, p, &signum) != 0) {
-      fprintf(stderr,"Complex matrix decomposition failed\n");
+      mm_error("Complex matrix decomposition failed\n");
       gsl_matrix_complex_free(tmp);
       gsl_permutation_free(p);
       return 1;
@@ -196,7 +197,7 @@ int matrix_determinant(Stack* stack) {
     push_complex(stack, det);
     return 0;
   } else {
-    fprintf(stderr,"Only real or complex matrix determinant is supported\n");
+    mm_error("Only real or complex matrix determinant is supported\n");
     return 1;
   }
   return 0;
@@ -204,7 +205,7 @@ int matrix_determinant(Stack* stack) {
 
 int solve_linear_system(Stack* stack) {
   if (stack->top < 1) {
-    fprintf(stderr,"Need coefficient matrix and RHS vector\n");
+    mm_error("Need coefficient matrix and RHS vector\n");
     return 1;
   }
 
@@ -214,7 +215,7 @@ int solve_linear_system(Stack* stack) {
   if (a.type == TYPE_MATRIX_REAL && b.type == TYPE_MATRIX_REAL) {
     if (a.matrix_real->size1 != a.matrix_real->size2 ||
 	b.matrix_real->size2 != 1 || a.matrix_real->size1 != b.matrix_real->size1) {
-      fprintf(stderr,"Dimension mismatch or matrix not square\n");
+      mm_error("Dimension mismatch or matrix not square\n");
       return 1;
     }
 
@@ -243,7 +244,7 @@ int solve_linear_system(Stack* stack) {
     gsl_permutation_free(p);
     return 0;
   } else {
-    fprintf(stderr,"Unsupported types for linear system solving\n");
+    mm_error("Unsupported types for linear system solving\n");
     return 1;
   }
   return 0;
@@ -251,7 +252,7 @@ int solve_linear_system(Stack* stack) {
 
 int matrix_eigen_decompose(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix on stack for eigendecomposition\n");
+    mm_error("No matrix on stack for eigendecomposition\n");
     return 1;
   }
 
@@ -259,7 +260,7 @@ int matrix_eigen_decompose(Stack* stack) {
   if (m.type == TYPE_MATRIX_REAL) {
     size_t n = m.matrix_real->size1;
     if (n != m.matrix_real->size2) {
-      fprintf(stderr,"Matrix is not square\n");
+      mm_error("Matrix is not square\n");
       return 1;
     }
 
@@ -271,7 +272,7 @@ int matrix_eigen_decompose(Stack* stack) {
     gsl_eigen_nonsymmv_workspace* w = gsl_eigen_nonsymmv_alloc(n);
 
     if (gsl_eigen_nonsymmv(tmp, eval, evec, w) != 0) {
-      fprintf(stderr,"Eigen decomposition failed\n");
+      mm_error("Eigen decomposition failed\n");
       gsl_matrix_free(tmp);
       gsl_vector_complex_free(eval);
       gsl_matrix_complex_free(evec);
@@ -296,14 +297,14 @@ int matrix_eigen_decompose(Stack* stack) {
     push_matrix_complex(stack, eval_matrix);
     return 0;
   } else {
-    fprintf(stderr,"Only real matrix eigendecomposition is supported\n");
+    mm_error("Only real matrix eigendecomposition is supported\n");
     return 1;
   }
 }
 
 int matrix_transpose(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix to transpose\n");
+    mm_error("No matrix to transpose\n");
     return 1;
   }
 
@@ -315,7 +316,7 @@ int matrix_transpose(Stack* stack) {
 
     gsl_matrix* transposed = gsl_matrix_alloc(cols, rows);
     if (!transposed) {
-      fprintf(stderr,"Memory allocation failed for transposed matrix\n");
+      mm_error("Memory allocation failed for transposed matrix\n");
       return 1;
     }
 
@@ -335,7 +336,7 @@ int matrix_transpose(Stack* stack) {
 
     gsl_matrix_complex* transposed = gsl_matrix_complex_alloc(cols, rows);
     if (!transposed) {
-      fprintf(stderr,"Memory allocation failed for transposed complex matrix\n");
+      mm_error("Memory allocation failed for transposed complex matrix\n");
       return 1;
     }
 
@@ -351,7 +352,7 @@ int matrix_transpose(Stack* stack) {
     return 0;
   }
   else {
-    fprintf(stderr,"Only real or complex matrices can be transposed\n");
+    mm_error("Only real or complex matrices can be transposed\n");
     return 1;
   }
   return 0;
@@ -359,25 +360,25 @@ int matrix_transpose(Stack* stack) {
 
 int matrix_cholesky(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix on stack for Cholesky decomposition\n");
+    mm_error("No matrix on stack for Cholesky decomposition\n");
     return 1;
   }
 
   stack_element m = pop(stack);
 
   if (m.type == TYPE_MATRIX_COMPLEX) {
-    fprintf(stderr,"Cholesky decomposition is only supported for real matrices\n");
+    mm_error("Cholesky decomposition is only supported for real matrices\n");
     return 1;
   }
 
   if (m.type != TYPE_MATRIX_REAL) {
-    fprintf(stderr,"Only real matrices are supported for Cholesky decomposition\n");
+    mm_error("Only real matrices are supported for Cholesky decomposition\n");
     return 1;
   }
 
   size_t n = m.matrix_real->size1;
   if (n != m.matrix_real->size2) {
-    fprintf(stderr,"Matrix must be square for Cholesky decomposition\n");
+    mm_error("Matrix must be square for Cholesky decomposition\n");
     return 1;
   }
 
@@ -387,7 +388,7 @@ int matrix_cholesky(Stack* stack) {
       double aij = gsl_matrix_get(m.matrix_real, i, j);
       double aji = gsl_matrix_get(m.matrix_real, j, i);
       if (fabs(aij - aji) > 1e-9) { // Tolerance for floating point errors
-	fprintf(stderr,"Matrix is not symmetric; cannot perform Cholesky decomposition\n");
+	mm_error("Matrix is not symmetric; cannot perform Cholesky decomposition\n");
 	return 1;
       }
     }
@@ -398,7 +399,7 @@ int matrix_cholesky(Stack* stack) {
 
   int status = gsl_linalg_cholesky_decomp(tmp);
   if (status != 0) {
-    fprintf(stderr,"Cholesky decomposition failed (matrix may not be positive definite)\n");
+    mm_error("Cholesky decomposition failed (matrix may not be positive definite)\n");
     gsl_matrix_free(tmp);
     return 1;
   }
@@ -417,14 +418,14 @@ int matrix_cholesky(Stack* stack) {
 
 int matrix_svd(Stack* stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix on stack for SVD\n");
+    mm_error("No matrix on stack for SVD\n");
     return 1;
   }
 
   stack_element m = pop(stack);
 
   if (m.type != TYPE_MATRIX_REAL) {
-    fprintf(stderr,"SVD is only implemented for real matrices\n");
+    mm_error("SVD is only implemented for real matrices\n");
     return 1;
   }
 
@@ -443,7 +444,7 @@ int matrix_svd(Stack* stack) {
   int status = gsl_linalg_SV_decomp(A, V, S, work);
 
   if (status != 0) {
-    fprintf(stderr,"SVD decomposition failed\n");
+    mm_error("SVD decomposition failed\n");
     gsl_matrix_free(A);
     gsl_matrix_free(V);
     gsl_vector_free(S);
@@ -494,7 +495,7 @@ int matrix_svd(Stack* stack) {
 
 /* int matrix_frobenius_norm(Stack *stack) { */
 /*   if (stack->top < 0) { */
-/*     fprintf(stderr,"No matrix to invert\n"); */
+/*     mm_error("No matrix to invert\n"); */
 /*     return 1; */
 /*   } */
 
@@ -508,7 +509,7 @@ int matrix_svd(Stack* stack) {
 
 int matrix_pseudoinverse(Stack *stack) {
   if (stack->top < 0) {
-    fprintf(stderr,"No matrix to pseudoinvert\n");
+    mm_error("No matrix to pseudoinvert\n");
     return 1;
   }
 
@@ -519,7 +520,7 @@ int matrix_pseudoinverse(Stack *stack) {
     
   if ((m.type != TYPE_MATRIX_REAL) || (rows != cols))
     {
-      fprintf(stderr,"Only real square matrix pseudoinversion is supported\n");
+      mm_error("Only real square matrix pseudoinversion is supported\n");
       return 1;
     }
 
@@ -531,7 +532,7 @@ int matrix_pseudoinverse(Stack *stack) {
   gsl_vector *work = gsl_vector_alloc(cols);
 
   if (gsl_linalg_SV_decomp(U, V, S, work) != 0) {
-    fprintf(stderr,"SVD decomposition failed\n");
+    mm_error("SVD decomposition failed\n");
     gsl_matrix_free(U); gsl_matrix_free(V);
     gsl_vector_free(S); gsl_vector_free(work);
     gsl_matrix_free(m.matrix_real);

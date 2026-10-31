@@ -18,6 +18,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "errors.h"
 #include "eval_fun.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -232,13 +233,13 @@ void evaluate_one_token(Stack *stack, Token tok) {
     user_word *w = find_macro(tok.text);
     if (w == NULL) w = find_word(tok.text);
     if (w == NULL) {
-      printf("Unknown identifier!\n");
+      mm_error("Unknown word: %s", tok.text);
       return;
     }
     /* A word may call itself; a runaway recursion used to overflow the C
        stack and crash. Nesting is counted across macros and words. */
     if (word_depth >= MAX_WORD_DEPTH) {
-      fprintf(stderr, "Error: word nesting deeper than %d (in '%s'); aborting.\n",
+      mm_error("Error: word nesting deeper than %d (in '%s'); aborting.\n",
               MAX_WORD_DEPTH, w->name);
       word_aborted = true;
       return;
@@ -260,12 +261,12 @@ void evaluate_one_token(Stack *stack, Token tok) {
     // Meta level
     if (!strcmp("eval",tok.text)) {
       if (stack->top < 0) {
-        fprintf(stderr, "Stack is empty: nothing to evaluate.\n");
+        mm_error("Stack is empty: nothing to evaluate.\n");
         return;
       }
       stack_element t = pop(stack);
       if (t.type != TYPE_STRING) {
-        fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
+        mm_error("Top of stack is not a string: cannot evaluate.\n");
       } else evaluate_line(stack, t.string);
       if (t.type == TYPE_STRING) free(t.string);
       return;
@@ -273,12 +274,12 @@ void evaluate_one_token(Stack *stack, Token tok) {
 
     if (!strcmp("batch",tok.text)) {
       if (stack->top < 0) {
-        fprintf(stderr, "Stack is empty: no batch to run.\n");
+        mm_error("Stack is empty: no batch to run.\n");
         return;
       }
       stack_element t = pop(stack);
       if (t.type != TYPE_STRING) {
-        fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
+        mm_error("Top of stack is not a string: cannot evaluate.\n");
       } else run_batch(stack, t.string);
       if (t.type == TYPE_STRING) free(t.string);
       return;
@@ -286,16 +287,16 @@ void evaluate_one_token(Stack *stack, Token tok) {
     
     if (!strcmp("run",tok.text)) {
       if (stack->top < 0) {
-        fprintf(stderr, "Stack is empty: no program to run.\n");
+        mm_error("Stack is empty: no program to run.\n");
         return;
       }
       stack_element t = pop(stack);
       if (t.type != TYPE_STRING) {
-	fprintf(stderr, "Top of stack is not a string: cannot evaluate.\n");
+	mm_error("Top of stack is not a string: cannot evaluate.\n");
       } else {
 	Program prog = {.count = 0, .label_count = 0};
 	if (!load_program_from_file(t.string, &prog)) {
-	  fprintf(stderr, "Failed to load program.\n");
+	  mm_error("Failed to load program.\n");
 	  free_program(&prog);   // load may have strdup'd args before failing
 	  free(t.string);
 	  return;
@@ -461,10 +462,10 @@ void evaluate_one_token(Stack *stack, Token tok) {
       printf("| \n");
       return;
       case TOK_UNKNOWN:
-	printf("Illegal token.\n");
+	mm_error("Illegal token: %s", tok.text);
 	return;
 	default:
-	  printf("Unhandled token type.\n");
+	  mm_error("Unhandled token: %s", tok.text);
 	  return;
   }
   }

@@ -122,6 +122,10 @@ test-asan: asan
 .PHONY: test
 test: asan
 	@bash tests/run_tests.sh
+	@ASAN_OPTIONS=detect_leaks=0 sh tests/run_golden.sh bin/asan/mm_15
+
+golden: all
+	@sh tests/run_golden.sh $(TARGET)
 
 # -------- Rules --------
 .PHONY: all install install-system uninstall clean doc

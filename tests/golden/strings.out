@@ -1,0 +1,6 @@
+Error: substring requires a string as the first popped value
+
+[0] ℝ : 6.000000
+[1] 𝒮 : "FEDCBA"
+[2] ℝ : 3.000000
+[exit 1]

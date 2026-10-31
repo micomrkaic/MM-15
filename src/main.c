@@ -38,6 +38,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include "errors.h"
 #include "eval_fun.h"          // for evaluate_line
 #include "globals.h"           // for CONFIG_PATH, HISTORY_PATH, completed_...
 #include "print_fun.h"         // for print_stack
@@ -56,11 +57,14 @@
 #include <stdio.h>             // for fprintf, perror, stderr, NULL
 #include <stdlib.h>            // for free, WEXITSTATUS, system, WIFEXITED
 #include <string.h>            // for strcmp
+#include <unistd.h>            // for isatty
 
 // Globals
 gsl_rng
     *global_rng; // Global random number generator, used throughout the program
 Register registers[MAX_REG] = {0}; // Global or static array
+
+#define MM15_VERSION "2.0"
 
 // Local declarations
 void my_error_handler(const char *reason, const char *file, int line,
@@ -69,7 +73,7 @@ int repl(void);
 
 void my_error_handler(const char *reason, const char *file, int line,
                       int gsl_errno) {
-  fprintf(stderr, "GSL ERROR: %s (%s:%d) [code=%d]\n", reason, file, line,
+  mm_error("GSL ERROR: %s (%s:%d) [code=%d]\n", reason, file, line,
           gsl_errno);
   // Do NOT call abort(); this allows graceful recovery
 }
@@ -128,86 +132,169 @@ static char *capture_command_output(const char *cmd, int *wait_status_out) {
   return buf;
 }
 
-int repl(void) {
+static bool batch_mode = false;   /* -e, -f, or stdin that is not a terminal */
+static bool autoload = true;      /* -n turns off macros/config at startup */
 
-  Stack stack;
-  Stack old_stack;
-
-  // Initialize everything needed
-  splash_screen();
-  init_stack(&stack);
-  init_stack(&old_stack);
+static void startup(Stack *stack, Stack *old_stack) {
+  init_stack(stack);
+  init_stack(old_stack);
   init_registers();
-  load_macros_from_file();
-  if (verbose_mode)
-    list_macros();
-  load_config(CONFIG_PATH); // #define APP_CFG_DIR  HOME_DIR "/.config/mm_15"
+  if (autoload) {
+    load_macros_from_file();
+    load_config(CONFIG_PATH);
+  }
+}
+
+static void shutdown(Stack *stack, Stack *old_stack) {
+  if (autoload && !batch_mode) save_config(CONFIG_PATH);
+  free_stack(old_stack);
+  free_stack(stack);
+  free_all_registers();
+}
+
+/* One line of input, shared by the REPL and batch mode. Returns false on "q". */
+static bool handle_line(Stack *stack, Stack *old_stack, char *line) {
+  if (strcmp(line, "q") == 0) return false;
+
+  if (line[0] == '!') {
+    int st = 0;
+    char *out = capture_command_output(line + 1, &st);
+    if (!out) {
+      mm_perror("popen/capture_command_output");
+    } else {
+      push_string(stack, out);
+      if (WIFEXITED(st) && WEXITSTATUS(st) != 0)
+        mm_error("Command exited with status %d", WEXITSTATUS(st));
+      else if (!WIFEXITED(st))
+        mm_error("Command terminated abnormally");
+      free(out);
+    }
+    return true;
+  }
+
+  if (!strcmp(line, "undo")) {
+    copy_stack(stack, old_stack);
+  } else {
+    copy_stack(old_stack, stack); // Preserve the stack
+    evaluate_line(stack, line);
+  }
+  return true;
+}
+
+int repl(void) {
+  Stack stack, old_stack;
+  splash_screen();
+  startup(&stack, &old_stack);
+  if (verbose_mode) list_macros();
   read_history(HISTORY_PATH);
   stifle_history(1000); // Keep only the last 1000 commands
   rl_attempted_completion_function = function_name_completion;
 
-  // The main REPL loop
   while (1) {
     char *line = readline("MM_RPN>> ");
-    if (!line || strcmp(line, "q") == 0) {
-      free(line);
-      break;
-    }
-    if (*line)
-      add_history(line);
-
-    if (line[0] == '!') {
-      const char *cmd = line + 1;
-
-      // If you want stderr too, do: "<cmd> 2>&1"
-      // Easiest is to build a wrapper string:
-      // char wrapped[...]; snprintf(wrapped, sizeof wrapped, "%s 2>&1", cmd);
-      // cmd = wrapped;
-
-      int st = 0;
-      char *out = capture_command_output(cmd, &st);
-      if (!out) {
-        perror("popen/capture_command_output");
-      } else {
-        push_string(&stack, out);
-        if (WIFEXITED(st) && WEXITSTATUS(st) != 0) {
-          fprintf(stderr, "Command exited with status %d\n", WEXITSTATUS(st));
-        } else if (!WIFEXITED(st)) {
-          fprintf(stderr, "Command terminated abnormally\n");
-        }
-      }
-
-      free(line);
-      continue;
-    }
-
-    if (!strcmp(line, "undo")) // Restore the old stack
-    {
-      copy_stack(&stack, &old_stack);
-    } else {
-      copy_stack(&old_stack, &stack); // Preserve the stack
-      evaluate_line(&stack, line);
-    }
+    if (!line) { putchar('\n'); break; }
+    if (*line) add_history(line);
+    bool go_on = handle_line(&stack, &old_stack, line);
+    free(line);
+    if (!go_on) break;
     if (completed_batch)
       completed_batch = false;
     else if (!skip_stack_printing)
       print_stack(&stack, NULL);
     skip_stack_printing = false;
-    free(line);
   }
 
-  // Save config, history, and cleanup
-  save_config(CONFIG_PATH);
   write_history(HISTORY_PATH);
-  free_stack(&old_stack);
-  free_stack(&stack);
-  free_all_registers();
+  shutdown(&stack, &old_stack);
   return 0;
 }
 
-int main(void) {
+/* Batch mode: no splash, no echo of the stack after each line. The lines
+   from -e/-f/stdin run in order; the final stack is printed once at the
+   end, and the exit status is 1 if any error was reported. */
+static int run_lines_from(Stack *stack, Stack *old_stack, FILE *f) {
+  char *line = NULL;
+  size_t cap = 0;
+  ssize_t n;
+  bool go_on = true;
+  while (go_on && (n = getline(&line, &cap, f)) != -1) {
+    while (n > 0 && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = '\0';
+    go_on = handle_line(stack, old_stack, line);
+    skip_stack_printing = false;
+    completed_batch = false;
+  }
+  free(line);
+  return go_on;
+}
+
+static void usage_text(FILE *f) {
+  fprintf(f,
+    "usage: mm_15 [-n] [-e EXPR]... [-f FILE]...\n"
+    "       mm_15 --version | -h\n"
+    "\n"
+    "  (no args)   interactive calculator (reads stdin when it is not a terminal)\n"
+    "  -e EXPR     evaluate EXPR as one line; may be repeated\n"
+    "  -f FILE     run the lines of FILE ('-' is stdin); may be repeated\n"
+    "  -n          do not load the saved macros and config\n"
+    "\n"
+    "Non-interactive runs print the final stack and exit with status 1 if\n"
+    "any error occurred.\n");
+}
+
+int main(int argc, char **argv) {
+  enum { MAXJOBS = 256 };
+  struct { char kind; const char *arg; } jobs[MAXJOBS];
+  int njobs = 0;
+
+  for (int i = 1; i < argc; i++) {
+    const char *a = argv[i];
+    if (!strcmp(a, "-h") || !strcmp(a, "--help")) { usage_text(stdout); return 0; }
+    if (!strcmp(a, "--version")) { printf("MM-15 %s (%s)\n", MM15_VERSION, VERSION); return 0; }
+    if (!strcmp(a, "-n")) { autoload = false; continue; }
+    if ((!strcmp(a, "-e") || !strcmp(a, "-f")) && i + 1 < argc && njobs < MAXJOBS) {
+      jobs[njobs].kind = a[1];
+      jobs[njobs].arg = argv[++i];
+      njobs++;
+      continue;
+    }
+    usage_text(stderr);
+    return 2;
+  }
+
   global_rng = gsl_rng_alloc(gsl_rng_mt19937); // Init random number generation
   gsl_set_error_handler(&my_error_handler);
-  repl();
-  return 0;
+
+  batch_mode = (njobs > 0) || !isatty(STDIN_FILENO);
+  /* Line-buffer stdout in batch mode so output and error messages interleave
+     in order and nothing is lost if a sanitizer aborts the process at exit. */
+  if (batch_mode) setvbuf(stdout, NULL, _IOLBF, 0);
+  if (!batch_mode) {
+    repl();
+    gsl_rng_free(global_rng);
+    return 0;
+  }
+
+  Stack stack, old_stack;
+  startup(&stack, &old_stack);
+  bool go_on = true;
+  if (njobs == 0) {
+    go_on = run_lines_from(&stack, &old_stack, stdin);
+  } else {
+    for (int j = 0; j < njobs && go_on; j++) {
+      if (jobs[j].kind == 'e') {
+        char *copy = strdup(jobs[j].arg);
+        go_on = handle_line(&stack, &old_stack, copy);
+        free(copy);
+      } else {
+        FILE *f = strcmp(jobs[j].arg, "-") ? fopen(jobs[j].arg, "r") : stdin;
+        if (!f) { mm_perror(jobs[j].arg); continue; }
+        go_on = run_lines_from(&stack, &old_stack, f);
+        if (f != stdin) fclose(f);
+      }
+    }
+  }
+  print_stack(&stack, NULL);
+  shutdown(&stack, &old_stack);
+  gsl_rng_free(global_rng);
+  return error_count ? 1 : 0;
 }

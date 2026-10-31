@@ -1,0 +1,5 @@
+: sq dup * ;
+3 sq
+: cube dup sq * ;
+2 cube
+listwords

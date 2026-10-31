@@ -19,6 +19,7 @@
 #define MAX_ROMBERG_ITER 20
 #define MAX_BISECTION_ITER 40
 
+#include "errors.h"
 #include <math.h>                   // for fabs, pow
 #include <stdbool.h>                // for false, bool, true
 #include <stdio.h>                  // for fprintf, stderr
@@ -30,7 +31,7 @@
 
 void find_zero(Stack *stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Error: Stack underflow — need two real numbers.\n");
+    mm_error("Error: Stack underflow — need two real numbers.\n");
     return;
   }
 
@@ -38,12 +39,12 @@ void find_zero(Stack *stack) {
   stack_element b = pop(stack);
 
   if (a.type != TYPE_REAL || b.type != TYPE_REAL) {
-    fprintf(stderr, "Error: find_zero requires two real scalars.\n");
+    mm_error("Error: find_zero requires two real scalars.\n");
     return;
   }
 
   if (b.real >= a.real) {
-    fprintf(stderr, "Error: messed up interval bounds.\n");
+    mm_error("Error: messed up interval bounds.\n");
     return;
   }
 
@@ -51,7 +52,7 @@ void find_zero(Stack *stack) {
   if (bisection(stack_helper, b.real, a.real, fsolve_tolerance, &root)) {
     push_real(stack, root);
   } else {
-    fprintf(stderr, "Warning: Bisection failed — pushing a.real back.\n");
+    mm_warn("Warning: Bisection failed — pushing a.real back.\n");
     push_real(stack, a.real);
   }
 }
@@ -59,7 +60,7 @@ void find_zero(Stack *stack) {
 
 void integrate(Stack *stack) {
   if (stack->top < 1) {
-    fprintf(stderr, "Error: Stack underflow — need two real numbers for integration.\n");
+    mm_error("Error: Stack underflow — need two real numbers for integration.\n");
     return;
   }
 
@@ -67,12 +68,12 @@ void integrate(Stack *stack) {
   stack_element b = pop(stack);
 
   if (a.type != TYPE_REAL || b.type != TYPE_REAL) {
-    fprintf(stderr, "Error: integrate requires two real scalars.\n");
+    mm_error("Error: integrate requires two real scalars.\n");
     return;
   }
 
   if (b.real >= a.real) {
-    fprintf(stderr, "Error: messed up integration limits.\n");
+    mm_error("Error: messed up integration limits.\n");
     return;
   }
 
@@ -112,7 +113,7 @@ double romberg(double (*func)(double), double a, double b, double tol, int max_i
     }
   }
   
-  fprintf(stderr,"Warning: Romberg integration did not converge after %d iterations\n", max_iter);
+  mm_warn("Warning: Romberg integration did not converge after %d iterations\n", max_iter);
   return R[max_iter - 1][max_iter - 1];
 }
 
@@ -121,7 +122,7 @@ void set_integration_precision(Stack *stack) {
   if ((a.type == TYPE_REAL) && (a.real >= 1.0e-10) && (a.real <= 1.0e-2))
     intg_tolerance = a.real;
   else 
-    fprintf(stderr,"Incorrect argument\n");
+    mm_error("Incorrect argument\n");
 }
 
 void set_f0_precision(Stack *stack) {
@@ -129,7 +130,7 @@ void set_f0_precision(Stack *stack) {
   if ((a.type == TYPE_REAL) && (a.real >= 1.0e-10) && (a.real <= 1.0e-2))
     fsolve_tolerance = a.real;
   else 
-    fprintf(stderr,"Incorrect argument\n");
+    mm_error("Incorrect argument\n");
 }
 
 double stack_helper(double x) {
@@ -173,6 +174,6 @@ bool bisection(double (*func)(double), double a, double b, double tol, double* r
       fa = fmid;
     }
   }
-  fprintf(stderr,"Warning: Maximum iterations reached without convergence\n");
+  mm_warn("Warning: Maximum iterations reached without convergence\n");
   return false;
 }
