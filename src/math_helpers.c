@@ -147,6 +147,24 @@ double complex to_double_complex(gsl_complex z) {
   return GSL_REAL(z) + GSL_IMAG(z) * I;
 }
 
+static void real_matrix_to_complex(stack_element *e) {
+  gsl_matrix *m = e->matrix_real;
+  gsl_matrix_complex *mc = gsl_matrix_complex_alloc(m->size1, m->size2);
+  for (size_t i = 0; i < m->size1; ++i)
+    for (size_t j = 0; j < m->size2; ++j)
+      gsl_matrix_complex_set(mc, i, j, gsl_complex_rect(gsl_matrix_get(m, i, j), 0.0));
+  gsl_matrix_free(m);
+  e->type = TYPE_MATRIX_COMPLEX;
+  e->matrix_complex = mc;
+}
+
+void promote_mixed_matrix_operands(stack_element *a, stack_element *b) {
+  bool a_c = a->type == TYPE_MATRIX_COMPLEX || a->type == TYPE_COMPLEX;
+  bool b_c = b->type == TYPE_MATRIX_COMPLEX || b->type == TYPE_COMPLEX;
+  if (a->type == TYPE_MATRIX_REAL && b_c) real_matrix_to_complex(a);
+  else if (b->type == TYPE_MATRIX_REAL && a_c) real_matrix_to_complex(b);
+}
+
 bool is_zero_complex(gsl_complex z) {
   return (GSL_REAL(z) == 0.0) && (GSL_IMAG(z) == 0.0);
 }

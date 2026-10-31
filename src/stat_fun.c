@@ -398,13 +398,9 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       }
     }
 
-    stack_element out = {.type = TYPE_MATRIX_REAL, .matrix_real = result};
-    if (stack->top + 1 >= STACK_SIZE) {
-      mm_error("Stack overflow.\n");
-      gsl_matrix_free(result);
-      return;
-    }
-    stack->items[++stack->top] = out;
+    /* the reduction replaces its argument: A -- v */
+    gsl_matrix_free(top->matrix_real);
+    top->matrix_real = result;
 
   } else if (top->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex* mat = top->matrix_complex;
@@ -478,13 +474,8 @@ void matrix_reduce(Stack* stack, const char* axis, const char* op) {
       }
     }
 
-    stack_element out = {.type = TYPE_MATRIX_COMPLEX, .matrix_complex = result};
-    if (stack->top + 1 >= STACK_SIZE) {
-      mm_error("Stack overflow.\n");
-      gsl_matrix_complex_free(result);
-      return;
-    }
-    stack->items[++stack->top] = out;
+    gsl_matrix_complex_free(top->matrix_complex);
+    top->matrix_complex = result;
 
   } else {
     mm_error("Type error: top stack item must be a matrix (real or complex).\n");

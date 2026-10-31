@@ -18,6 +18,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 #include "errors.h"
+#include <string.h>
 #include <gsl/gsl_complex.h>                // for gsl_complex
 #include <gsl/gsl_complex_math.h>           // for gsl_complex_abs, gsl_comp...
 #include <gsl/gsl_matrix_complex_double.h>  // for gsl_matrix_complex_get
@@ -56,8 +57,18 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
   stack_element* b = &stack->items[stack->top];
   stack_element result = {0};
 
+  // String vs String: eq and neq only
+  if (a->type == TYPE_STRING && b->type == TYPE_STRING) {
+    if (op != CMP_EQ && op != CMP_NE) {
+      mm_error("strings support only eq and neq");
+      return;
+    }
+    int same = strcmp(a->string, b->string) == 0;
+    result.type = TYPE_REAL;
+    result.real = (op == CMP_EQ) ? same : !same;
+  }
   // Scalar vs Scalar
-  if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
+  else if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
     result.type = TYPE_REAL;
     result.real = cmp_real(a->real, b->real, op);
   }
@@ -140,7 +151,7 @@ void dot_cmp_top_two(Stack* stack, comparison_op op) {
       }
   }
   else {
-    mm_error("Unsupported types in dot_cmp_top_two.\n");
+    mm_error("comparison: unsupported argument types");
     return;
   }
 

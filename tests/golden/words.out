@@ -1,14 +1,3 @@
-New word sq <- dup *
-New word cube <- dup sq *
-New word sq <- dup dup * *
-New word fac <- dup 1 gt if dup 1 - fac * then
-New word sum <- 0 swap 1 + 1 do i + loop
-New word grid <- 3 0 do 2 0 do j 10 * i + loop loop
-New word dbl <- 1 begin dup 100 lt while 2 * repeat
-New word cnt <- 0 begin 1 + dup 5 geq until
-New word sgn <- dup 0 gt if drop 1 else 0 lt if -1 else 0 then then
-New word down <- 0 10 do i -3 +loop
-New word f <- f
 Error: Runaway recursion: word nesting deeper than 256 (in 'f')
   (in word 'f')
 Error: bad: undefined word 'frobnicate'
@@ -17,7 +6,6 @@ Error: e2: 'then' without matching 'if'
 Error: e3: 'i' outside a do loop
 Error: Word name '42' cannot start with a digit
 Error: 'dup' is a built-in command
-New word partial <- 7 0 /
 Error: Division by zero
   (in word 'partial')
  0.               sq: dup dup * *

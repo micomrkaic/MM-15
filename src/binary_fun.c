@@ -237,6 +237,7 @@ void add_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top
   stack_element* b = &stack->items[stack->top];     // top
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};                       // temp result
 
   // Dispatch begins here
@@ -341,7 +342,7 @@ void add_top_two(Stack* stack) {
     gsl_matrix_complex_add(result.matrix_complex, b->matrix_complex);
   }
   else {
-    mm_error("Unsupported operand types in add_top_two.\n");
+    mm_error("+: unsupported operand types");
     return;
   }
 
@@ -364,6 +365,7 @@ void sub_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top
   stack_element* b = &stack->items[stack->top];     // top
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};
 
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
@@ -507,7 +509,7 @@ void sub_top_two(Stack* stack) {
     gsl_matrix_complex_sub(result.matrix_complex, b->matrix_complex);
   }
   else {
-    mm_error("Unsupported operand types in sub_top_two.\n");
+    mm_error("-: unsupported operand types");
     return;
   }
 
@@ -531,6 +533,7 @@ void mul_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top
   stack_element* b = &stack->items[stack->top];     // top
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};
 
   // Scalar * Scalar
@@ -645,7 +648,7 @@ void mul_top_two(Stack* stack) {
   }
 
   else {
-    mm_error("Unsupported operand types in mul_top_two.\n");
+    mm_error("*: unsupported operand types");
     return;
   }
 
@@ -835,7 +838,7 @@ void div_top_two(Stack* stack) {
   }
 
   else {
-    mm_error("Unsupported operand types in div_top_two.\n");
+    mm_error("/: unsupported operand types");
     return;
   }
 
@@ -882,9 +885,13 @@ void pow_top_two(Stack* stack) {
 
   // ---- Matrix ^ integer ----
   else if (a->type == TYPE_MATRIX_REAL && b->type == TYPE_REAL) {
+    if (b->real != floor(b->real) || b->real < 0 || b->real > 1e6) {
+      mm_error("^: a matrix exponent must be a non-negative integer (use .^ for elementwise powers)");
+      return;
+    }
     int n = (int)b->real;
-    if (n < 0 || a->matrix_real->size1 != a->matrix_real->size2) {
-      mm_error("Matrix exponent must be non-negative and square.\n");
+    if (a->matrix_real->size1 != a->matrix_real->size2) {
+      mm_error("^: the matrix must be square");
       return;
     }
     gsl_matrix* res = gsl_matrix_alloc(a->matrix_real->size1, a->matrix_real->size2);
@@ -906,9 +913,13 @@ void pow_top_two(Stack* stack) {
   }
 
   else if (a->type == TYPE_MATRIX_COMPLEX && b->type == TYPE_REAL) {
+    if (b->real != floor(b->real) || b->real < 0 || b->real > 1e6) {
+      mm_error("^: a matrix exponent must be a non-negative integer (use .^ for elementwise powers)");
+      return;
+    }
     int n = (int)b->real;
-    if (n < 0 || a->matrix_complex->size1 != a->matrix_complex->size2) {
-      mm_error("Matrix exponent must be non-negative and square.\n");
+    if (a->matrix_complex->size1 != a->matrix_complex->size2) {
+      mm_error("^: the matrix must be square");
       return;
     }
     gsl_matrix_complex* res =
@@ -934,7 +945,7 @@ void pow_top_two(Stack* stack) {
 
   // ---- Unsupported case ----
   else {
-    mm_error("Unsupported types in pow_top_two.\n");
+    mm_error("^: unsupported operand types");
     return;
   }
 
@@ -1153,7 +1164,7 @@ int kronecker_top_two(Stack* stack) {
   }
 
   else {
-    mm_error("Unsupported operand types for kronecker product.\n");
+    mm_error("kron: both arguments must be matrices");
     return 1;
   }
 
@@ -1176,6 +1187,7 @@ void dot_div_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top (numerator)
   stack_element* b = &stack->items[stack->top];     // top (denominator)
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};
 
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
@@ -1287,7 +1299,7 @@ void dot_div_top_two(Stack* stack) {
       }
   }
   else {
-    mm_error("Unsupported operand types in dot_div_top_two.\n");
+    mm_error("./: unsupported operand types");
     return;
   }
 
@@ -1310,6 +1322,7 @@ void dot_mult_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top
   stack_element* b = &stack->items[stack->top];     // top
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};
 
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
@@ -1420,7 +1433,7 @@ void dot_mult_top_two(Stack* stack) {
       }
   }
   else {
-    mm_error("Unsupported operand types in dot_mult_top_two.\n");
+    mm_error(".*: unsupported operand types");
     return;
   }
 
@@ -1443,6 +1456,7 @@ void dot_pow_top_two(Stack* stack) {
 
   stack_element* a = &stack->items[stack->top - 1]; // second from top (base)
   stack_element* b = &stack->items[stack->top];     // top (exponent)
+  promote_mixed_matrix_operands(a, b);
   stack_element result = {0};
 
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
@@ -1542,7 +1556,7 @@ void dot_pow_top_two(Stack* stack) {
       }
   }
   else {
-    mm_error("Unsupported operand types in dot_pow_top_two.\n");
+    mm_error(".^: unsupported operand types");
     return;
   }
 

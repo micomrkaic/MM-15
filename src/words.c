@@ -234,7 +234,7 @@ int define_word(const char *name, const char *body, bool is_macro) {
     snprintf(w->name, sizeof w->name, "%s", name);
   }
   w->body = norm; w->code = code; w->ncode = ncode; w->is_macro = is_macro;
-  if (!is_macro) printf("New word %s <- %s\n", w->name, w->body);
+  if (!is_macro && (!batch_mode || verbose_mode)) printf("New word %s <- %s\n", w->name, w->body);
   return 0;
 }
 

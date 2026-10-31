@@ -1,6 +1,6 @@
 Error: drop: needs 1 item on the stack (x --)
 Error: +: needs 2 items on the stack (y x -- y+x)
-Error: Unsupported operand types in add_top_two.
+Error: +: unsupported operand types
 Error: Dimension mismatch for real matrix multiplication.
 Error: Unknown word: nosuchword
 

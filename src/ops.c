@@ -80,7 +80,7 @@ static int op_run(Stack *stack) {
   if (!load_program_from_file(s, &prog)) {
     mm_error("Failed to load program %s", s);
   } else {
-    list_program(&prog);
+    if (verbose_mode) list_program(&prog);
     run_RPN_code(stack, &prog);
   }
   free_program(&prog);
@@ -274,7 +274,7 @@ static int op_beta(Stack *stack) { (void)stack; (void)(beta_wrapper(stack)); ret
 static int op_ln_beta(Stack *stack) { (void)stack; (void)(ln_beta_wrapper(stack)); return 0; }
 static int op_pi(Stack *stack) { (void)stack; (void)(push_real(stack, M_PI)); return 0; }
 static int op_e(Stack *stack) { (void)stack; (void)(push_real(stack, exp(1.0))); return 0; }
-static int op_gravity(Stack *stack) { (void)stack; (void)(push_real(stack, 9.81)); return 0; }
+static int op_gravity(Stack *stack) { (void)stack; (void)(push_real(stack, 9.80665)); return 0; }
 static int op_inf(Stack *stack) { (void)stack; (void)(push_real(stack, INFINITY)); return 0; }
 static int op_nan(Stack *stack) { (void)stack; (void)(push_real(stack, NAN)); return 0; }
 static int op_eq(Stack *stack) { (void)stack; (void)(dot_cmp_top_two(stack, CMP_EQ)); return 0; }
@@ -379,18 +379,18 @@ static int op_fuck(Stack *stack) { (void)stack; (void)(whose_place()); return 0;
 const Op ops[] = {
   /* ---- Arithmetic ---- */
   { "+", 2, op_add, "Arithmetic", "y x -- y+x", "add scalars or matrices; a scalar added to a matrix is added elementwise", "3 4 +" },
-  { "-", 2, op_sub, "Arithmetic", "y x -- y-x", "subtract", "10 4 -" },
+  { "-", 2, op_sub, "Arithmetic", "y x -- y-x", "subtract scalars or matrices (a scalar elementwise)", "10 4 -" },
   { "*", 2, op_mul, "Arithmetic", "y x -- y*x", "multiply scalars, or matrix product for matrices", "[2 2 $ 1 2 3 4] [2 1 $ 1 1] *" },
-  { "/", 2, op_div, "Arithmetic", "y x -- y/x", "divide", "1 3 /" },
-  { "^", 2, op_pow_, "Arithmetic", "y x -- y^x", "power; negative real bases with fractional exponents give a complex result", "2 10 ^" },
+  { "/", 2, op_div, "Arithmetic", "y x -- y/x", "divide scalars, or a matrix by a scalar; division by zero is an error", "1 3 /" },
+  { "^", 2, op_pow_, "Arithmetic", "y x -- y^x", "power; a square matrix to an integer power is a matrix power; a negative base with a fractional exponent promotes to complex", "2 10 ^" },
   { "pow", 2, op_pow, "Arithmetic", "y x -- y^x", "power (alias of ^)", "2 10 pow" },
   { ".*", 2, op_dot_mul, "Arithmetic", "A B -- A.*B", "elementwise matrix product", "[2 2 $ 1 2 3 4] [2 2 $ 1 1 2 2] .*" },
-  { "./", 2, op_dot_div, "Arithmetic", "A B -- A./B", "elementwise matrix division", "" },
-  { ".^", 2, op_dot_pow, "Arithmetic", "A B -- A.^B", "elementwise matrix power", "" },
-  { "chs", 1, op_chs, "Arithmetic", "x -- -x", "Change sign.", "5 chs      (→ -5)" },
-  { "inv", 1, op_inv, "Arithmetic", "x -- 1/x", "Multiplicative inverse.", "4 inv      (→ 0.25)" },
-  { "abs", 1, op_abs, "Arithmetic", "z -- |z|", "Absolute value (magnitude for complex).", "3 abs      (→ 3)" },
-  { "sqrt", 1, op_sqrt, "Arithmetic", "x -- sqrt(x)", "Square root; supports complex for x < 0.", "9 sqrt     (→ 3)" },
+  { "./", 2, op_dot_div, "Arithmetic", "A B -- A./B", "elementwise division (matrix or scalar operands)", "[2 2 $ 1 2 3 4] [2 2 $ 1 2 1 2] ./" },
+  { ".^", 2, op_dot_pow, "Arithmetic", "A B -- A.^B", "elementwise power (matrix or scalar operands)", "[2 2 $ 1 2 3 4] 2 .^" },
+  { "chs", 1, op_chs, "Arithmetic", "x -- -x", "change sign (elementwise for matrices)", "5 chs" },
+  { "inv", 1, op_inv, "Arithmetic", "x -- 1/x", "reciprocal (elementwise for matrices; see minv for the matrix inverse)", "4 inv" },
+  { "abs", 1, op_abs, "Arithmetic", "z -- |z|", "absolute value; magnitude for complex; elementwise for matrices", "(3,4) abs" },
+  { "sqrt", 1, op_sqrt, "Arithmetic", "x -- sqrt(x)", "square root; a negative real promotes to complex", "-4 sqrt" },
   { "%", 2, op_pct, "Arithmetic", "y x -- y y*x/100", "percent of y (HP %; keeps y)", "200 25 %" },
   { "%t", 2, op_pctt, "Arithmetic", "y x -- y 100*x/y", "x as a percent of the total y (HP %T; keeps y)", "200 50 %t" },
   { "%chg", 2, op_pctchg, "Arithmetic", "y x -- y 100*(x-y)/y", "percent change from y to x (HP delta%; keeps y)", "80 100 %chg" },
@@ -398,118 +398,118 @@ const Op ops[] = {
   { "fact", 1, op_fact, "Arithmetic", "x -- x!", "factorial; Gamma(x+1) for non-integers", "5 fact" },
   { "ncr", 2, op_ncr, "Arithmetic", "n k -- C(n,k)", "combinations", "52 5 ncr" },
   { "npr", 2, op_npr, "Arithmetic", "n k -- P(n,k)", "permutations", "10 3 npr" },
-  { "frac", 1, op_frac, "Arithmetic", "x -- frac(x)", "Fractional part of x (x - floor(x)).", "3.7 frac   (→ 0.7)" },
-  { "intg", 1, op_intg, "Arithmetic", "x -- floor(x)", "Integer part (floor).", "3.7 intg   (→ 3)" },
+  { "frac", 1, op_frac, "Arithmetic", "x -- frac(x)", "fractional part, x - intg(x), with the sign of x", "3.7 frac" },
+  { "intg", 1, op_intg, "Arithmetic", "x -- int(x)", "integer part, truncated toward zero as on HP calculators (-3.7 gives -3)", "3.7 intg" },
   /* ---- Exp/Log ---- */
-  { "exp", 1, op_exp, "Exp/Log", "x -- e^x", "Exponential function.", "1 exp      (≈ 2.71828...)" },
-  { "ln", 1, op_ln, "Exp/Log", "x -- ln(x)", "Natural logarithm.", "10 ln      (≈ 2.302585...)" },
-  { "log", 1, op_log, "Exp/Log", "x -- log10(x)", "Base-10 logarithm.", "100 log    (→ 2)" },
+  { "exp", 1, op_exp, "Exp/Log", "x -- e^x", "exponential (elementwise for matrices)", "1 exp" },
+  { "ln", 1, op_ln, "Exp/Log", "x -- ln(x)", "natural logarithm; a negative real promotes to complex", "10 ln" },
+  { "log", 1, op_log, "Exp/Log", "x -- log10(x)", "base-10 logarithm; a negative real promotes to complex", "100 log" },
   /* ---- Trigonometry ---- */
-  { "sin", 1, op_sin, "Trigonometry", "z -- sin(z)", "Sine of real or complex argument.", "0.5 sin      (pushes sin(0.5))" },
-  { "cos", 1, op_cos, "Trigonometry", "z -- cos(z)", "Cosine of real or complex argument.", "1 cos       (pushes cos(1))" },
-  { "tan", 1, op_tan, "Trigonometry", "z -- tan(z)", "Tangent of real or complex argument.", "0.3 tan     (pushes tan(0.3))" },
-  { "asin", 1, op_asin, "Trigonometry", "z -- asin(z)", "Inverse sine (principal value).", "0.5 asin    (pushes arcsin(0.5))" },
-  { "acos", 1, op_acos, "Trigonometry", "z -- acos(z)", "Inverse cosine (principal value).", "0.5 acos" },
-  { "atan", 1, op_atan, "Trigonometry", "z -- atan(z)", "Inverse tangent (principal value).", "1 atan      (≈ 0.785398...)" },
-  { "sinh", 1, op_sinh, "Trigonometry", "z -- sinh(z)", "Hyperbolic sine.", "1 sinh" },
-  { "cosh", 1, op_cosh, "Trigonometry", "z -- cosh(z)", "Hyperbolic cosine.", "1 cosh" },
-  { "tanh", 1, op_tanh, "Trigonometry", "z -- tanh(z)", "Hyperbolic tangent.", "1 tanh" },
-  { "asinh", 1, op_asinh, "Trigonometry", "z -- asinh(z)", "Inverse hyperbolic sine.", "1 asinh" },
-  { "acosh", 1, op_acosh, "Trigonometry", "z -- acosh(z)", "Inverse hyperbolic cosine.", "2 acosh" },
-  { "atanh", 1, op_atanh, "Trigonometry", "z -- atanh(z)", "Inverse hyperbolic tangent.", "0.5 atanh" },
+  { "sin", 1, op_sin, "Trigonometry", "z -- sin(z)", "sine of a real or complex argument (radians); elementwise for matrices", "0.5 sin" },
+  { "cos", 1, op_cos, "Trigonometry", "z -- cos(z)", "cosine of real or complex argument", "1 cos" },
+  { "tan", 1, op_tan, "Trigonometry", "z -- tan(z)", "tangent of real or complex argument", "0.3 tan" },
+  { "asin", 1, op_asin, "Trigonometry", "z -- asin(z)", "inverse sine (principal value)", "0.5 asin" },
+  { "acos", 1, op_acos, "Trigonometry", "z -- acos(z)", "inverse cosine (principal value)", "0.5 acos" },
+  { "atan", 1, op_atan, "Trigonometry", "z -- atan(z)", "inverse tangent (principal value)", "1 atan" },
+  { "sinh", 1, op_sinh, "Trigonometry", "z -- sinh(z)", "hyperbolic sine", "1 sinh" },
+  { "cosh", 1, op_cosh, "Trigonometry", "z -- cosh(z)", "hyperbolic cosine", "1 cosh" },
+  { "tanh", 1, op_tanh, "Trigonometry", "z -- tanh(z)", "hyperbolic tangent", "1 tanh" },
+  { "asinh", 1, op_asinh, "Trigonometry", "z -- asinh(z)", "inverse hyperbolic sine", "1 asinh" },
+  { "acosh", 1, op_acosh, "Trigonometry", "z -- acosh(z)", "inverse hyperbolic cosine", "2 acosh" },
+  { "atanh", 1, op_atanh, "Trigonometry", "z -- atanh(z)", "inverse hyperbolic tangent", "0.5 atanh" },
   /* ---- Complex ---- */
-  { "re", 1, op_re, "Complex", "z -- Re(z)", "Real part of a complex number.", "(1,2) re   (→ 1)" },
-  { "im", 1, op_im, "Complex", "z -- Im(z)", "Imaginary part of a complex number.", "(1,2) im   (→ 2)" },
-  { "arg", 1, op_arg, "Complex", "z -- arg(z)", "Complex argument (phase) in radians.", "(0,1) arg  (→ pi/2)" },
+  { "re", 1, op_re, "Complex", "z -- Re(z)", "real part (a real is unchanged)", "(1,2) re" },
+  { "im", 1, op_im, "Complex", "z -- Im(z)", "imaginary part (0 for a real)", "(1,2) im" },
+  { "arg", 1, op_arg, "Complex", "z -- arg(z)", "argument (phase) in radians, in (-pi, pi]", "(0,1) arg" },
   { "conj", 1, op_conj, "Complex", "z -- conj(z)", "complex conjugate (elementwise for matrices; identity for reals)", "(1,2) conj" },
-  { "re2c", 1, op_re2c, "Complex", "x -- x+0i", "Promote real number to complex.", "5 re2c     (→ 5+0i)" },
-  { "split_c", 1, op_split_c, "Complex", "z -- Re(z) Im(z)", "Split complex into real and imaginary parts.", "(1,2) split_c  (→ 1 2)" },
-  { "j2r", 2, op_j2r, "Complex", "Im(z) Re(z) -- z", "Join two reals into complex (imaginary on top).", "1 2 j2r   (→ 2+1i)   ; adjust to your actual convention" },
+  { "re2c", 1, op_re2c, "Complex", "x -- (x,0)", "promote a real to complex", "5 re2c" },
+  { "split_c", 1, op_split_c, "Complex", "z -- Re(z) Im(z)", "split a complex number into real and imaginary parts", "(1,2) split_c" },
+  { "j2r", 2, op_j2r, "Complex", "re im -- (re,im)", "join two reals into a complex number (imaginary part on top)", "1 2 j2r" },
   /* ---- Special functions ---- */
-  { "npdf", 1, op_npdf, "Special functions", "x -- φ(x)", "Standard normal (mean 0, sd 1) PDF.", "0 npdf     (≈ 0.3989)" },
-  { "ncdf", 1, op_ncdf, "Special functions", "x -- Φ(x)", "Standard normal CDF.", "1.96 ncdf  (≈ 0.975)" },
-  { "nquant", 1, op_nquant, "Special functions", "p -- x", "Inverse standard normal CDF (quantile).", "0.975 nquant (≈ 1.96)" },
-  { "gamma", 1, op_gamma, "Special functions", "x -- Γ(x)", "Gamma function.", "5 gamma    (→ 24)" },
-  { "ln_gamma", 1, op_ln_gamma, "Special functions", "x -- ln Γ(x)", "Log gamma function.", "10 ln_gamma" },
-  { "beta", 2, op_beta, "Special functions", "a b -- B(a,b)", "Beta function.", "2 3 beta   (→ 1/12)" },
-  { "ln_beta", 2, op_ln_beta, "Special functions", "a b -- ln B(a,b)", "Log beta function.", "2 3 ln_beta" },
+  { "npdf", 1, op_npdf, "Special functions", "x -- phi(x)", "standard normal density", "0 npdf" },
+  { "ncdf", 1, op_ncdf, "Special functions", "x -- Phi(x)", "standard normal cumulative distribution", "1.96 ncdf" },
+  { "nquant", 1, op_nquant, "Special functions", "p -- x", "standard normal quantile (inverse of ncdf), 0 < p < 1", "0.975 nquant" },
+  { "gamma", 1, op_gamma, "Special functions", "x -- Gamma(x)", "gamma function", "5 gamma" },
+  { "ln_gamma", 1, op_ln_gamma, "Special functions", "x -- ln Γ(x)", "log gamma function", "10 ln_gamma" },
+  { "beta", 2, op_beta, "Special functions", "a b -- B(a,b)", "beta function", "2 3 beta" },
+  { "ln_beta", 2, op_ln_beta, "Special functions", "a b -- ln B(a,b)", "log beta function", "2 3 ln_beta" },
   /* ---- Constants ---- */
-  { "pi", 0, op_pi, "Constants", "-- π", "Push π.", "pi" },
-  { "e", 0, op_e, "Constants", "-- e", "Push Euler's number.", "e" },
-  { "gravity", 0, op_gravity, "Constants", "-- g", "Push standard gravitational acceleration (m/s^2).", "gravity    (→ 9.80665...)" },
-  { "inf", 0, op_inf, "Constants", "-- +∞", "Push positive infinity.", "inf" },
-  { "nan", 0, op_nan, "Constants", "-- NaN", "Push a NaN (not-a-number).", "nan" },
+  { "pi", 0, op_pi, "Constants", "-- π", "push π", "pi" },
+  { "e", 0, op_e, "Constants", "-- e", "push Euler's number", "e" },
+  { "gravity", 0, op_gravity, "Constants", "-- g", "standard gravity, 9.80665 m/s^2", "gravity" },
+  { "inf", 0, op_inf, "Constants", "-- +∞", "positive infinity", "inf" },
+  { "nan", 0, op_nan, "Constants", "-- NaN", "not-a-number", "nan" },
   /* ---- Logic ---- */
-  { "eq", 2, op_eq, "Logic", "a b -- bool", "Equality test (numeric or string).", "2 2 eq     (→ 1/true)" },
-  { "neq", 2, op_neq, "Logic", "a b -- bool", "Not equal.", "2 3 neq    (→ 1)" },
-  { "lt", 2, op_lt, "Logic", "a b -- bool", "Less than.", "2 3 lt     (→ 1)" },
-  { "leq", 2, op_leq, "Logic", "a b -- bool", "Less than or equal.", "2 3 leq    (→ 1)" },
-  { "gt", 2, op_gt, "Logic", "a b -- bool", "Greater than.", "3 2 gt     (→ 1)" },
-  { "geq", 2, op_geq, "Logic", "a b -- bool", "Greater than or equal.", "3 2 geq    (→ 1)" },
-  { "and", 2, op_and, "Logic", "a b -- bool", "Logical AND on boolean-like values.", "1 0 and    (→ 0)" },
-  { "or", 2, op_or, "Logic", "a b -- bool", "Logical OR.", "1 0 or     (→ 1)" },
-  { "not", 1, op_not, "Logic", "a -- bool", "Logical NOT.", "0 not      (→ 1)" },
+  { "eq", 2, op_eq, "Logic", "a b -- flag", "1 if a equals b, else 0; numbers, strings, or elementwise for matrices", "2 2 eq" },
+  { "neq", 2, op_neq, "Logic", "a b -- flag", "1 if a differs from b; numbers, strings, or elementwise for matrices", "2 3 neq" },
+  { "lt", 2, op_lt, "Logic", "a b -- flag", "1 if a < b (complex numbers compare by magnitude); elementwise for matrices", "2 3 lt" },
+  { "leq", 2, op_leq, "Logic", "a b -- flag", "1 if a <= b; elementwise for matrices", "2 3 leq" },
+  { "gt", 2, op_gt, "Logic", "a b -- flag", "1 if a > b; elementwise for matrices", "3 2 gt" },
+  { "geq", 2, op_geq, "Logic", "a b -- flag", "1 if a >= b; elementwise for matrices", "3 2 geq" },
+  { "and", 2, op_and, "Logic", "a b -- flag", "logical and (0 is false, anything else true)", "1 0 and" },
+  { "or", 2, op_or, "Logic", "a b -- flag", "logical or", "1 0 or" },
+  { "not", 1, op_not, "Logic", "a -- flag", "logical not", "0 not" },
   /* ---- Stack ---- */
-  { "dup", 1, op_dup, "Stack", "x -- x x", "Duplicate top of stack.", "5 dup      (→ 5 5)" },
-  { "drop", 1, op_drop, "Stack", "x --", "Drop the top stack element.", "1 2 drop   (→ 1)" },
-  { "swap", 2, op_swap, "Stack", "a b -- b a", "Swap top two elements.", "1 2 swap   (→ 2 1)" },
-  { "over", 2, op_over, "Stack", "a b -- a b a", "Copy second item to top.", "1 2 over   (→ 1 2 1)" },
-  { "nip", 2, op_nip, "Stack", "a b -- b", "Drop second-from-top element (keep top).", "1 2 nip    (→ 2)" },
-  { "tuck", 2, op_tuck, "Stack", "a b -- b a b", "Duplicate second item and tuck below top.", "1 2 tuck   (→ 2 1 2)" },
+  { "dup", 1, op_dup, "Stack", "x -- x x", "duplicate top of stack", "5 dup" },
+  { "drop", 1, op_drop, "Stack", "x --", "drop the top stack element", "1 2 drop" },
+  { "swap", 2, op_swap, "Stack", "a b -- b a", "swap top two elements", "1 2 swap" },
+  { "over", 2, op_over, "Stack", "a b -- a b a", "copy second item to top", "1 2 over" },
+  { "nip", 2, op_nip, "Stack", "a b -- b", "drop second-from-top element (keep top)", "1 2 nip" },
+  { "tuck", 2, op_tuck, "Stack", "a b -- b a b", "duplicate second item and tuck below top", "1 2 tuck" },
   { "roll", 1, op_roll_n, "Stack", "... n -- ...", "move the item at depth n to the top (1 roll = swap, 2 roll = rot)", "1 2 3 2 roll" },
   { "pick", 1, op_pick, "Stack", "... n -- ... v", "copy the item at depth n to the top (0 pick = dup)", "1 2 3 2 pick" },
   { "depth", 0, op_depth, "Stack", "-- n", "number of items on the stack", "depth" },
-  { "clst", 0, op_clst, "Stack", "--", "Clear the entire stack.", "1 2 3 clst (stack empty)" },
-  { "savestack", 0, op_savestack, "Stack", "--", "save the whole stack to the config directory", "savestack" },
-  { "loadstack", 0, op_loadstack, "Stack", "-- ...", "restore the stack saved by savestack", "loadstack" },
+  { "clst", 0, op_clst, "Stack", "... --", "clear the stack", "clst" },
+  { "savestack", 0, op_savestack, "Stack", "--", "save the whole stack to stack_backup.dat in the config directory", "savestack" },
+  { "loadstack", 0, op_loadstack, "Stack", "-- ...", "push the stack saved by savestack", "loadstack" },
   /* ---- Strings ---- */
-  { "scon", 2, op_scon, "Strings", "s1 s2 -- s3", "String concatenation.", "\"foo\" \"bar\" scon   (→ \"foobar\")" },
-  { "substr", 3, op_substr, "Strings", "s start end -- sub", "substring from index start (0-based) up to end (exclusive)", "\"abcdef\" 1 3 substr   (→ \"bc\")" },
-  { "s2l", 1, op_s2l, "Strings", "s -- s_lower", "Convert string to lowercase.", "\"Hello\" s2l  (→ \"hello\")" },
-  { "s2u", 1, op_s2u, "Strings", "s -- s_upper", "Convert string to uppercase.", "\"Hello\" s2u  (→ \"HELLO\")" },
-  { "slen", 1, op_slen, "Strings", "s -- n", "Length of string in characters.", "\"hello\" slen (→ 5)" },
-  { "srev", 1, op_srev, "Strings", "s -- s_rev", "Reverse string.", "\"abc\" srev   (→ \"cba\")" },
-  { "int2str", 1, op_int2str, "Strings", "n -- s", "Convert integer to string.", "123 int2str   (→ \"123\")" },
+  { "scon", 2, op_scon, "Strings", "s1 s2 -- s1s2", "concatenate two strings", "\"foo\" \"bar\" scon" },
+  { "substr", 3, op_substr, "Strings", "s start end -- sub", "substring from index start (0-based) up to end (exclusive)", "\"abcdef\" 1 3 substr" },
+  { "s2l", 1, op_s2l, "Strings", "s -- s_lower", "convert string to lowercase", "\"Hello\" s2l" },
+  { "s2u", 1, op_s2u, "Strings", "s -- s_upper", "convert string to uppercase", "\"Hello\" s2u" },
+  { "slen", 1, op_slen, "Strings", "s -- n", "length of a string in bytes", "\"hello\" slen" },
+  { "srev", 1, op_srev, "Strings", "s -- s_rev", "reverse string", "\"abc\" srev" },
+  { "int2str", 1, op_int2str, "Strings", "x -- s", "integer part of x as a string", "123 int2str" },
   /* ---- Matrices ---- */
-  { "tran", 1, op_tran, "Matrices", "A -- A^T", "Matrix transpose.", "A tran" },
+  { "tran", 1, op_tran, "Matrices", "A -- A^T", "transpose", "[2 3 $ 1 2 3 4 5 6] tran" },
   { "'", 1, op_tick_tran, "Matrices", "A -- A'", "transpose (alias of tran)", "[2 3 $ 1 2 3 4 5 6] '" },
-  { "minv", 1, op_minv, "Matrices", "A -- A^{-1}", "Matrix inverse (real).", "2 2 eye minv (→ identity again)" },
-  { "pinv", 1, op_pinv, "Matrices", "A -- A^+", "Moore–Penrose pseudoinverse.", "A pinv" },
-  { "det", 1, op_det, "Matrices", "A -- det(A)", "Determinant of a square matrix.", "2 2 eye det (→ 1)" },
-  { "eig", 1, op_eig, "Matrices", "A -- V Λ", "Eigen-decomposition (matrix of eigenvectors and eigenvalues).", "A eig      (→ V Λ)" },
-  { "chol", 1, op_chol, "Matrices", "A -- L", "Cholesky factorization (A = L L^T).", "A chol" },
-  { "svd", 1, op_svd, "Matrices", "A -- U S Vt", "Singular value decomposition.", "A svd" },
-  { "kron", 2, op_kron, "Matrices", "A B -- A ⊗ B", "Kronecker product of two matrices.", "A B kron" },
-  { "dim", 1, op_dim, "Matrices", "A -- rows cols", "Matrix dimensions.", "A dim" },
-  { "reshape", 3, op_reshape, "Matrices", "A rows cols -- B", "Reshape matrix to given dimensions (row-major).", "A 2 3 reshape" },
-  { "get_aij", 3, op_get_aij, "Matrices", "A i j -- a_ij", "Get matrix element (0- or 1-based depending on your convention).", "A 1 2 get_aij" },
-  { "set_aij", 4, op_set_aij, "Matrices", "A i j x -- A'", "Set matrix element to x.", "A 1 2 5 set_aij" },
-  { "split_mat", 1, op_split_mat, "Matrices", "A -- v1 v2 ...", "Split matrix into row or column vectors (depending on implementation).", "A split_mat" },
-  { "diag", 1, op_diag, "Matrices", "v -- D   or   A -- diag(v)", "Diagonal matrix from vector or extract main diagonal.", "1 2 3 join_v diag" },
-  { "to_diag", 1, op_to_diag, "Matrices", "A -- D", "Zero out off-diagonal terms (keep diagonal).", "A to_diag" },
-  { "eye", 1, op_eye, "Matrices", "n -- I_n", "Identity matrix of size n×n.", "3 eye" },
-  { "ones", 2, op_ones, "Matrices", "rows cols -- A", "Matrix filled with ones.", "2 3 ones" },
-  { "zeroes", 2, op_zeroes, "Matrices", "rows cols -- A", "Matrix filled with zeros.", "2 3 zeroes" },
-  { "rand", 2, op_rand, "Matrices", "rows cols -- A", "Matrix of uniform(0,1) randoms.", "2 2 rand" },
-  { "randn", 2, op_randn, "Matrices", "rows cols -- A", "Matrix of standard normal randoms.", "2 2 randn" },
-  { "rrange", 3, op_rrange, "Matrices", "start step end -- v", "Range vector (start:step:end).", "0 0.1 1 rrange" },
-  { "join_v", 2, op_join_v, "Matrices", "v1 v2 -- [v1; v2]", "Stack vectors vertically.", "v1 v2 join_v" },
-  { "join_h", 2, op_join_h, "Matrices", "v1 v2 -- [v1 v2]", "Concatenate vectors horizontally.", "v1 v2 join_h" },
-  { "cumsum_r", 1, op_cumsum_r, "Matrices", "A -- B", "Row-wise cumulative sum.", "A cumsum_r" },
-  { "cumsum_c", 1, op_cumsum_c, "Matrices", "A -- B", "Column-wise cumulative sum.", "A cumsum_c" },
-  { "cmean", 1, op_cmean, "Matrices", "A -- row_mean", "Mean of each column.", "A cmean" },
-  { "rmean", 1, op_rmean, "Matrices", "A -- col_mean", "Mean of each row.", "A rmean" },
-  { "csum", 1, op_csum, "Matrices", "A -- row_sum", "Sum of each column.", "A csum" },
-  { "rsum", 1, op_rsum, "Matrices", "A -- col_sum", "Sum of each row.", "A rsum" },
-  { "cvar", 1, op_cvar, "Matrices", "A -- col_variances", "Variance of each column.", "A cvar" },
-  { "rvar", 1, op_rvar, "Matrices", "A -- row_variances", "Variance of each row.", "A rvar" },
-  { "cmin", 1, op_cmin, "Matrices", "A -- col_mins", "Minimum of each column.", "A cmin" },
-  { "rmin", 1, op_rmin, "Matrices", "A -- row_mins", "Minimum of each row.", "A rmin" },
-  { "cmax", 1, op_cmax, "Matrices", "A -- col_maxs", "Maximum of each column.", "A cmax" },
-  { "rmax", 1, op_rmax, "Matrices", "A -- row_maxs", "Maximum of each row.", "A rmax" },
+  { "minv", 1, op_minv, "Matrices", "A -- A^-1", "inverse of a square real or complex matrix (error if singular)", "[2 2 $ 4 7 2 6] minv" },
+  { "pinv", 1, op_pinv, "Matrices", "A -- A^+", "Moore-Penrose pseudoinverse of a square real matrix (SVD)", "[2 2 $ 1 2 2 4] pinv" },
+  { "det", 1, op_det, "Matrices", "A -- det(A)", "determinant of a square real or complex matrix", "[2 2 $ 4 7 2 6] det" },
+  { "eig", 1, op_eig, "Matrices", "A -- V L", "eigenvectors (columns of V) and eigenvalues (diagonal of L) of a square real matrix; both complex", "[2 2 $ 2 1 1 2] eig" },
+  { "chol", 1, op_chol, "Matrices", "A -- L", "Cholesky factor of a symmetric positive definite real matrix, A = L L^T", "[2 2 $ 4 2 2 3] chol" },
+  { "svd", 1, op_svd, "Matrices", "A -- U S V", "singular value decomposition of a real matrix, A = U S V^T", "[2 2 $ 4 7 2 6] svd" },
+  { "kron", 2, op_kron, "Matrices", "A B -- A(x)B", "Kronecker product", "[2 2 $ 1 2 3 4] [1 2 $ 5 6] kron" },
+  { "dim", 1, op_dim, "Matrices", "A -- A rows cols", "push the dimensions (the matrix stays)", "[2 3 $ 1 2 3 4 5 6] dim" },
+  { "reshape", 3, op_reshape, "Matrices", "A rows cols -- B", "reshape in row-major order; rows*cols must match", "[2 3 $ 1 2 3 4 5 6] 3 2 reshape" },
+  { "get_aij", 3, op_get_aij, "Matrices", "A i j -- A a_ij", "push element (i,j), 0-based (the matrix stays)", "[2 2 $ 1 2 3 4] 0 1 get_aij" },
+  { "set_aij", 4, op_set_aij, "Matrices", "A i j x -- A", "set element (i,j), 0-based, in place; a complex x promotes a real matrix", "[2 2 $ 1 2 3 4] 0 1 9 set_aij" },
+  { "split_mat", 1, op_split_mat, "Matrices", "A -- a11 a12 ...", "push all elements as scalars, row by row", "[2 2 $ 1 2 3 4] split_mat" },
+  { "diag", 1, op_diag, "Matrices", "A -- v", "main diagonal as a row vector", "[2 2 $ 1 2 3 4] diag" },
+  { "to_diag", 1, op_to_diag, "Matrices", "v -- D", "diagonal matrix from a row or column vector", "[1 3 $ 1 2 3] to_diag" },
+  { "eye", 1, op_eye, "Matrices", "n -- I", "n x n identity matrix", "3 eye" },
+  { "ones", 2, op_ones, "Matrices", "rows cols -- A", "matrix filled with ones", "2 3 ones" },
+  { "zeroes", 2, op_zeroes, "Matrices", "rows cols -- A", "matrix filled with zeros", "2 3 zeroes" },
+  { "rand", 2, op_rand, "Matrices", "rows cols -- A", "matrix of uniform(0,1) randoms", "2 2 rand" },
+  { "randn", 2, op_randn, "Matrices", "rows cols -- A", "matrix of standard normal randoms", "2 2 randn" },
+  { "rrange", 3, op_rrange, "Matrices", "start step end -- v", "row vector start, start+step, ... up to end", "0 0.25 1 rrange" },
+  { "join_v", 2, op_join_v, "Matrices", "A B -- [A; B]", "stack two matrices vertically (same number of columns)", "[1 2 $ 1 2] [1 2 $ 3 4] join_v" },
+  { "join_h", 2, op_join_h, "Matrices", "A B -- [A B]", "join two matrices side by side (same number of rows)", "[2 1 $ 1 2] [2 1 $ 3 4] join_h" },
+  { "cumsum_r", 1, op_cumsum_r, "Matrices", "A -- B", "cumulative sum along each row", "[2 2 $ 1 2 3 4] cumsum_r" },
+  { "cumsum_c", 1, op_cumsum_c, "Matrices", "A -- B", "cumulative sum down each column", "[2 2 $ 1 2 3 4] cumsum_c" },
+  { "cmean", 1, op_cmean, "Matrices", "A -- v", "mean of each column (row vector)", "[2 2 $ 1 2 3 4] cmean" },
+  { "rmean", 1, op_rmean, "Matrices", "A -- v", "mean of each row (column vector)", "[2 2 $ 1 2 3 4] rmean" },
+  { "csum", 1, op_csum, "Matrices", "A -- v", "sum of each column (row vector)", "[2 2 $ 1 2 3 4] csum" },
+  { "rsum", 1, op_rsum, "Matrices", "A -- v", "sum of each row (column vector)", "[2 2 $ 1 2 3 4] rsum" },
+  { "cvar", 1, op_cvar, "Matrices", "A -- v", "sample variance of each column (row vector)", "[2 2 $ 1 2 3 4] cvar" },
+  { "rvar", 1, op_rvar, "Matrices", "A -- v", "sample variance of each row (column vector)", "[2 2 $ 1 2 3 4] rvar" },
+  { "cmin", 1, op_cmin, "Matrices", "A -- v", "minimum of each column", "[2 2 $ 1 2 3 4] cmin" },
+  { "rmin", 1, op_rmin, "Matrices", "A -- v", "minimum of each row", "[2 2 $ 1 2 3 4] rmin" },
+  { "cmax", 1, op_cmax, "Matrices", "A -- v", "maximum of each column", "[2 2 $ 1 2 3 4] cmax" },
+  { "rmax", 1, op_rmax, "Matrices", "A -- v", "maximum of each row", "[2 2 $ 1 2 3 4] rmax" },
   /* ---- Polynomials ---- */
-  { "roots", 1, op_roots, "Polynomials", "coeffs -- roots", "Roots of a real polynomial; coefficients highest degree first, result is a complex row vector.", "[1 3 $ 1 -3 2] roots   (x^2 - 3x + 2 → 1, 2)" },
-  { "pval", 2, op_pval, "Polynomials", "coeffs x -- y", "Evaluate a polynomial (coefficients highest degree first, real or complex) at x.", "[1 3 $ 1 0 -1] 2 pval   (2^2 - 1 = 3)" },
+  { "roots", 1, op_roots, "Polynomials", "coeffs -- roots", "roots of a real polynomial; coefficients highest degree first, result is a complex row vector", "[1 3 $ 1 -3 2] roots" },
+  { "pval", 2, op_pval, "Polynomials", "coeffs x -- y", "evaluate a polynomial (coefficients highest degree first, real or complex) at x", "[1 3 $ 1 0 -1] 2 pval" },
   /* ---- Numerics ---- */
   { "exec", 1, op_exec, "Numerics", "xt --", "run an execution token (@name pushes one)", "3 @sq exec" },
   { "integrate", 3, op_integrate, "Numerics", "a b xt -- I", "integral of f over [a,b] (tanh-sinh with adaptive bisection; handles endpoint singularities)", "0 pi @sin integrate" },
@@ -524,50 +524,50 @@ const Op ops[] = {
   { "nevals", 0, op_nevals, "Numerics", "-- n", "function evaluations used by the last numerical call", "nevals" },
   { "interr", 0, op_interr, "Numerics", "-- e", "error estimate of the last integrate", "interr" },
   /* ---- Registers ---- */
-  { "sto", 2, op_sto, "Registers", "value n --", "Store value into register n.", "42 0 sto" },
-  { "rcl", 1, op_rcl, "Registers", "n -- value", "Recall value from register n.", "0 rcl" },
-  { "ffr", 0, op_ffr, "Registers", "--", "Free/flush register-related resources (exact semantics: see source).", "ffr" },
-  { "pr", 0, op_pr, "Registers", "n --", "Print contents of register n.", "0 pr" },
-  { "saveregs", 0, op_saveregs, "Registers", "filename --", "Save all registers to file.", "\"regs.dat\" saveregs" },
-  { "loadregs", 0, op_loadregs, "Registers", "filename --", "Load registers from file.", "\"regs.dat\" loadregs" },
-  { "clregs", 0, op_clregs, "Registers", "--", "Clear all registers.", "clregs" },
+  { "sto", 2, op_sto, "Registers", "x n --", "store x in register n (0-63); any type", "42 0 sto" },
+  { "rcl", 1, op_rcl, "Registers", "n -- x", "push a copy of register n", "0 rcl" },
+  { "ffr", 0, op_ffr, "Registers", "-- n", "index of the first free register", "ffr" },
+  { "pr", 0, op_pr, "Registers", "--", "show which registers are occupied", "pr" },
+  { "saveregs", 0, op_saveregs, "Registers", "--", "save all registers to registers.txt in the config directory", "saveregs" },
+  { "loadregs", 0, op_loadregs, "Registers", "--", "load the registers saved by saveregs", "loadregs" },
+  { "clregs", 0, op_clregs, "Registers", "--", "clear all registers", "clregs" },
   /* ---- Dates ---- */
-  { "today", 0, op_today, "Dates", "-- date", "Push today's date as a string (d.m.yyyy).", "today" },
-  { "now", 0, op_now, "Dates", "-- \"HH:MM\"", "Push the current local time as a string, same form as sunrise/sunset.", "now" },
-  { "tz_offset", 2, op_tz_offset, "Dates", "date zone -- hours", "UTC offset (hours) of an IANA zone on the given date, DST included.", "\"1.12.2026\" \"America/New_York\" tz_offset" },
-  { "ddays", 2, op_ddays, "Dates", "date2 date1 -- n_days", "Difference in days between two dates (date2 - date1).", "\"2025-12-31\" \"2025-01-01\" ddays" },
-  { "dateplus", 2, op_dateplus, "Dates", "date n -- date2", "Add n days to a date.", "\"2025-01-01\" 30 dateplus" },
-  { "dow", 1, op_dow, "Dates", "date -- n", "Day of week (e.g. 0=Sunday..6=Saturday; see implementation).", "\"2025-01-01\" dow" },
-  { "edmy", 1, op_edmy, "Dates", "date -- d m y", "Extract day, month, year from date.", "\"2025-01-01\" edmy" },
-  { "num2date", 3, op_num2date, "Dates", "n -- date", "Convert integer (days since some epoch) to date string.", "10000 num2date" },
-  { "days2eoy", 1, op_days2eoy, "Dates", "date -- n", "Number of days from given date to end of year.", "\"2025-01-01\" days2eoy" },
-  { "sunrise", 4, op_sunrise, "Dates", "date lat lon utc_offset|zone -- time_str", "Local sunrise time (HH:MM) for given date and location.", "\"21.6.2025\" 38.9 -77.0 \"America/New_York\" sunrise" },
-  { "sunset", 4, op_sunset, "Dates", "date lat lon utc_offset|zone -- time_str", "Local sunset time (HH:MM) for given date and location.", "\"21.6.2025\" 38.9 -77.0 -4 sunset" },
-  { "dawn", 4, op_dawn, "Dates", "date lat lon utc_offset|zone -- time_str", "Civil dawn (sun at -6 deg) for given date and location.", "today 38.9 -77.0 \"America/New_York\" dawn" },
-  { "dusk", 4, op_dusk, "Dates", "date lat lon utc_offset|zone -- time_str", "Civil dusk (sun at -6 deg) for given date and location.", "today 100 dateplus 38.9 -77.0 \"America/New_York\" dusk" },
+  { "today", 0, op_today, "Dates", "-- date", "today's date as a string d.m.yyyy", "today" },
+  { "now", 0, op_now, "Dates", "-- \"HH:MM\"", "push the current local time as a string, same form as sunrise/sunset", "now" },
+  { "tz_offset", 2, op_tz_offset, "Dates", "date zone -- hours", "UTC offset in hours of an IANA zone on the given date, DST included", "\"1.12.2026\" \"America/New_York\" tz_offset" },
+  { "ddays", 2, op_ddays, "Dates", "d1 d2 -- n", "days from date d1 to date d2 (d2 - d1)", "\"1.1.2025\" \"31.12.2025\" ddays" },
+  { "dateplus", 2, op_dateplus, "Dates", "date n -- date2", "the date n days later (n may be negative)", "\"1.1.2025\" 30 dateplus" },
+  { "dow", 1, op_dow, "Dates", "date -- name", "weekday name of a date", "\"1.1.2025\" dow" },
+  { "edmy", 1, op_edmy, "Dates", "date -- y m d", "split a date into year, month, day (day on top)", "\"1.1.2025\" edmy" },
+  { "num2date", 3, op_num2date, "Dates", "d m y -- date", "build a date string from day, month, year", "1 1 2025 num2date" },
+  { "days2eoy", 1, op_days2eoy, "Dates", "date -- n", "days from the date to the end of its year", "\"1.1.2025\" days2eoy" },
+  { "sunrise", 4, op_sunrise, "Dates", "date lat lon zone -- time", "local sunrise HH:MM; zone is an IANA name or a UTC offset in hours", "\"21.6.2025\" 38.9 -77.0 \"America/New_York\" sunrise" },
+  { "sunset", 4, op_sunset, "Dates", "date lat lon zone -- time", "local sunset HH:MM", "\"21.6.2025\" 38.9 -77.0 -4 sunset" },
+  { "dawn", 4, op_dawn, "Dates", "date lat lon zone -- time", "civil dawn HH:MM (sun 6 degrees below the horizon)", "today 38.9 -77.0 \"America/New_York\" dawn" },
+  { "dusk", 4, op_dusk, "Dates", "date lat lon zone -- time", "civil dusk HH:MM", "today 38.9 -77.0 \"America/New_York\" dusk" },
   /* ---- Display ---- */
-  { "print", 0, op_print, "Display", "x -- x", "Print top of stack in current format (leaving it on stack).", "42 print" },
-  { "pm", 1, op_pm, "Display", "A -- A", "Print matrix in human-readable form.", "A pm" },
-  { "ps", 0, op_ps, "Display", "--", "Print entire stack.", "ps" },
-  { "setprec", 1, op_setprec, "Display", "n --", "Set number of digits for printing.", "10 setprec" },
-  { "sfs", 0, op_sfs, "Display", "n --", "Set field width/significant figures (see your printing code).", "15 sfs" },
+  { "print", 0, op_print, "Display", "x -- x", "print the top of the stack (a matrix in full)", "42 print" },
+  { "pm", 1, op_pm, "Display", "A -- A", "print the matrix on top of the stack in full", "[2 2 $ 1 2 3 4] pm" },
+  { "ps", 0, op_ps, "Display", "--", "print the whole stack", "ps" },
+  { "setprec", 1, op_setprec, "Display", "n --", "digits after the decimal point (fixed) or significant digits (scientific), 0-20", "10 setprec" },
+  { "sfs", 0, op_sfs, "Display", "--", "toggle between fixed-point and scientific display", "sfs" },
   /* ---- Words ---- */
-  { "listwords", 0, op_listwords, "Words", "--", "List stored user-defined words.", "listwords" },
-  { "listmacros", 0, op_listmacros, "Words", "--", "List available macros/programs.", "listmacros" },
-  { "loadwords", 0, op_loadwords, "Words", "filename --", "Load user words from file.", "\"words.mm\" loadwords" },
-  { "savewords", 0, op_savewords, "Words", "filename --", "Save user words to file.", "\"words.mm\" savewords" },
-  { "delword", 1, op_delword, "Words", "name --", "Delete a user-defined word.", "\"FOO\" delword" },
-  { "clrwords", 0, op_clrwords, "Words", "--", "Clear all user-defined words.", "clrwords" },
+  { "listwords", 0, op_listwords, "Words", "--", "list the user-defined words", "listwords" },
+  { "listmacros", 0, op_listmacros, "Words", "--", "list the macros loaded from predefined_macros.txt", "listmacros" },
+  { "loadwords", 0, op_loadwords, "Words", "--", "load the words saved in user_words.txt (also done at startup)", "loadwords" },
+  { "savewords", 0, op_savewords, "Words", "--", "save all user-defined words to user_words.txt in the config directory", "savewords" },
+  { "delword", 1, op_delword, "Words", "\"name\" --", "delete a user-defined word", "\"sq\" delword" },
+  { "clrwords", 0, op_clrwords, "Words", "--", "delete all user-defined words", "clrwords" },
   /* ---- Programs ---- */
-  { "eval",  1, op_eval,  "Programs", "s --", "evaluate the string s as a line of input", "\"1 2 +\" eval" },
-  { "batch", 1, op_batch, "Programs", "s --", "run the lines of file s", "\"calc.txt\" batch" },
-  { "run",   1, op_run,   "Programs", "s --", "load and run the HP-41 style program in file s (LBL/GOTO/GOSUB/RTN)", "\"prog1.prg\" run" },
+  { "eval", 1, op_eval, "Programs", "s --", "evaluate the string s as a line of input", "\"1 2 +\" eval" },
+  { "batch", 1, op_batch, "Programs", "s --", "run the lines of file s as input", "\"calc.txt\" batch" },
+  { "run", 1, op_run, "Programs", "s --", "load and run the HP-41 style program in file s (LBL/GOTO/GOSUB/RTN/END)", "\"prog1.prg\" run" },
   /* ---- Session ---- */
-  { "help", 0, op_help, "Session", "[name?] --", "Print help for a word, or general help if stack empty or top not a string.", "\"sin\" help    (display info about sin)" },
+  { "help", 0, op_help, "Session", "--", "print the quick-start help screen", "help" },
   { "usage", 1, op_usage, "Session", "\"name\" --", "show the stack picture, description and example of a command, or a word's definition", "\"sin\" usage" },
-  { "listfcns", 0, op_listfcns, "Session", "--", "List all built-in function names.", "listfcns" },
-  { "clrhist", 0, op_clrhist, "Session", "--", "Clear command/history buffer (and/or undo history).", "clrhist" },
-  { "fuck", 0, op_fuck, "Session", "--", "User-defined diagnostic/joke word (see source).", "fuck       (behavior depends on your implementation)" },
+  { "listfcns", 0, op_listfcns, "Session", "--", "list all commands by category", "listfcns" },
+  { "clrhist", 0, op_clrhist, "Session", "--", "clear the readline history", "clrhist" },
+  { "fuck", 0, op_fuck, "Session", "--", "an Easter egg", "fuck" },
 };
 const int n_ops = (int)(sizeof ops / sizeof ops[0]);
 
@@ -615,6 +615,49 @@ void list_ops_by_category(void) {
 
 static void md(const char *s) {
   for (; *s; s++) { if (*s == '|') fputs("\\|", stdout); else putchar(*s); }
+}
+
+/* LaTeX: everything goes inside \texttt{} with the special characters escaped. */
+static void tex(const char *s) {
+  for (; *s; s++) {
+    switch (*s) {
+    case '\\': fputs("\\textbackslash{}", stdout); break;
+    case '{': fputs("\\{", stdout); break;
+    case '}': fputs("\\}", stdout); break;
+    case '$': case '&': case '%': case '#': case '_': printf("\\%c", *s); break;
+    case '^': fputs("\\^{}", stdout); break;
+    case '~': fputs("\\~{}", stdout); break;
+    case '|': fputs("\\textbar{}", stdout); break;
+    case '<': fputs("\\textless{}", stdout); break;
+    case '>': fputs("\\textgreater{}", stdout); break;
+    case '"': fputs("\\textquotedbl{}", stdout); break;
+    case '\'': fputs("\\textquotesingle{}", stdout); break;
+    case '-': fputs("-{}", stdout); break;        /* no ligatures: -- stays -- */
+    default: putchar(*s);
+    }
+  }
+}
+
+void print_ops_latex(void) {
+  const char *cats[32];
+  int nc = categories(cats, 32);
+  printf("%% Generated by mm_15 --commands-tex from the dispatch table; do not edit by hand.\n");
+  for (int c = 0; c < nc; c++) {
+    printf("\\subsection*{%s}\n", cats[c]);
+    printf("\\begin{longtable}{@{}>{\\raggedright\\arraybackslash}p{0.12\\textwidth}>{\\raggedright\\arraybackslash}p{0.19\\textwidth}>{\\raggedright\\arraybackslash}p{0.36\\textwidth}>{\\raggedright\\arraybackslash}p{0.23\\textwidth}@{}}\n");
+    printf("\\toprule \\textbf{Command} & \\textbf{Stack} & \\textbf{Description} & \\textbf{Example}\\\\ \\midrule \\endfirsthead\n");
+    printf("\\toprule \\textbf{Command} & \\textbf{Stack} & \\textbf{Description} & \\textbf{Example}\\\\ \\midrule \\endhead\n");
+    printf("\\bottomrule \\endlastfoot\n");
+    for (int i = 0; i < n_ops; i++) {
+      if (strcmp(ops[i].cat, cats[c]) != 0) continue;
+      printf("\\texttt{"); tex(ops[i].name); printf("} & ");
+      if (ops[i].effect[0]) { printf("\\texttt{"); tex(ops[i].effect); printf("}"); }
+      printf(" & "); tex(ops[i].help); printf(" & ");
+      if (ops[i].example[0]) { printf("\\texttt{"); tex(ops[i].example); printf("}"); }
+      printf("\\\\\n");
+    }
+    printf("\\end{longtable}\n\n");
+  }
 }
 
 void print_ops_markdown(void) {

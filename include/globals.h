@@ -23,6 +23,7 @@
 #include <gsl/gsl_rng.h>
 #include "stack.h"
 
+#define MM15_VERSION "2.1"
 #define MAX_PATH 2048
 
 #define HISTORY_FILE ".rpn_history"
@@ -49,6 +50,7 @@ extern gsl_rng * global_rng;
 
 extern bool fixed_point;
 extern bool verbose_mode;
+extern bool batch_mode;           /* set in main: -e, -f, or stdin not a terminal */
 extern bool completed_batch;
 extern bool test_flag;
 extern bool skip_stack_printing;

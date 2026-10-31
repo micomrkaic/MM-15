@@ -44,3 +44,8 @@ doc/*.toc
 .projectile
 .dir-locals.el
 .rpn_history
+# manual build intermediates (doc/mm_15-manual.pdf is kept)
+doc/*.fls
+doc/*.fdb_latexmk
+doc/*.xdv
+doc/manual.pdf

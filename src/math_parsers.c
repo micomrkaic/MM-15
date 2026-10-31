@@ -40,14 +40,16 @@ int read_complex(const char* input, gsl_complex* z) {
 void read_matrix_from_file(Stack *stack, char *input) {
   int rows, cols;
   char filename[1024];
-  if (sscanf(input, "[%d,%d,\"%255[^\"]\"]", &rows, &cols, filename) == 3) {
-    printf("rows = %d\n", rows);
-    printf("cols = %d\n", cols);
-    printf("filename = %s\n", filename);
-  } else {
-    mm_error("Failed to parse input string\n");
+  if (sscanf(input, "[%d,%d,\"%255[^\"]\"]", &rows, &cols, filename) != 3) {
+    mm_error("matrix from file: expected [rows, cols, \"file\"]");
+    return;
   }
-  push_matrix_real(stack,load_matrix_from_file(rows, cols, filename));
+  if (rows <= 0 || cols <= 0) {
+    mm_error("matrix from file: dimensions must be positive");
+    return;
+  }
+  gsl_matrix *m = load_matrix_from_file(rows, cols, filename);
+  if (m) push_matrix_real(stack, m);
 }
 
 // Parse real matrices: rows cols $ list of real numbers

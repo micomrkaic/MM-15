@@ -65,7 +65,6 @@ gsl_rng
     *global_rng; // Global random number generator, used throughout the program
 Register registers[MAX_REG] = {0}; // Global or static array
 
-#define MM15_VERSION "2.0"
 
 // Local declarations
 void my_error_handler(const char *reason, const char *file, int line,
@@ -133,7 +132,7 @@ static char *capture_command_output(const char *cmd, int *wait_status_out) {
   return buf;
 }
 
-static bool batch_mode = false;   /* -e, -f, or stdin that is not a terminal */
+bool batch_mode = false;          /* -e, -f, or stdin that is not a terminal */
 static bool autoload = true;      /* -n turns off macros/config at startup */
 
 static void startup(Stack *stack, Stack *old_stack) {
@@ -233,7 +232,7 @@ static int run_lines_from(Stack *stack, Stack *old_stack, FILE *f) {
 static void usage_text(FILE *f) {
   fprintf(f,
     "usage: mm_15 [-n] [-e EXPR]... [-f FILE]...\n"
-    "       mm_15 --commands | --version | -h\n"
+    "       mm_15 --commands | --commands-tex | --version | -h\n"
     "\n"
     "  (no args)   interactive calculator (reads stdin when it is not a terminal)\n"
     "  -e EXPR     evaluate EXPR as one line; may be repeated\n"
@@ -253,6 +252,7 @@ int main(int argc, char **argv) {
     const char *a = argv[i];
     if (!strcmp(a, "-h") || !strcmp(a, "--help")) { usage_text(stdout); return 0; }
     if (!strcmp(a, "--commands")) { print_ops_markdown(); return 0; }
+    if (!strcmp(a, "--commands-tex")) { print_ops_latex(); return 0; }
     if (!strcmp(a, "--version")) { printf("MM-15 %s (%s)\n", MM15_VERSION, VERSION); return 0; }
     if (!strcmp(a, "-n")) { autoload = false; continue; }
     if ((!strcmp(a, "-e") || !strcmp(a, "-f")) && i + 1 < argc && njobs < MAXJOBS) {

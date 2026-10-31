@@ -42,6 +42,7 @@ extern const int n_ops;
 int  find_op(const char *name);                   /* index or -1 */
 int  call_op(Stack *stack, int idx);              /* depth check + call */
 void print_ops_markdown(void);                    /* --commands */
+void print_ops_latex(void);                       /* --commands-tex */
 void list_ops_by_category(void);                  /* listfcns */
 
 #endif

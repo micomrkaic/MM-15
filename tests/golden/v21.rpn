@@ -1,0 +1,21 @@
+# 2.1: argument orders, new semantics, mixed real/complex matrices.
+[2 2 $ 1 2 3 4] 1 0 9 set_aij pm
+[2 2 $ 1 2 3 4] 0 0 (1,1) set_aij pm
+[2 2 $ 1 2 3 4] 1 2 3 set_aij
+clst 0 0.25 1 rrange pm
+1 -0.5 0 rrange pm
+1 1 0 rrange
+clst "1.1.2025" days2eoy "31.12.2024" days2eoy "1.3.2024" days2eoy
+"a" "a" eq "a" "b" neq "a" "b" lt
+clst [2 2 $ 1 2 3 4] [2 2 $ 1 (0,1) 0 1] + pm
+[2 2 $ 1 (0,1) 0 1] [2 2 $ 1 2 3 4] * pm
+[2 2 $ 1 2 3 4] (0,1) + pm
+[2 2 $ 1 2 3 4] [2 2 $ 1 (0,1) 2 2] ./ pm
+clst [2 2 $ 4 9 16 25] 0.5 ^
+[2 2 $ 1 2 3 4] 2 ^ pm
+( 1 , 2 ) (1, -2.5e-1)
+clst [2 2 $ 1 2 3 4] cmean [2 2 $ 1 2 3 4] rmax
+[2 2 $ 1 2 3 4] print
+clst [1 3 $ 1 -3 2] roots pm
+[1 3 $ 0 1 2] roots
+gravity

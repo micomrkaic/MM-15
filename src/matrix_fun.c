@@ -24,6 +24,7 @@
 #include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matrix
 #include <gsl/gsl_randist.h>                // for gsl_ran_gaussian
 #include <gsl/gsl_rng.h>                    // for gsl_rng_uniform, gsl_rng
+#include <math.h>
 #include <stdbool.h>                        // for bool
 #include <stdio.h>                          // for fprintf, stderr, size_t
 #include "stack.h"                          // for (anonymous struct)::(anon...
@@ -157,61 +158,68 @@ int select_matrix_element(Stack *s) {
 
 int set_matrix_element(Stack *s) {
   if (s->top < 3) {
-    mm_error("Error: insufficient elements on stack (need value, row, col, and matrix).\n");
+    mm_error("set_aij: need matrix, row, column and value");
     return -1;
   }
 
-  // Top stack layout (high to low):
-  stack_element *val_elem = &s->items[s->top - 3];   // [top - 3] -> value (scalar)
-  stack_element *col_elem = &s->items[s->top - 2];   // [top - 2] -> col (real scalar)
-  stack_element *row_elem = &s->items[s->top - 1];   // [top - 1] -> row (real scalar)
-  stack_element *matrix_elem = &s->items[s->top];    // [top - 0] -> matrix (real or complex)
+  /* A i j x -- A : the matrix is deepest, like get_aij */
+  stack_element *val_elem    = &s->items[s->top];
+  stack_element *col_elem    = &s->items[s->top - 1];
+  stack_element *row_elem    = &s->items[s->top - 2];
+  stack_element *matrix_elem = &s->items[s->top - 3];
 
   if (row_elem->type != TYPE_REAL || col_elem->type != TYPE_REAL) {
-    mm_error("Error: row and column must be real scalars.\n");
+    mm_error("set_aij: row and column must be real numbers");
     return -1;
   }
-
+  if (row_elem->real < 0 || col_elem->real < 0) {
+    mm_error("set_aij: row and column must be non-negative (0-based)");
+    return -1;
+  }
   size_t row = (size_t)row_elem->real;
   size_t col = (size_t)col_elem->real;
 
   if (matrix_elem->type == TYPE_MATRIX_REAL) {
     gsl_matrix *matrix = matrix_elem->matrix_real;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      mm_error("Error: invalid row or column index for real matrix.\n");
+      mm_error("set_aij: index (%zu,%zu) out of range", row, col);
       return -1;
     }
-
-    if (val_elem->type != TYPE_REAL) {
-      mm_error("Error: cannot set real matrix with non-real value.\n");
+    if (val_elem->type == TYPE_REAL) {
+      gsl_matrix_set(matrix, row, col, val_elem->real);
+    } else if (val_elem->type == TYPE_COMPLEX) {
+      /* promote the whole matrix to complex */
+      gsl_matrix_complex *mc = gsl_matrix_complex_alloc(matrix->size1, matrix->size2);
+      for (size_t i = 0; i < matrix->size1; ++i)
+        for (size_t j = 0; j < matrix->size2; ++j)
+          gsl_matrix_complex_set(mc, i, j, gsl_complex_rect(gsl_matrix_get(matrix, i, j), 0.0));
+      gsl_matrix_complex_set(mc, row, col, val_elem->complex_val);
+      gsl_matrix_free(matrix);
+      matrix_elem->type = TYPE_MATRIX_COMPLEX;
+      matrix_elem->matrix_complex = mc;
+    } else {
+      mm_error("set_aij: value must be a real or complex scalar");
       return -1;
     }
-
-    gsl_matrix_set(matrix, row, col, val_elem->real);
-
   } else if (matrix_elem->type == TYPE_MATRIX_COMPLEX) {
     gsl_matrix_complex *matrix = matrix_elem->matrix_complex;
     if (!matrix || row >= matrix->size1 || col >= matrix->size2) {
-      mm_error("Error: invalid row or column index for complex matrix.\n");
+      mm_error("set_aij: index (%zu,%zu) out of range", row, col);
       return -1;
     }
-
     gsl_complex value;
-    if (val_elem->type == TYPE_COMPLEX) {
-      value = val_elem->complex_val;
-    } else if (val_elem->type == TYPE_REAL) {
-      GSL_SET_COMPLEX(&value, val_elem->real, 0.0);
-    } else {
-      mm_error("Error: invalid value type for complex matrix.\n");
+    if (val_elem->type == TYPE_COMPLEX) value = val_elem->complex_val;
+    else if (val_elem->type == TYPE_REAL) GSL_SET_COMPLEX(&value, val_elem->real, 0.0);
+    else {
+      mm_error("set_aij: value must be a real or complex scalar");
       return -1;
     }
-
     gsl_matrix_complex_set(matrix, row, col, value);
-
   } else {
-    mm_error("Error: top-3 element is not a matrix.\n");
+    mm_error("set_aij: the fourth item from the top must be a matrix");
     return -1;
   }
+  s->top -= 3;                       /* i, j, x are scalars: nothing to free */
   return 0;
 }
 
@@ -294,33 +302,39 @@ int make_unit_matrix(Stack* stack) {
 }
 
 int make_row_range(Stack* stack) {
-  if (stack->top < 0) {
-    mm_error("Stack underflow: you need one dimension to create the row matrix.\n");
+  if (stack->top < 2) {
+    mm_error("rrange: need start step end");
     return 1;
   }
-
-  value_type cols_top_type=stack_top_type(stack);
-    
-  if (cols_top_type != TYPE_REAL) {
-    mm_error("Type error: top stack item must be a real number (dimension).\n");
+  const stack_element *e_end   = &stack->items[stack->top];
+  const stack_element *e_step  = &stack->items[stack->top - 1];
+  const stack_element *e_start = &stack->items[stack->top - 2];
+  if (e_end->type != TYPE_REAL || e_step->type != TYPE_REAL || e_start->type != TYPE_REAL) {
+    mm_error("rrange: start, step and end must be real numbers");
     return 1;
   }
-
-  stack_element cols = pop(stack);
-  int num_cols = (int)(cols.real);
-  if (num_cols <= 0) {
-    mm_error("Dimension must be positive, got %d.\n", num_cols);
+  double start = e_start->real, step = e_step->real, end = e_end->real;
+  if (step == 0.0 || !isfinite(step) || !isfinite(start) || !isfinite(end)) {
+    mm_error("rrange: step must be nonzero and all arguments finite");
     return 1;
   }
-
-  gsl_matrix* mat = gsl_matrix_calloc(1, num_cols); // allocates and zeroes the matrix
+  double span = (end - start) / step;
+  if (span < -1e-9) {
+    mm_error("rrange: step has the wrong sign for the interval");
+    return 1;
+  }
+  size_t n = (size_t)floor(span + 1e-9) + 1;
+  if (n > 10000000) {
+    mm_error("rrange: too many elements (%zu)", n);
+    return 1;
+  }
+  gsl_matrix* mat = gsl_matrix_alloc(1, n);
   if (!mat) {
     mm_error("Failed to allocate matrix.\n");
     return 1;
   }
-  for(int i=0; i < num_cols; i++)
-    gsl_matrix_set(mat, 0, i, (double)i);
-    
+  for (size_t i = 0; i < n; i++) gsl_matrix_set(mat, 0, i, start + (double)i * step);
+  pop_and_free(stack); pop_and_free(stack); pop_and_free(stack);
   push_matrix_real(stack, mat);
   return 0;
 }

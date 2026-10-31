@@ -48,6 +48,11 @@ gsl_complex to_gsl_complex(double complex z);
 double complex to_double_complex(gsl_complex z);
 bool is_zero_complex(gsl_complex z);
 
+/* If exactly one of a, b is a real matrix and the other a complex matrix (or
+   a complex scalar), promote the real matrix to complex in place so the
+   complex branch of a binary operator applies. */
+void promote_mixed_matrix_operands(stack_element *a, stack_element *b);
+
 // ****************************************************************
 // Wrappers
 // ****************************************************************

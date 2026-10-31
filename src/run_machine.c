@@ -199,12 +199,6 @@ compare_dispatch_entry compare_dispatch_table[] = {
     {"top_lt?",      is_top_lt},
     {"top_gte?",     is_top_gte},
     {"top_lte?",     is_top_lte},
-    {"ctr_eq0?",  is_ctr_eq_0},
-    {"ctr_neq0?", is_ctr_neq_0},
-    {"ctr_gt0?",  is_ctr_gt_0},
-    {"ctr_lt0?",  is_ctr_lt_0},
-    {"ctr_gte0?", is_ctr_gte_0},
-    {"ctr_lte0?", is_ctr_lte_0},
     {NULL, NULL}  // Sentinel
 };
 
@@ -222,7 +216,7 @@ int run_batch(Stack *stack, char *fname) {
   if (!f) {
     mm_perror("Failed to open input file");
     return 1;
-  } else printf("Running batch: %s\n",fname);
+  } else if (verbose_mode) printf("Running batch: %s\n",fname);
 
   char *line = NULL;
   size_t len = 0;
@@ -282,7 +276,11 @@ bool load_program_from_file(const char *filename, Program *prog) {
   while (fgets(line, sizeof line, f)) {
     /* chomp \r\n */
     line[strcspn(line, "\r\n")] = '\0';
-    if (line[0] == '\0') continue;
+    {   /* skip blank lines and comment lines */
+      char *p = line;
+      while (*p == ' ' || *p == '\t') p++;
+      if (*p == '\0' || *p == '\\' || *p == '#') continue;
+    }
 
     /* prepare instruction */
     Instruction instr = {0};

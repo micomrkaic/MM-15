@@ -1,18 +1,10 @@
-New word sq <- dup *
-New word rsqrt <- sqrt inv
-New word f2 <- dup * 2 -
-New word par <- 3 - dup * 1 +
-New word invsq <- dup * inv
-New word ident <- 
 Error: drop must leave exactly one real result (x -- f(x)); it left 0 items
 Error: 42.5 is not an execution token (use @name)
 Error: @nosuch: no such command or word
-New word bad <- 0 /
 Error: Division by zero
   (in word 'bad')
 Error:   while evaluating bad at x = 0.5
 Error: tol: tolerance must be between 0 and 1
-New word scaled <- 0 rcl *
 
 [0] ℝ : 2.666666666667
 [1] ℝ : 2.000000000000

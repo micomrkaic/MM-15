@@ -514,36 +514,21 @@ int make_date_string(Stack *stack)
 
 /* Pushes the count of days left in the current year (excludes today). */
 int days_to_end_of_year(Stack* stack) {
-  time_t now = time(NULL);
-  if (now == (time_t)-1) {
-    mm_error("Error: failed to get current time\n");
+  if (stack->top < 0) {
+    mm_error("days2eoy: expected a date string");
     return 1;
   }
-
-  struct tm lt;
-#if defined(_POSIX_THREAD_SAFE_FUNCTIONS)
-  if (!localtime_r(&now, &lt)) {
-    mm_error("Error: localtime_r failed\n");
+  const stack_element *e = &stack->items[stack->top];
+  int d, m, y;
+  if (e->type != TYPE_STRING || !parse_date_relaxed(e->string, &d, &m, &y)) {
+    mm_error("days2eoy: expected a date string d.m.yyyy");
     return 1;
   }
-#else
-  struct tm *ptm = localtime(&now);
-  if (!ptm) {
-    mm_error("Error: localtime failed\n");
-    return 1;
-  }
-  lt = *ptm;
-#endif
-
-  int year = lt.tm_year + 1900;
-  int year_len = is_leap_year(year) ? 366 : 365;
-
-  /* tm_yday is 0-based (Jan 1 = 0). Remaining days AFTER today: */
-  int remaining = year_len - 1 - lt.tm_yday;
-
-  if (remaining < 0) remaining = 0; /* ultra-defensive */
-
-  push_real(stack, (double)remaining); /* or push_int if available */
+  int yday = d - 1;
+  for (int k = 1; k < m; ++k) yday += days_in_month(y, k);
+  int year_len = is_leap_year(y) ? 366 : 365;
+  pop_and_free(stack);
+  push_real(stack, (double)(year_len - 1 - yday)); /* days after the given date */
   return 0;
 }
 

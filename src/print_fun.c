@@ -58,6 +58,16 @@ void print_top_scalar(const Stack* stack) {
   case TYPE_STRING:
     printf("[%d] 𝒮 : \"%s\"\n", i, stack->items[i].string);
     break;
+  case TYPE_MATRIX_REAL:
+    printf("[%d] Mℝ: %zu x %zu matrix\n", i, stack->items[i].matrix_real->size1,
+           stack->items[i].matrix_real->size2);
+    print_real_matrix(stack->items[i].matrix_real);
+    break;
+  case TYPE_MATRIX_COMPLEX:
+    printf("[%d] Mℂ: %zu x %zu matrix\n", i, stack->items[i].matrix_complex->size1,
+           stack->items[i].matrix_complex->size2);
+    print_complex_matrix(stack->items[i].matrix_complex);
+    break;
   default:
     break;
   }

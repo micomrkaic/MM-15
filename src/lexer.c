@@ -174,14 +174,18 @@ Token lex_complex(Lexer* lexer) {
 
   if (!match(lexer, '(')) return make_token(TOK_UNKNOWN, "(");
 
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   Token real = lex_number(lexer);
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
 
   if (!match(lexer, ',')) {
     lexer->pos = start_pos;
     return make_token(TOK_UNKNOWN, "(");
   }
 
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   Token imag = lex_number(lexer);
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
 
   if (!match(lexer, ')')) {
     lexer->pos = start_pos;
@@ -197,13 +201,20 @@ Token lex_complex(Lexer* lexer) {
 Token lex_matrix_file(Lexer* lexer) {
   size_t start_pos = lexer->pos;
 
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   Token row = lex_number(lexer);
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   if (!match(lexer, ',')) { lexer->pos = start_pos; return make_token(TOK_UNKNOWN, "["); }
 
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   Token col = lex_number(lexer);
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   if (!match(lexer, ',')) { lexer->pos = start_pos; return make_token(TOK_UNKNOWN, "["); }
 
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
+  if (peek(lexer) != '"') { lexer->pos = start_pos; return make_token(TOK_UNKNOWN, "["); }
   Token str = lex_string(lexer);
+  while (isspace((unsigned char)peek(lexer))) advance(lexer);
   if (!match(lexer, ']')) { lexer->pos = start_pos; return make_token(TOK_UNKNOWN, "["); }
 
   char temp_buf[TEMP_BUF_SIZE];
