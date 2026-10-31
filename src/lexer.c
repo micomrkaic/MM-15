@@ -145,19 +145,27 @@ Token lex_identifier(Lexer* lexer) {
   return make_token(is_function_name(buf) ? TOK_FUNCTION : TOK_IDENTIFIER, buf);
 }
 
+/* "..." with backslash escapes: \" \\ \n \t */
 Token lex_string(Lexer* lexer) {
   advance(lexer);
-  size_t start = lexer->pos;
-  while (peek(lexer) != '"' && peek(lexer) != '\0') advance(lexer);
-
-  size_t len = lexer->pos - start;
-
   char buf[MAX_TOKEN_LEN] = {0};
-  size_t copy_len = (len >= (MAX_TOKEN_LEN - 1)) ? (MAX_TOKEN_LEN - 1) : len;
-  strncpy(buf, &lexer->input[start], copy_len);
-  buf[copy_len] = '\0';
-
-  match(lexer, '"');
+  size_t n = 0;
+  while (peek(lexer) != '"' && peek(lexer) != '\0') {
+    char c = advance(lexer);
+    if (c == '\\' && peek(lexer) != '\0') {
+      char e = advance(lexer);
+      switch (e) {
+      case 'n': c = '\n'; break;
+      case 't': c = '\t'; break;
+      case '"': c = '"'; break;
+      case '\\': c = '\\'; break;
+      default: c = e; break;
+      }
+    }
+    if (n < MAX_TOKEN_LEN - 1) buf[n++] = c;
+  }
+  buf[n] = '\0';
+  if (!match(lexer, '"')) mm_error("Unterminated string");
   return make_token(TOK_STRING, buf);
 }
 
@@ -376,6 +384,23 @@ Token next_token(Lexer* lexer) {
   case ':': advance(lexer); return make_token(TOK_COLON, ":");
   case ';': advance(lexer); return make_token(TOK_SEMICOLON, ";");
   case '\'': advance(lexer); return make_token(TOK_FUNCTION, "'");
+  case '%': {                                   /* %, %t, %chg */
+    size_t start = lexer->pos;
+    advance(lexer);
+    while (isalnum((unsigned char)peek(lexer))) advance(lexer);
+    char buf[MAX_TOKEN_LEN] = {0};
+    size_t len = lexer->pos - start;
+    if (len >= MAX_TOKEN_LEN) len = MAX_TOKEN_LEN - 1;
+    memcpy(buf, &lexer->input[start], len);
+    return make_token(is_function_name(buf) ? TOK_FUNCTION : TOK_IDENTIFIER, buf);
+  }
+  case '@': {                                   /* @name: execution token */
+    advance(lexer);
+    Token t = lex_identifier(lexer);
+    char buf[MAX_TOKEN_LEN];
+    snprintf(buf, sizeof buf, "@%.*s", MAX_TOKEN_LEN - 2, t.text);
+    return make_token(TOK_XT, buf);
+  }
   default: {
     char unknown_char = advance(lexer);
     char unk[2] = { unknown_char, '\0' };

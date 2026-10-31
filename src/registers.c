@@ -92,35 +92,30 @@ void free_element(stack_element* el) {
 }
 
 
+/* value n sto : store the value below the index, as on the HP (1.x took
+   "n value sto"). Both items are consumed; the stored copy is independent. */
 void store_to_register(Stack* stack) {
   if (stack->top < 1) {
-    mm_error("Stack underflow: need value and register index.\n");
+    mm_error("sto: need a value and a register index on the stack (value n sto)");
     return;
   }
+  stack_element* reg_elem = &stack->items[stack->top];
+  stack_element* value_elem = &stack->items[stack->top - 1];
 
-  stack_element reg_elem = stack->items[stack->top - 1];
-  stack_element* value_elem = &stack->items[stack->top];
-
-  if (reg_elem.type != TYPE_REAL) {
-    mm_error("Type error: register index must be a real number.\n");
+  if (reg_elem->type != TYPE_REAL || reg_elem->real != (int)reg_elem->real) {
+    mm_error("sto: register index must be an integer (value n sto)");
     return;
   }
-
-  int reg_index = (int)reg_elem.real;
+  int reg_index = (int)reg_elem->real;
   if (reg_index < 0 || reg_index >= MAX_REG) {
-    mm_error("Invalid register index: %d\n", reg_index);
+    mm_error("sto: invalid register index %d (0..%d)", reg_index, MAX_REG - 1);
     return;
   }
 
-  // Free old value if occupied
-  if (registers[reg_index].occupied) {
-    free_element(&registers[reg_index].value);
-  }
-
-  registers[reg_index].value = copy_element(value_elem);
+  if (registers[reg_index].occupied) free_element(&registers[reg_index].value);
+  registers[reg_index].value = *value_elem;      /* take ownership, no copy */
   registers[reg_index].occupied = true;
-
-  stack->top -= 2;  // remove reg index and value
+  stack->top -= 2;                               /* index is a real: nothing to free */
 }
 
 void recall_from_register(Stack* stack) {

@@ -1,0 +1,6 @@
+-1 sqrt -1 ln -100 log 2 asin -2 acos 0.5 acosh 2 atanh
+-8 3 inv ^ -8 2 ^ 0.5 asin 4 sqrt
+[2 2 $ 1 -4 9 16] sqrt pm
+5 0 /
+(1,1) (0,0) /
+0 inv

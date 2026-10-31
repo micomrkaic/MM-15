@@ -190,12 +190,66 @@ DEFINE_UNARY_WRAPPER(sin, sin, gsl_complex_sin)
   DEFINE_UNARY_WRAPPER(frac, safe_frac, safe_frac_complex)
 DEFINE_UNARY_WRAPPER(intg, safe_int, safe_int_complex)
 
-DEFINE_UNARY_WRAPPER(asin, asin, my_complex_asin)
-DEFINE_UNARY_WRAPPER(acos, acos, my_complex_acos)
 DEFINE_UNARY_WRAPPER(atan, atan, my_complex_atan)
 DEFINE_UNARY_WRAPPER(asinh, asinh, my_complex_asinh)
-DEFINE_UNARY_WRAPPER(acosh, acosh, my_complex_acosh)
-DEFINE_UNARY_WRAPPER(atanh, atanh, my_complex_atanh)
+
+/* Functions whose real version is only defined on part of the real line.
+   Outside that domain the argument is promoted to complex and the complex
+   function is used, so -1 sqrt gives (0,1), 2 asin gives (1.5708,-1.3170),
+   and a real matrix with one out-of-domain entry becomes a complex matrix.
+   This is the one rule for every such function. */
+static void promoting_unary(Stack *stack, const char *name, double (*fr)(double),
+                            gsl_complex (*fc)(gsl_complex), bool (*in_domain)(double)) {
+  switch (stack_top_type(stack)) {
+  case TYPE_REAL: {
+    double x = stack->items[stack->top].real;
+    if (in_domain(x)) stack->items[stack->top].real = fr(x);
+    else { pop(stack); push_complex(stack, fc(gsl_complex_rect(x, 0.0))); }
+    return;
+  }
+  case TYPE_COMPLEX:
+    apply_complex_unary(stack, fc);
+    return;
+  case TYPE_MATRIX_REAL: {
+    gsl_matrix *m = stack->items[stack->top].matrix_real;
+    bool all_ok = true;
+    for (size_t i = 0; i < m->size1 && all_ok; i++)
+      for (size_t j = 0; j < m->size2; j++)
+        if (!in_domain(gsl_matrix_get(m, i, j))) { all_ok = false; break; }
+    if (all_ok) { apply_real_matrix_unary_inplace(stack, fr); return; }
+    gsl_matrix_complex *cm = gsl_matrix_complex_alloc(m->size1, m->size2);
+    if (!cm) { mm_error("%s: out of memory", name); return; }
+    for (size_t i = 0; i < m->size1; i++)
+      for (size_t j = 0; j < m->size2; j++)
+        gsl_matrix_complex_set(cm, i, j, fc(gsl_complex_rect(gsl_matrix_get(m, i, j), 0.0)));
+    stack_element old = pop(stack);
+    stack_element_free(&old);
+    push_matrix_complex(stack, cm);
+    return;
+  }
+  case TYPE_MATRIX_COMPLEX:
+    apply_complex_matrix_unary_inplace(stack, fc);
+    return;
+  default:
+    mm_error("Unsupported type in %s", name);
+  }
+}
+
+static bool dom_nonneg(double x)  { return x >= 0.0; }
+static bool dom_unit(double x)    { return fabs(x) <= 1.0; }
+static bool dom_ge1(double x)     { return x >= 1.0; }
+static bool dom_lt1(double x)     { return fabs(x) <= 1.0; }
+
+#define DEFINE_PROMOTING_WRAPPER(name, real_fn, complex_fn, domain)  \
+  void name##_wrapper(Stack *stack) { promoting_unary(stack, #name, real_fn, complex_fn, domain); }
+
+DEFINE_PROMOTING_WRAPPER(asin,  asin,  my_complex_asin,  dom_unit)
+DEFINE_PROMOTING_WRAPPER(acos,  acos,  my_complex_acos,  dom_unit)
+DEFINE_PROMOTING_WRAPPER(acosh, acosh, my_complex_acosh, dom_ge1)
+DEFINE_PROMOTING_WRAPPER(atanh, atanh, my_complex_atanh, dom_lt1)
+DEFINE_PROMOTING_WRAPPER(sqrt,  sqrt,  gsl_complex_sqrt, dom_nonneg)
+DEFINE_PROMOTING_WRAPPER(ln,    log,   gsl_complex_log,  dom_nonneg)
+DEFINE_PROMOTING_WRAPPER(log,   log10, log10_complex,    dom_nonneg)
 
 // **** Start: Define helpers to evaluate logical not **** 
 static inline double real_not(double x) {
@@ -289,236 +343,8 @@ void arg_wrapper(Stack *stack) {
   return;
 }
 
-void ln_wrapper(Stack *stack) {
-  stack_element a = pop(stack);
 
-  if (a.type == TYPE_REAL) {
-    if (a.real >= 0.0) {
-      push_real(stack, log(a.real));
-    } else {
-      push_complex(stack, gsl_complex_log(gsl_complex_rect(a.real, 0.0)));
-    }
-  }
 
-  else if (a.type == TYPE_COMPLEX) {
-    push_complex(stack, gsl_complex_log(a.complex_val));
-  }
-
-  else if (a.type == TYPE_MATRIX_REAL) {
-    gsl_matrix* m = a.matrix_real;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    // Check for any negative entry
-    bool has_negative = false;
-    for (size_t i = 0; i < rows && !has_negative; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	if (gsl_matrix_get(m, i, j) < 0.0) {
-	  has_negative = true;
-	  break;
-	}
-      }
-    }
-
-    if (has_negative) {
-      // Promote to complex
-      gsl_matrix_complex* cm = gsl_matrix_complex_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_complex z = gsl_complex_rect(x, 0.0);
-	  gsl_matrix_complex_set(cm, i, j, gsl_complex_log(z));
-	}
-      }
-      push_matrix_complex(stack, cm);
-    } else {
-      // Stay real
-      gsl_matrix* rm = gsl_matrix_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_matrix_set(rm, i, j, log(x));
-	}
-      }
-      push_matrix_real(stack, rm);
-    }
-  }
-
-  else if (a.type == TYPE_MATRIX_COMPLEX) {
-    gsl_matrix_complex* m = a.matrix_complex;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    gsl_matrix_complex* result = gsl_matrix_complex_alloc(rows, cols);
-    for (size_t i = 0; i < rows; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	gsl_complex z = gsl_matrix_complex_get(m, i, j);
-	gsl_matrix_complex_set(result, i, j, gsl_complex_log(z));
-      }
-    }
-    push_matrix_complex(stack, result);
-  }
-  else {
-    mm_error("ln: unsupported type\n");
-  }
-}
-
-void log_wrapper(Stack *stack) {
-  stack_element a = pop(stack);
-
-  gsl_complex log10_const = gsl_complex_rect(log(10.0), 0.0);
-
-  if (a.type == TYPE_REAL) {
-    if (a.real >= 0.0) {
-      push_real(stack, log10(a.real));
-    } else {
-      gsl_complex z = gsl_complex_rect(a.real, 0.0);
-      gsl_complex ln_z = gsl_complex_log(z);
-      gsl_complex result = gsl_complex_div(ln_z, log10_const);
-      push_complex(stack, result);
-    }
-  }
-
-  else if (a.type == TYPE_COMPLEX) {
-    gsl_complex ln_z = gsl_complex_log(a.complex_val);
-    gsl_complex result = gsl_complex_div(ln_z, log10_const);
-    push_complex(stack, result);
-  }
-
-  else if (a.type == TYPE_MATRIX_REAL) {
-    gsl_matrix* m = a.matrix_real;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    bool has_negative = false;
-    for (size_t i = 0; i < rows && !has_negative; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	if (gsl_matrix_get(m, i, j) < 0.0) {
-	  has_negative = true;
-	  break;
-	}
-      }
-    }
-
-    if (has_negative) {
-      // Promote to complex
-      gsl_matrix_complex* cm = gsl_matrix_complex_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_complex z = gsl_complex_rect(x, 0.0);
-	  gsl_complex ln_z = gsl_complex_log(z);
-	  gsl_complex res = gsl_complex_div(ln_z, log10_const);
-	  gsl_matrix_complex_set(cm, i, j, res);
-	}
-      }
-      push_matrix_complex(stack, cm);
-    } else {
-      // Stay real
-      gsl_matrix* rm = gsl_matrix_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_matrix_set(rm, i, j, log10(x));
-	}
-      }
-      push_matrix_real(stack, rm);
-    }
-  }
-
-  else if (a.type == TYPE_MATRIX_COMPLEX) {
-    gsl_matrix_complex* m = a.matrix_complex;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    gsl_matrix_complex* result = gsl_matrix_complex_alloc(rows, cols);
-    for (size_t i = 0; i < rows; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	gsl_complex z = gsl_matrix_complex_get(m, i, j);
-	gsl_complex ln_z = gsl_complex_log(z);
-	gsl_matrix_complex_set(result, i, j, gsl_complex_div(ln_z, log10_const));
-      }
-    }
-    push_matrix_complex(stack, result);
-  }
-  else {
-    mm_error("log: unsupported type\n");
-  }
-}
-
-void sqrt_wrapper(Stack *stack) {
-  stack_element a = pop(stack);
-
-  if (a.type == TYPE_REAL) {
-    if (a.real >= 0.0) {
-      push_real(stack, sqrt(a.real));
-    } else {
-      gsl_complex z = gsl_complex_rect(a.real, 0.0);
-      push_complex(stack, gsl_complex_sqrt(z));
-    }
-  }
-
-  else if (a.type == TYPE_COMPLEX) {
-    push_complex(stack, gsl_complex_sqrt(a.complex_val));
-  }
-
-  else if (a.type == TYPE_MATRIX_REAL) {
-    gsl_matrix* m = a.matrix_real;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    bool has_negative = false;
-    for (size_t i = 0; i < rows && !has_negative; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	if (gsl_matrix_get(m, i, j) < 0.0) {
-	  has_negative = true;
-	  break;
-	}
-      }
-    }
-
-    if (has_negative) {
-      // Promote to complex
-      gsl_matrix_complex* cm = gsl_matrix_complex_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_complex z = gsl_complex_rect(x, 0.0);
-	  gsl_matrix_complex_set(cm, i, j, gsl_complex_sqrt(z));
-	}
-      }
-      push_matrix_complex(stack, cm);
-    } else {
-      gsl_matrix* rm = gsl_matrix_alloc(rows, cols);
-      for (size_t i = 0; i < rows; ++i) {
-	for (size_t j = 0; j < cols; ++j) {
-	  double x = gsl_matrix_get(m, i, j);
-	  gsl_matrix_set(rm, i, j, sqrt(x));
-	}
-      }
-      push_matrix_real(stack, rm);
-    }
-  }
-
-  else if (a.type == TYPE_MATRIX_COMPLEX) {
-    gsl_matrix_complex* m = a.matrix_complex;
-    size_t rows = m->size1;
-    size_t cols = m->size2;
-
-    gsl_matrix_complex* result = gsl_matrix_complex_alloc(rows, cols);
-    for (size_t i = 0; i < rows; ++i) {
-      for (size_t j = 0; j < cols; ++j) {
-	gsl_complex z = gsl_matrix_complex_get(m, i, j);
-	gsl_matrix_complex_set(result, i, j, gsl_complex_sqrt(z));
-      }
-    }
-    push_matrix_complex(stack, result);
-  }
-
-  else {
-    mm_error("sqrt: unsupported type\n");
-  }
-}
 
 void npdf_wrapper(Stack *stack) {
   value_type a = stack_top_type(stack);

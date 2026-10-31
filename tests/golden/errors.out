@@ -5,9 +5,8 @@ Error: Dimension mismatch for real matrix multiplication.
 Error: Unknown word: nosuchword
 
 [0] ℝ : 3.000000
-[1] ℝ : 99.000000
-[2] 𝒮 : "abc"
-[3] ℝ : 3.000000
-[4] Mℝ: 2 x 2 matrix
-[5] Mℝ: 3 x 3 matrix
+[1] 𝒮 : "abc"
+[2] ℝ : 3.000000
+[3] Mℝ: 2 x 2 matrix
+[4] Mℝ: 3 x 3 matrix
 [exit 1]

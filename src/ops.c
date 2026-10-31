@@ -119,6 +119,67 @@ static int op_pick(Stack *stack) {
 
 static int op_depth(Stack *stack) { push_real(stack, stack->top + 1); return 0; }
 
+/* ---- real-only arithmetic helpers ---- */
+static int pop_two_reals(Stack *stack, const char *what, double *y, double *x) {
+  if (stack->items[stack->top].type != TYPE_REAL || stack->items[stack->top - 1].type != TYPE_REAL)
+    return mm_error("%s: needs two real numbers", what);
+  *x = pop(stack).real;
+  *y = pop(stack).real;
+  return 0;
+}
+
+static int op_pct(Stack *stack) {          /* y x -- y y*x/100  (HP %) */
+  double y, x;
+  if (pop_two_reals(stack, "%", &y, &x)) return 0;
+  push_real(stack, y); push_real(stack, y * x / 100.0); return 0;
+}
+static int op_pctt(Stack *stack) {         /* y x -- y 100*x/y  (HP %T) */
+  double y, x;
+  if (pop_two_reals(stack, "%t", &y, &x)) return 0;
+  if (y == 0.0) return mm_error("%%t: total is zero");
+  push_real(stack, y); push_real(stack, 100.0 * x / y); return 0;
+}
+static int op_pctchg(Stack *stack) {       /* y x -- y 100*(x-y)/y  (HP delta%) */
+  double y, x;
+  if (pop_two_reals(stack, "%chg", &y, &x)) return 0;
+  if (y == 0.0) return mm_error("%%chg: base is zero");
+  push_real(stack, y); push_real(stack, 100.0 * (x - y) / y); return 0;
+}
+static int op_mod(Stack *stack) {          /* floored modulo, sign of x */
+  double y, x;
+  if (pop_two_reals(stack, "mod", &y, &x)) return 0;
+  if (x == 0.0) return mm_error("mod: modulus is zero");
+  double r = fmod(y, x);
+  if (r != 0.0 && ((r < 0) != (x < 0))) r += x;
+  push_real(stack, r); return 0;
+}
+static int op_fact(Stack *stack) {
+  if (stack->items[stack->top].type != TYPE_REAL) return mm_error("fact: needs a real number");
+  double x = pop(stack).real;
+  if (x < 0.0 && x == floor(x)) return mm_error("fact: negative integer");
+  double r = tgamma(x + 1.0);
+  if (!isfinite(r)) return mm_error("fact: overflow");
+  push_real(stack, x == floor(x) && x <= 22 ? round(r) : r); return 0;
+}
+static int op_ncr(Stack *stack) {
+  double n, k;
+  if (pop_two_reals(stack, "ncr", &n, &k)) return 0;
+  if (n != floor(n) || k != floor(k) || n < 0 || k < 0 || k > n) return mm_error("ncr: need integers 0 <= k <= n");
+  if (k > n - k) k = n - k;
+  double r = 1.0;
+  for (double i = 1.0; i <= k; i += 1.0) r = r * (n - k + i) / i;
+  push_real(stack, r < 9007199254740992.0 ? round(r) : r); return 0;
+}
+static int op_npr(Stack *stack) {
+  double n, k;
+  if (pop_two_reals(stack, "npr", &n, &k)) return 0;
+  if (n != floor(n) || k != floor(k) || n < 0 || k < 0 || k > n) return mm_error("npr: need integers 0 <= k <= n");
+  double r = 1.0;
+  for (double i = n - k + 1.0; i <= n; i += 1.0) r *= i;
+  if (!isfinite(r)) return mm_error("npr: overflow");
+  push_real(stack, r); return 0;
+}
+
 static gsl_complex conj_c(gsl_complex z) { return gsl_complex_conjugate(z); }
 static double conj_r(double x) { return x; }
 
@@ -301,6 +362,13 @@ const Op ops[] = {
   { "inv", 1, op_inv, "Arithmetic", "x -- 1/x", "Multiplicative inverse.", "4 inv      (→ 0.25)" },
   { "abs", 1, op_abs, "Arithmetic", "z -- |z|", "Absolute value (magnitude for complex).", "3 abs      (→ 3)" },
   { "sqrt", 1, op_sqrt, "Arithmetic", "x -- sqrt(x)", "Square root; supports complex for x < 0.", "9 sqrt     (→ 3)" },
+  { "%", 2, op_pct, "Arithmetic", "y x -- y y*x/100", "percent of y (HP %; keeps y)", "200 25 %" },
+  { "%t", 2, op_pctt, "Arithmetic", "y x -- y 100*x/y", "x as a percent of the total y (HP %T; keeps y)", "200 50 %t" },
+  { "%chg", 2, op_pctchg, "Arithmetic", "y x -- y 100*(x-y)/y", "percent change from y to x (HP delta%; keeps y)", "80 100 %chg" },
+  { "mod", 2, op_mod, "Arithmetic", "y x -- y mod x", "floored modulo (result has the sign of x)", "-7 3 mod" },
+  { "fact", 1, op_fact, "Arithmetic", "x -- x!", "factorial; Gamma(x+1) for non-integers", "5 fact" },
+  { "ncr", 2, op_ncr, "Arithmetic", "n k -- C(n,k)", "combinations", "52 5 ncr" },
+  { "npr", 2, op_npr, "Arithmetic", "n k -- P(n,k)", "permutations", "10 3 npr" },
   { "frac", 1, op_frac, "Arithmetic", "x -- frac(x)", "Fractional part of x (x - floor(x)).", "3.7 frac   (→ 0.7)" },
   { "intg", 1, op_intg, "Arithmetic", "x -- floor(x)", "Integer part (floor).", "3.7 intg   (→ 3)" },
   /* ---- Exp/Log ---- */

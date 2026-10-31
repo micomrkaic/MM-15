@@ -1,4 +1,6 @@
-2 1.5 sto 2 rcl
+1.5 2 sto 2 rcl
 5 sto
 pr
 3 rcl
+[2 2 $ 1 2 3 4] 9 sto 9 rcl pm
+"text" 10 sto 10 rcl

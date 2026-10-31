@@ -57,20 +57,33 @@ static int  word_depth = 0;       /* current nesting of word/macro calls */
 static bool word_aborted = false; /* set when the depth limit is hit: unwind */
 
 // **************** The main loop in this file ****************
+/* Each top-level token is atomic: a snapshot of the stack is taken before
+   it runs, and if the token reports an error the stack is restored and the
+   rest of the line is skipped. A user word is one token for this purpose. */
 void evaluate_line(Stack *stack, char* line) {
   int def = is_word_definition(line);
   if (def != 0) {
     // definition line (accepted or rejected) is already handled; do not lex it
     return;
   }
-  
+
+  Stack before;
+  init_stack(&before);
   word_aborted = false;
   Lexer lexer = (Lexer){ .input = line, .pos = 0 };
   Token tok;
   do {
     tok = next_token(&lexer);
+    if (tok.type == TOK_EOF) break;
+    long errors_before = error_count;
+    copy_stack(&before, stack);
     evaluate_one_token(stack, tok);
-  } while (tok.type != TOK_EOF && !word_aborted);
+    if (error_count > errors_before) {
+      copy_stack(stack, &before);
+      break;
+    }
+  } while (!word_aborted);
+  free_stack(&before);
   word_aborted = false;
 }
 
@@ -162,6 +175,9 @@ void evaluate_one_token(Stack *stack, Token tok) {
     else mm_error("Unknown command: %s", tok.text);
     return;
   }
+  case TOK_XT:
+    mm_error("%s: execution tokens arrive in the next step", tok.text);
+    return;
   case TOK_UNKNOWN:
     mm_error("Illegal token: %s", tok.text);
     return;

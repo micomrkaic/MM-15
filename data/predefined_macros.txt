@@ -16,10 +16,10 @@ npv 1 + / tuck pval
 irr roots selreal rmax split_mat inv 1 - 100 *
 cumprod_c ln cumsum_c exp
 cumprod_r ln cumsum_r exp
-sto_add over rcl + sto
-sto_sub over rcl - sto
-sto_mul over rcl .* sto
-sto_div over rcl ./ sto
+sto_add dup rcl 2 roll + swap sto
+sto_sub dup rcl 2 roll - swap sto
+sto_mul dup rcl 2 roll .* swap sto
+sto_div dup rcl 2 roll ./ swap sto
 XprimeX dup ' swap *
 f2c 32 - 9 / 5 *
 c2f 9 * 5 / 32 +

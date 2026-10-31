@@ -671,6 +671,12 @@ void div_top_two(Stack* stack) {
   stack_element* b = &stack->items[stack->top];     // denominator
   stack_element result = {0};
 
+  if ((b->type == TYPE_REAL && b->real == 0.0) ||
+      (b->type == TYPE_COMPLEX && GSL_REAL(b->complex_val) == 0.0 && GSL_IMAG(b->complex_val) == 0.0)) {
+    mm_error("Division by zero");
+    return;
+  }
+
   // ---- Scalar ÷ Scalar ----
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
     result.type = TYPE_REAL;
@@ -855,8 +861,13 @@ void pow_top_two(Stack* stack) {
 
   // ---- Scalar power ----
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
-    result.type = TYPE_REAL;
-    result.real = pow(a->real, b->real);
+    if (a->real < 0.0 && b->real != floor(b->real)) {   /* promote, as sqrt does */
+      result.type = TYPE_COMPLEX;
+      result.complex_val = gsl_complex_pow(gsl_complex_rect(a->real, 0.0), gsl_complex_rect(b->real, 0.0));
+    } else {
+      result.type = TYPE_REAL;
+      result.real = pow(a->real, b->real);
+    }
   }
   else if ((a->type == TYPE_REAL && b->type == TYPE_COMPLEX) ||
 	   (a->type == TYPE_COMPLEX && b->type == TYPE_REAL) ||
@@ -1435,8 +1446,13 @@ void dot_pow_top_two(Stack* stack) {
   stack_element result = {0};
 
   if (a->type == TYPE_REAL && b->type == TYPE_REAL) {
-    result.type = TYPE_REAL;
-    result.real = pow(a->real, b->real);
+    if (a->real < 0.0 && b->real != floor(b->real)) {   /* promote, as sqrt does */
+      result.type = TYPE_COMPLEX;
+      result.complex_val = gsl_complex_pow(gsl_complex_rect(a->real, 0.0), gsl_complex_rect(b->real, 0.0));
+    } else {
+      result.type = TYPE_REAL;
+      result.real = pow(a->real, b->real);
+    }
   }
   else if ((a->type == TYPE_REAL || a->type == TYPE_COMPLEX) &&
            (b->type == TYPE_REAL || b->type == TYPE_COMPLEX)) {

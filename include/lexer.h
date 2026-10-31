@@ -56,6 +56,7 @@ typedef enum {
   TOK_IDENTIFIER,
   TOK_FUNCTION,
   TOK_VERTICAL,
+  TOK_XT,            /* @name: execution token of a command or word */
   TOK_UNKNOWN,
 } token_type;
 

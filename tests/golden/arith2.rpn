@@ -1,0 +1,4 @@
+200 25 % 200 50 %t 80 100 %chg
+-7 3 mod 7 -3 mod 5 fact 4.5 fact 52 5 ncr 10 3 npr
+1 2 3 4 2 pick depth 3 roll
+"a\"b\\c" slen
