@@ -47,7 +47,7 @@
 #include "compare_fun.h"
 #include "words.h"
 #include "run_machine.h"
-#include "integration_and_zeros.h"
+#include "numerics.h"
 #include "globals.h"
 #include "my_astronomy.h"
 #include "ops.h"
@@ -148,9 +148,12 @@ void evaluate_one_token(Stack *stack, Token tok) {
     else mm_error("Unknown command: %s", tok.text);
     return;
   }
-  case TOK_XT:
-    mm_error("%s: execution tokens arrive in the next step", tok.text);
+  case TOK_XT: {
+    double xt = xt_of(tok.text + 1);
+    if (xt < 0) { mm_error("%s: no such command or word", tok.text); return; }
+    push_real(stack, xt);
     return;
+  }
   case TOK_UNKNOWN:
     mm_error("Illegal token: %s", tok.text);
     return;

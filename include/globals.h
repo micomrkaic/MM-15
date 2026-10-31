@@ -53,11 +53,8 @@ extern bool completed_batch;
 extern bool test_flag;
 extern bool skip_stack_printing;
 extern int print_precision;
-extern int selected_function;
 extern char path_to_data_and_programs[MAX_PATH];
 
-extern double intg_tolerance;
-extern double fsolve_tolerance;
 
 int set_print_precision(Stack* stack);
 void swap_fixed_scientific(void);

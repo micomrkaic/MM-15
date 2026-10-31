@@ -1,0 +1,34 @@
+# Numerical methods take an execution token from @name.
+12 setprec
+: sq dup * ;
+0 2 @sq integrate
+0 pi @sin integrate
+0 1 @exp romberg
+: rsqrt sqrt inv ;
+0 1 @rsqrt integrate
+2 0 @sq integrate 1 1 @sq integrate
+: f2 dup * 2 - ;
+0 3 @f2 fzero
+1 @f2 solve
+-1 @f2 solve
+1 2 @f2 fzero
+: par 3 - dup * 1 + ;
+0 5 @par minimize 3 - abs 1e-6 lt
+2 @exp deriv 2 exp - abs 1e-9 lt
+: invsq dup * inv ;
+1 1000 @invsq fsum
+: ident ;
+1 10 @ident fprod
+0 @sin exec
+3 @sq exec
+0 1 @drop integrate
+0 1 42.5 integrate
+0 1 @nosuch integrate
+: bad 0 / ;
+7 0 1 @bad integrate
+5 tol
+1e-4 tol 0 1 @exp integrate 1 exp 1 - - abs 1e-3 lt
+nevals 0 gt
+: scaled 0 rcl * ;
+3 0 sto
+0 1 @scaled integrate

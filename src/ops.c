@@ -29,7 +29,7 @@
 #include "compare_fun.h"
 #include "globals.h"
 #include "help.h"
-#include "integration_and_zeros.h"
+#include "numerics.h"
 #include "linear_algebra.h"
 #include "math_helpers.h"
 #include "matrix_fun.h"
@@ -193,6 +193,40 @@ static void conj_wrapper(Stack *stack) {
   }
 }
 
+/* ---- numerical methods: pop reals, run, push the result ---- */
+static int pop_real_arg(Stack *stack, const char *what, double *out) {
+  if (stack->items[stack->top].type != TYPE_REAL) return mm_error("%s: expected a real number", what);
+  *out = pop(stack).real;
+  return 0;
+}
+static int op_exec(Stack *stack) { double xt; if (pop_real_arg(stack, "exec", &xt)) return -1; return xt_exec(stack, xt); }
+static int op_tol(Stack *stack) {
+  double t; if (pop_real_arg(stack, "tol", &t)) return -1;
+  if (!(t > 0.0 && t < 1.0)) return mm_error("tol: tolerance must be between 0 and 1");
+  num_tol = t; return 0;
+}
+static int op_nevals(Stack *stack) { push_real(stack, (double)num_evals); return 0; }
+static int op_interr(Stack *stack) { push_real(stack, num_last_err); return 0; }
+#define NUM3(nm, call) static int op_##nm(Stack *stack) {                      \
+  double xt, b, a, r;                                                        \
+  if (pop_real_arg(stack, #nm, &xt) || pop_real_arg(stack, #nm, &b) || pop_real_arg(stack, #nm, &a)) return -1; \
+  if (call != 0) return -1;                                                  \
+  push_real(stack, r); return 0; }
+#define NUM2(nm, call) static int op_##nm(Stack *stack) {                      \
+  double xt, a, r;                                                           \
+  if (pop_real_arg(stack, #nm, &xt) || pop_real_arg(stack, #nm, &a)) return -1; \
+  if (call != 0) return -1;                                                  \
+  push_real(stack, r); return 0; }
+static double err_dummy;
+NUM3(integrate, num_integrate(stack, xt, a, b, &r, &err_dummy))
+NUM3(romberg,   num_romberg(stack, xt, a, b, &r))
+NUM3(fzero,     num_fzero(stack, xt, a, b, &r))
+NUM2(solve,     num_solve(stack, xt, a, &r))
+NUM3(minimize,  num_minimize(stack, xt, a, b, &r))
+NUM2(deriv,     num_deriv(stack, xt, a, &r))
+NUM3(fsum,      num_fsum(stack, xt, a, b, false, &r))
+NUM3(fprod,     num_fsum(stack, xt, a, b, true, &r))
+
 /* GENERATED ONCE by gen_ops.py from the 1.x dispatcher and help table; now maintained by hand. */
 static int op_add(Stack *stack) { (void)stack; (void)(add_top_two(stack)); return 0; }
 static int op_sub(Stack *stack) { (void)stack; (void)(sub_top_two(stack)); return 0; }
@@ -306,10 +340,6 @@ static int op_cmax(Stack *stack) { (void)stack; (void)(matrix_reduce(stack, "col
 static int op_rmax(Stack *stack) { (void)stack; (void)(matrix_reduce(stack, "row", "max")); return 0; }
 static int op_roots(Stack *stack) { (void)stack; (void)(poly_roots(stack)); return 0; }
 static int op_pval(Stack *stack) { (void)stack; (void)(poly_eval(stack)); return 0; }
-static int op_integrate(Stack *stack) { (void)stack; (void)(integrate(stack)); return 0; }
-static int op_fzero(Stack *stack) { (void)stack; (void)(find_zero(stack)); return 0; }
-static int op_set_intg_tol(Stack *stack) { (void)stack; (void)(set_integration_precision(stack)); return 0; }
-static int op_set_f0_tol(Stack *stack) { (void)stack; (void)(set_f0_precision(stack)); return 0; }
 static int op_sto(Stack *stack) { (void)stack; (void)(store_to_register(stack)); return 0; }
 static int op_rcl(Stack *stack) { (void)stack; (void)(recall_from_register(stack)); return 0; }
 static int op_ffr(Stack *stack) { (void)stack; (void)(find_first_free_register(stack)); return 0; }
@@ -481,10 +511,18 @@ const Op ops[] = {
   { "roots", 1, op_roots, "Polynomials", "coeffs -- r1 r2 ...", "Roots of polynomial with given coefficients.", "[1 0 -1] roots   (x^2 - 1 = 0 → ±1)" },
   { "pval", 2, op_pval, "Polynomials", "x coeffs -- y", "Evaluate polynomial at x.", "2 [1 0 -1] pval   (2^2 - 1 = 3)" },
   /* ---- Numerics ---- */
-  { "integrate", 2, op_integrate, "Numerics", "a b f -- ∫_a^b f(x) dx", "Numerical integration over [a,b] of function/macro f.", "0 1 \\\"f\\\" integrate" },
-  { "fzero", 2, op_fzero, "Numerics", "x0 f -- x*", "Find root of function f near initial guess x0.", "0 \\\"f\\\" fzero" },
-  { "set_intg_tol", 1, op_set_intg_tol, "Numerics", "tol --", "Set tolerance for numerical integration.", "1e-8 set_intg_tol" },
-  { "set_f0_tol", 1, op_set_f0_tol, "Numerics", "tol --", "Set tolerance for root finding.", "1e-8 set_f0_tol" },
+  { "exec", 1, op_exec, "Numerics", "xt --", "run an execution token (@name pushes one)", "3 @sq exec" },
+  { "integrate", 3, op_integrate, "Numerics", "a b xt -- I", "integral of f over [a,b] (tanh-sinh with adaptive bisection; handles endpoint singularities)", "0 pi @sin integrate" },
+  { "romberg", 3, op_romberg, "Numerics", "a b xt -- I", "integral of f over [a,b] by Romberg extrapolation", "0 1 @exp romberg" },
+  { "fzero", 3, op_fzero, "Numerics", "a b xt -- x", "root of f in the bracket [a,b] where f changes sign (Brent)", "2 4 @sin fzero" },
+  { "solve", 2, op_solve, "Numerics", "guess xt -- x", "root of f near one guess (bracket search, then Brent)", "3 @sin solve" },
+  { "minimize", 3, op_minimize, "Numerics", "a b xt -- x", "argument of the minimum of f in [a,b] (Brent)", "0 5 @par minimize" },
+  { "deriv", 2, op_deriv, "Numerics", "x xt -- f'(x)", "derivative of f at x (Ridders extrapolation)", "2 @exp deriv" },
+  { "fsum", 3, op_fsum, "Numerics", "lo hi xt -- S", "sum of f(i) for integer i from lo to hi", "1 1000 @invsq fsum" },
+  { "fprod", 3, op_fprod, "Numerics", "lo hi xt -- P", "product of f(i) for integer i from lo to hi", "1 10 @ident fprod" },
+  { "tol", 1, op_tol, "Numerics", "x --", "set the convergence tolerance (default 1e-10)", "1e-6 tol" },
+  { "nevals", 0, op_nevals, "Numerics", "-- n", "function evaluations used by the last numerical call", "nevals" },
+  { "interr", 0, op_interr, "Numerics", "-- e", "error estimate of the last integrate", "interr" },
   /* ---- Registers ---- */
   { "sto", 2, op_sto, "Registers", "value n --", "Store value into register n.", "42 0 sto" },
   { "rcl", 1, op_rcl, "Registers", "n -- value", "Recall value from register n.", "0 rcl" },

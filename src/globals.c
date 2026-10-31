@@ -18,6 +18,7 @@
 
 #include "errors.h"
 #include "globals.h"
+#include "numerics.h"
 
 bool fixed_point = true;
 bool verbose_mode = false;
@@ -25,10 +26,7 @@ bool completed_batch=false;
 bool test_flag = false;
 bool skip_stack_printing = false;
 int print_precision = 6;
-int selected_function = 0;
 char path_to_data_and_programs[MAX_PATH];
-double intg_tolerance = 1.0e-5;
-double fsolve_tolerance = 1.0e-6;
 
 #include "globals.h"
 #include <errno.h>            // for errno, EEXIST
@@ -114,7 +112,7 @@ void save_config(const char* filename) {
   fprintf(f, "print_precision = %d\n", print_precision);
   fprintf(f, "fixed_point = %d\n", fixed_point);
   fprintf(f, "verbose_mode = %d\n", verbose_mode);
-  fprintf(f, "selected_function = %d\n", selected_function);
+  fprintf(f, "tol = %g\n", num_tol);
 
   fclose(f);
 }
@@ -148,8 +146,9 @@ int load_config(const char* filename) {
       fixed_point = atoi(value);
     } else if (strcmp(key, "verbose_mode") == 0) {
       verbose_mode = atoi(value);
-    } else if (strcmp(key, "selected_function") == 0) {
-      selected_function = atoi(value);
+    } else if (strcmp(key, "tol") == 0) {
+      double t = atof(value);
+      if (t > 0.0 && t < 1.0) num_tol = t;
     } else if (strcmp(key, "path_to_data_and_programs") == 0) {
       strncpy(path_to_data_and_programs, value, MAX_PATH - 1);
       path_to_data_and_programs[MAX_PATH - 1] = '\0';
