@@ -59,8 +59,8 @@ int matrix_inverse(Stack* stack) {
 
     // LU decomposition
     int status = gsl_linalg_LU_decomp(tmp, p, &signum);
-    if (status != GSL_SUCCESS) {
-      mm_error("LU decomposition failed\n");
+    if (status != GSL_SUCCESS) {   /* GSL >= 2.8 reports a singular matrix here */
+      mm_error("Matrix is singular, cannot invert\n");
       gsl_matrix_free(inv);
       gsl_matrix_free(tmp);
       gsl_permutation_free(p);
@@ -110,11 +110,11 @@ int matrix_inverse(Stack* stack) {
     int signum;
 
     // LU decomposition
-    gsl_linalg_complex_LU_decomp(tmp, p, &signum);
+    int cstatus = gsl_linalg_complex_LU_decomp(tmp, p, &signum);
 
     // Check complex determinant
     gsl_complex det = gsl_linalg_complex_LU_det(tmp, signum);
-    if (GSL_REAL(det) == 0.0 && GSL_IMAG(det) == 0.0) {
+    if (cstatus != GSL_SUCCESS || (GSL_REAL(det) == 0.0 && GSL_IMAG(det) == 0.0)) {
       mm_error("Complex matrix is singular, cannot invert\n");
       gsl_matrix_complex_free(inv);
       gsl_matrix_complex_free(tmp);
@@ -169,8 +169,7 @@ int matrix_determinant(Stack* stack) {
     int signum;
 
     if (gsl_linalg_LU_decomp(tmp, p, &signum) != 0) {
-      mm_error("Matrix decomposition failed\n");
-      rc = 1;
+      push_real(stack, 0.0);          /* GSL >= 2.8: decomposition fails only for a singular matrix */
     } else {
       push_real(stack, gsl_linalg_LU_det(tmp, signum));
     }
@@ -191,8 +190,7 @@ int matrix_determinant(Stack* stack) {
     int signum;
 
     if (gsl_linalg_complex_LU_decomp(tmp, p, &signum) != 0) {
-      mm_error("Complex matrix decomposition failed\n");
-      rc = 1;
+      push_complex(stack, gsl_complex_rect(0.0, 0.0));
     } else {
       push_complex(stack, gsl_linalg_complex_LU_det(tmp, signum));
     }

@@ -36,6 +36,9 @@
   still left alone. Keep your own macros in `user_words.txt` (or in a file you
   `loadwords`), not in the macro file.
 - `errors.c` builds with gcc 14's `-Wformat-overflow`.
+- GSL 2.8 reports a singular matrix from the LU decomposition itself; `minv`
+  now says "singular" and `det` returns 0 with any GSL version. Negative
+  zero prints as 0.
 
 ## 2.0
 

@@ -26,6 +26,9 @@
 #include <gsl/gsl_matrix_double.h>          // for gsl_matrix_get, gsl_matrix
 #include <math.h>                           // for fabs
 #include <stdio.h>                          // for printf, size_t, snprintf
+
+/* print -0 as 0 */
+static inline double nz(double x) { return x == 0.0 ? 0.0 : x; }
 #include <stdlib.h>                         // for calloc, free
 #include <string.h>                         // for strlen
 #include "globals.h"                        // for print_precision, fixed_point
@@ -41,19 +44,19 @@ void print_top_scalar(const Stack* stack) {
   switch (stack->items[i].type) {
   case TYPE_REAL:
     if (fixed_point)
-      printf("[%d] ℝ : %.*f\n", i, print_precision, stack->items[i].real);
+      printf("[%d] ℝ : %.*f\n", i, print_precision, nz(stack->items[i].real));
     else
-      printf("[%d] ℝ : %.*g\n", i, print_precision, stack->items[i].real);
+      printf("[%d] ℝ : %.*g\n", i, print_precision, nz(stack->items[i].real));
     break;
   case TYPE_COMPLEX:
     if (fixed_point)
       printf("[%d] ℂ : (%.*f, %.*fi)\n", i,
-	     print_precision, GSL_REAL(stack->items[i].complex_val),
-	     print_precision, GSL_IMAG(stack->items[i].complex_val));
+	     print_precision, nz(GSL_REAL(stack->items[i].complex_val)),
+	     print_precision, nz(GSL_IMAG(stack->items[i].complex_val)));
     else
       printf("[%d] ℂ : (%.*g, %.*gi)\n", i,
-	     print_precision, GSL_REAL(stack->items[i].complex_val),
-	     print_precision, GSL_IMAG(stack->items[i].complex_val));
+	     print_precision, nz(GSL_REAL(stack->items[i].complex_val)),
+	     print_precision, nz(GSL_IMAG(stack->items[i].complex_val)));
     break;
   case TYPE_STRING:
     printf("[%d] 𝒮 : \"%s\"\n", i, stack->items[i].string);
@@ -84,19 +87,19 @@ void print_stack(const Stack* stack, char *title) {
     switch (stack->items[i].type) {
     case TYPE_REAL:
       if (fixed_point)
-	printf("[%d] ℝ : %.*f\n", i, print_precision, stack->items[i].real);
+	printf("[%d] ℝ : %.*f\n", i, print_precision, nz(stack->items[i].real));
       else
-	printf("[%d] ℝ : %.*g\n", i, print_precision, stack->items[i].real);
+	printf("[%d] ℝ : %.*g\n", i, print_precision, nz(stack->items[i].real));
       break;
     case TYPE_COMPLEX:
       if (fixed_point)
 	printf("[%d] ℂ : (%.*f, %.*fi)\n", i,
-	       print_precision, GSL_REAL(stack->items[i].complex_val),
-	       print_precision, GSL_IMAG(stack->items[i].complex_val));
+	       print_precision, nz(GSL_REAL(stack->items[i].complex_val)),
+	       print_precision, nz(GSL_IMAG(stack->items[i].complex_val)));
       else
 	printf("[%d] ℂ : (%.*g, %.*gi)\n", i,
-	       print_precision, GSL_REAL(stack->items[i].complex_val),
-	       print_precision, GSL_IMAG(stack->items[i].complex_val));
+	       print_precision, nz(GSL_REAL(stack->items[i].complex_val)),
+	       print_precision, nz(GSL_IMAG(stack->items[i].complex_val)));
       break;
     case TYPE_STRING:
       printf("[%d] 𝒮 : \"%s\"\n", i, stack->items[i].string);
@@ -139,9 +142,9 @@ void print_real_matrix(const gsl_matrix* m) {
       char buf[64];
       double val = gsl_matrix_get(m, i, j);
       if (fabs(val) > 1e5 || (fabs(val) > 0 && fabs(val) < 1e-4)) {
-	snprintf(buf, sizeof(buf), "%.4e", val);
+	snprintf(buf, sizeof(buf), "%.4e", nz(val));
       } else {
-	snprintf(buf, sizeof(buf), "%.4f", val);
+	snprintf(buf, sizeof(buf), "%.4f", nz(val));
       }
       int len = (int)strlen(buf);
       if (len > col_width[j]) col_width[j] = len;
@@ -154,9 +157,9 @@ void print_real_matrix(const gsl_matrix* m) {
     for (size_t j = 0; j < cols; ++j) {
       double val = gsl_matrix_get(m, i, j);
       if (fabs(val) > 1e5 || (fabs(val) > 0 && fabs(val) < 1e-4)) {
-	printf("%*.*e ", col_width[j], 4, val);
+	printf("%*.*e ", col_width[j], 4, nz(val));
       } else {
-	printf("%*.*f ", col_width[j], 4, val);
+	printf("%*.*f ", col_width[j], 4, nz(val));
       }
     }
     printf("|\n");
@@ -185,9 +188,9 @@ void print_complex_matrix(const gsl_matrix_complex* m) {
 
       if ((fabs(re) > 1e5 || (fabs(re) > 0 && fabs(re) < 1e-4)) ||
 	  (fabs(im) > 1e5 || (fabs(im) > 0 && fabs(im) < 1e-4))) {
-	snprintf(buf, sizeof(buf), "(%.4e,%.4e)", re, im);
+	snprintf(buf, sizeof(buf), "(%.4e,%.4e)", nz(re), nz(im));
       } else {
-	snprintf(buf, sizeof(buf), "(%.4f,%.4f)", re, im);
+	snprintf(buf, sizeof(buf), "(%.4f,%.4f)", nz(re), nz(im));
       }
       int len = (int)strlen(buf);
       if (len > col_width[j]) col_width[j] = len;
@@ -205,10 +208,10 @@ void print_complex_matrix(const gsl_matrix_complex* m) {
       if ((fabs(re) > 1e5 || (fabs(re) > 0 && fabs(re) < 1e-4)) ||
 	  (fabs(im) > 1e5 || (fabs(im) > 0 && fabs(im) < 1e-4))) {
 	printf("%*s ", col_width[j], "");
-	printf("(%.4e,%.4e)", re, im);
+	printf("(%.4e,%.4e)", nz(re), nz(im));
       } else {
 	printf("%*s ", col_width[j], "");
-	printf("(%.4f,%.4f)", re, im);
+	printf("(%.4f,%.4f)", nz(re), nz(im));
       }
     }
     printf("|\n");
