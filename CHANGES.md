@@ -30,9 +30,11 @@
 - Programs: comment lines are skipped, the listing is printed only in verbose
   mode, and the never-settable `ctr_*?` tests are gone.
 - Word definitions are not echoed in batch mode (unless `verbose_mode = 1`).
-- `npv` macro simplified to `cashflows rate npv`. Users with an existing
-  `~/.config/mm_15/predefined_macros.txt` should copy the new
-  `data/predefined_macros.txt` over it (`make install` does not overwrite it).
+- `npv` macro simplified to `cashflows rate npv`. `make install` now
+  replaces `~/.config/mm_15/predefined_macros.txt` with the shipped file, so
+  the macros always match the program; `config.txt` and `user_words.txt` are
+  still left alone. Keep your own macros in `user_words.txt` (or in a file you
+  `loadwords`), not in the macro file.
 - `errors.c` builds with gcc 14's `-Wformat-overflow`.
 
 ## 2.0

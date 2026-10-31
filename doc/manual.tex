@@ -537,7 +537,7 @@ A definition occupies the whole line: nothing may follow the closing semicolon. 
 
 \subsection{Macros}
 
-Macros are words that ship with the calculator in \code{predefined\_macros.txt}, loaded at startup from the configuration directory; \cmd{listmacros} lists them. They behave exactly like words---the only difference is where they are stored, so that \cmd{clrwords} does not remove them. Appendix~\ref{app:macros} describes each. If a word and a macro have the same name, the word wins.
+Macros are words that ship with the calculator in \code{predefined\_macros.txt}, loaded at startup from the configuration directory; \cmd{listmacros} lists them. They behave exactly like words---the only difference is where they are stored, so that \cmd{clrwords} does not remove them. Appendix~\ref{app:macros} describes each. If a word and a macro have the same name, the word wins. \code{make install} replaces the macro file with the version that matches the program, so put your own definitions in \code{user\_words.txt}, not there.
 
 %======================================================================
 \section{Numerical methods}
@@ -625,7 +625,7 @@ The \code{zone} argument of the solar functions is either an IANA zone name such
 today 100 dateplus durham dawn      \ civil dawn in Durham, NC, 100 days from now
 today kranj sunset dec_hr           \ sunset in Kranj as a decimal hour
 \end{rpn}
-Add your own with one line in \code{predefined\_macros.txt}: \code{home 51.5 -0.12 "Europe/London"}.
+Add your own with one line in \code{user\_words.txt}: \code{home 51.5 -0.12 "Europe/London"}.
 
 %======================================================================
 \section{Programs}
@@ -699,7 +699,7 @@ Everything lives in \code{\$XDG\_CONFIG\_HOME/mm\_15/}, which defaults to \code{
 \begin{tabular}{@{}lp{0.65\textwidth}@{}}
 \toprule
 \code{config.txt} & \code{print\_precision}, \code{fixed\_point}, \code{verbose\_mode}, \code{tol}; written at exit \\
-\code{predefined\_macros.txt} & macros, one \code{name body} per line; seeded by \code{make install} \\
+\code{predefined\_macros.txt} & macros, one \code{name body} per line; replaced by \code{make install} \\
 \code{user\_words.txt} & words saved by \cmd{savewords}; loaded at startup \\
 \code{registers.txt} & \cmd{saveregs} / \cmd{loadregs} \\
 \code{stack\_backup.dat} & \cmd{savestack} / \cmd{loadstack} \\
@@ -750,7 +750,7 @@ Generated from the dispatch table by \code{mm\_15 --commands-tex}; the same info
 \section{Shipped macros}
 \label{app:macros}
 
-The following words are loaded from \code{predefined\_macros.txt}. Edit the file to add your own.
+The following words are loaded from \code{predefined\_macros.txt}. The file is replaced at each \code{make install}; add your own words to \code{user\_words.txt} instead.
 
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}p{0.41\textwidth}@{}}
 \toprule \textbf{Macro} & \textbf{Definition} & \textbf{Meaning} \\ \midrule \endfirsthead

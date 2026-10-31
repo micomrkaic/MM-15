@@ -181,7 +181,10 @@ install: $(TARGET)
 	$(INSTALL) -d "$(APP_CONF_DIR)"
 	@for f in $(CONFIG_SRC); do \
 	  base=$$(basename "$$f"); \
-	  if [ ! -f "$(APP_CONF_DIR)/$$base" ]; then \
+	  if [ "$$base" = predefined_macros.txt ]; then \
+	    echo "  -> $$base (replaced: the macros ship with the program)"; \
+	    $(INSTALL) -m 644 "$$f" "$(APP_CONF_DIR)/$$base"; \
+	  elif [ ! -f "$(APP_CONF_DIR)/$$base" ]; then \
 	    echo "  -> $$base (new)"; \
 	    $(INSTALL) -m 644 "$$f" "$(APP_CONF_DIR)/$$base"; \
 	  else \

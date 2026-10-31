@@ -219,9 +219,10 @@ print precision, fixed/scientific, tolerance; written at exit.
 .I predefined_macros.txt
 macros, loaded at startup.
 .B make install
-seeds it from
-.I data/
-without overwriting.
+replaces it with the shipped
+.IR data/predefined_macros.txt ,
+so keep your own words in
+.IR user_words.txt .
 .TP
 .I user_words.txt
 words saved by

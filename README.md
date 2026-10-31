@@ -100,7 +100,7 @@ Requires a C17 compiler, GNU make, GNU Readline and GSL
 ```sh
 make                 # release build in bin/release/
 make test            # .t cases + golden files, under AddressSanitizer
-make install         # ~/.local: bin/mm_15, man page, manual and docs; seeds ~/.config/mm_15
+make install         # ~/.local: bin/mm_15, man page, manual, docs; macros into ~/.config/mm_15
 make uninstall
 make MODE=asan       # or ubsan, harden
 make docs            # regenerate COMMANDS.md and doc/commands.tex from the dispatch table
