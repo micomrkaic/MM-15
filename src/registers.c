@@ -92,7 +92,7 @@ void free_element(stack_element* el) {
 
 
 void store_to_register(Stack* stack) {
-  if (stack->top < 0) {
+  if (stack->top < 1) {
     fprintf(stderr, "Stack underflow: need value and register index.\n");
     return;
   }

@@ -27,7 +27,7 @@ MM-15 is built for users who:
 
 ```text
 $ ./mm15
-MM-15 v1.0
+MM-15 v1.1
 
 > 2 3 +
 5

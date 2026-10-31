@@ -30,11 +30,46 @@ double intg_tolerance = 1.0e-5;
 double fsolve_tolerance = 1.0e-6;
 
 #include "globals.h"
+#include <errno.h>            // for errno, EEXIST
 #include <gsl/gsl_complex.h>  // for GSL_IMAG, GSL_REAL
+#include <pwd.h>              // for getpwuid
 #include <stdbool.h>          // for bool, false, true
 #include <stdio.h>            // for fprintf, fclose, fopen, perror, stderr
-#include <stdlib.h>           // for atoi
+#include <stdlib.h>           // for atoi, getenv
 #include <string.h>           // for strcmp, strchr, strcspn, strncpy
+#include <sys/stat.h>         // for mkdir
+#include <unistd.h>           // for getuid
+
+static int mkdir_if_missing(const char *p) {
+  return (mkdir(p, 0700) == 0 || errno == EEXIST) ? 0 : -1;
+}
+
+const char *app_path(const char *file) {
+  static char ring[4][MAX_PATH];
+  static int slot = 0;
+  char *out = ring[slot];
+  slot = (slot + 1) % 4;
+
+  /* base and dir are deliberately shorter than the output buffer so the
+     compiler can prove the final snprintf does not truncate */
+  char base[MAX_PATH / 2], dir[MAX_PATH / 2 + 8];
+  const char *xdg = getenv("XDG_CONFIG_HOME");
+  if (xdg && *xdg) {
+    snprintf(base, sizeof base, "%s", xdg);
+  } else {
+    const char *home = getenv("HOME");
+    if (!home || !*home) {
+      struct passwd *pw = getpwuid(getuid());
+      home = (pw && pw->pw_dir) ? pw->pw_dir : ".";
+    }
+    snprintf(base, sizeof base, "%s/.config", home);
+  }
+  snprintf(dir, sizeof dir, "%.*s/mm_15", (int)(sizeof base - 1), base);
+  if (mkdir_if_missing(base) != 0 || mkdir_if_missing(dir) != 0)
+    fprintf(stderr, "Warning: cannot create %s: %s\n", dir, strerror(errno));
+  snprintf(out, MAX_PATH, "%s/%.255s", dir, file);
+  return out;
+}
 
 int set_print_precision(Stack* stack) {
   if (stack->top < 0) {

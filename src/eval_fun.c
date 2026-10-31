@@ -132,6 +132,10 @@ static const matrix_op matrix_ops[] = {
   {NULL,      NULL}
 };
 
+#define MAX_WORD_DEPTH 256
+static int  word_depth = 0;       /* current nesting of word/macro calls */
+static bool word_aborted = false; /* set when the depth limit is hit: unwind */
+
 // **************** The main loop in this file ****************
 void evaluate_line(Stack *stack, char* line) {
   int def = is_word_definition(line);
@@ -140,12 +144,14 @@ void evaluate_line(Stack *stack, char* line) {
     return;
   }
   
+  word_aborted = false;
   Lexer lexer = (Lexer){ .input = line, .pos = 0 };
   Token tok;
   do {
     tok = next_token(&lexer);
     evaluate_one_token(stack, tok);
-  } while (tok.type != TOK_EOF);
+  } while (tok.type != TOK_EOF && !word_aborted);
+  word_aborted = false;
 }
 
 /* void evaluate_line(Stack *stack, char* line) { */
@@ -223,32 +229,30 @@ void evaluate_one_token(Stack *stack, Token tok) {
     printf("; \n");
     return;
   case TOK_IDENTIFIER: {
-    user_word *m=find_macro(tok.text);
-    if (m!=NULL) {
-      char *sub_line = strdup(m->body);
-      Lexer sub_lexer = {sub_line, 0};
-      Token sub_tok;
-      do {   // The lexer loop
-	sub_tok = next_token(&sub_lexer);
-	evaluate_one_token(stack, sub_tok);    
-      } while (sub_tok.type != TOK_EOF);
-      free(sub_line);
+    user_word *w = find_macro(tok.text);
+    if (w == NULL) w = find_word(tok.text);
+    if (w == NULL) {
+      printf("Unknown identifier!\n");
       return;
     }
-    
-    user_word *w=find_word(tok.text);
-    if (w==NULL)
-      printf("Unknown identifier!\n");
-    else {
-      char *sub_line = strdup(w->body);
-      Lexer sub_lexer = {sub_line, 0};
-      Token sub_tok;
-      do {   // The lexer loop
-	sub_tok = next_token(&sub_lexer);
-	evaluate_one_token(stack, sub_tok);    
-      } while (sub_tok.type != TOK_EOF);
-      free(sub_line);
+    /* A word may call itself; a runaway recursion used to overflow the C
+       stack and crash. Nesting is counted across macros and words. */
+    if (word_depth >= MAX_WORD_DEPTH) {
+      fprintf(stderr, "Error: word nesting deeper than %d (in '%s'); aborting.\n",
+              MAX_WORD_DEPTH, w->name);
+      word_aborted = true;
+      return;
     }
+    char *sub_line = strdup(w->body);
+    Lexer sub_lexer = {sub_line, 0};
+    Token sub_tok;
+    word_depth++;
+    do {   // The lexer loop
+      sub_tok = next_token(&sub_lexer);
+      evaluate_one_token(stack, sub_tok);
+    } while (sub_tok.type != TOK_EOF && !word_aborted);
+    word_depth--;
+    free(sub_line);
     return;
   }
   case TOK_FUNCTION: {

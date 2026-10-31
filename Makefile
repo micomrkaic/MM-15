@@ -26,7 +26,6 @@ CC       ?= gcc
 CFLAGS   ?= -g -std=c17 -Wall -Wextra -Werror -Wpedantic -Iinclude -fno-common
 LDFLAGS  ?=
 LDLIBS   ?= -lgsl -lgslcblas -lreadline -lm
-CPPFLAGS += -DHOME_DIR='"$(HOME)"'
 
 # Auto-deps: generate .d files per source (write alongside .o)
 DEPFLAGS = -MMD -MP -MF $(@:.o=.d) -MT $@

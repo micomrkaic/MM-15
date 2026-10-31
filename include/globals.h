@@ -25,12 +25,6 @@
 
 #define MAX_PATH 2048
 
-#ifndef HOME_DIR
-#error "HOME_DIR must be provided by the build (-DHOME_DIR=...)."
-#endif
-
-#define APP_CFG_DIR  HOME_DIR "/.config/mm_15"
-
 #define HISTORY_FILE ".rpn_history"
 #define WORDS_FILE  "user_words.txt"
 #define REGISTERS_FILE "registers.txt"
@@ -38,12 +32,18 @@
 #define MACROS_FILE "predefined_macros.txt"
 #define STACK_FILE "stack_backup.dat"
 
-#define CONFIG_PATH      APP_CFG_DIR "/" CONFIG_FILE
-#define WORDS_PATH       APP_CFG_DIR "/" WORDS_FILE
-#define REGISTERS_PATH   APP_CFG_DIR "/" REGISTERS_FILE
-#define HISTORY_PATH     APP_CFG_DIR "/" HISTORY_FILE
-#define MACROS_PATH      APP_CFG_DIR "/" MACROS_FILE  // or use a DATADIR if not per-user
-#define STACK_PATH      APP_CFG_DIR "/" STACK_FILE  
+/* Per-user file paths, resolved at run time from $XDG_CONFIG_HOME or $HOME
+   (previously baked in at compile time, which broke installs for other
+   users and the test sandbox). The directory is created on first use.
+   The returned string lives in a small ring of static buffers. */
+const char *app_path(const char *file);
+
+#define CONFIG_PATH      app_path(CONFIG_FILE)
+#define WORDS_PATH       app_path(WORDS_FILE)
+#define REGISTERS_PATH   app_path(REGISTERS_FILE)
+#define HISTORY_PATH     app_path(HISTORY_FILE)
+#define MACROS_PATH      app_path(MACROS_FILE)
+#define STACK_PATH       app_path(STACK_FILE)
 
 extern gsl_rng * global_rng;
 
